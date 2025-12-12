@@ -7,7 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <!--
+      THEMED FONTS PRELOAD
+      All fonts must be loaded upfront to ensure immediate availability during gameplay.
+      When adding new fonts, also update /constants/fonts.ts
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323:wght@400&family=Press+Start+2P:wght@400&family=Silkscreen:wght@400;700&family=DotGothic16:wght@400&family=Pixelify+Sans:wght@400;500;600;700&family=MedievalSharp:wght@400&family=Cinzel:wght@400;500;600;700;800;900&family=Cinzel+Decorative:wght@400;700;900&family=Uncial+Antiqua:wght@400&family=IM+Fell+English:wght@400&family=Almendra:wght@400;700&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Audiowide:wght@400&family=Exo+2:wght@100;200;300;400;500;600;700;800;900&family=Share+Tech+Mono:wght@400&family=Electrolize:wght@400&family=Michroma:wght@400&family=Creepster:wght@400&family=Nosifer:wght@400&family=Eater:wght@400&family=Butcherman:wght@400&family=Jolly+Lodger:wght@400&family=Titillium+Web:wght@200;300;400;600;700;900&family=Jura:wght@300;400;500;600;700&family=Aldrich:wght@400&family=Nova+Square:wght@400&family=Saira:wght@100;200;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Spectral:wght@200;300;400;500;600;700;800&family=Libre+Baskerville:wght@400;700&family=Caveat:wght@400;500;600;700&family=Patrick+Hand:wght@400&family=Indie+Flower:wght@400&family=Shadows+Into+Light:wght@400&family=Special+Elite:wght@400&family=Courier+Prime:wght@400;700&family=Cutive+Mono:wght@400&family=Bangers:wght@400&family=Permanent+Marker:wght@400&family=Luckiest+Guy:wght@400&family=Comic+Neue:wght@300;400;700&family=Jim+Nightshade:wght@400&family=Abril+Fatface:wght@400&family=Cardo:wght@400;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Source+Sans+3:wght@200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=Teko:wght@300;400;500;600;700&family=Russo+One:wght@400&display=swap" rel="stylesheet">
     <style>
       /* CSS Custom Properties for Dynamic Theming */
       :root {
@@ -27,14 +32,15 @@
         --theme-warning: #d97706;
         --theme-danger: #dc2626;
         --theme-shadow: #1c1917;
+        --theme-font: 'VT323', monospace;
       }
 
       body {
-        font-family: 'VT323', monospace;
+        font-family: var(--theme-font);
         background-color: var(--theme-bg);
         color: var(--theme-text);
         font-size: 20px; /* Slightly larger for readability */
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease, font-family 0.3s ease;
       }
 
       .scrollbar-hide::-webkit-scrollbar {
@@ -50,9 +56,9 @@
         background-color: var(--theme-bg-secondary);
         border: 2px solid var(--theme-border-strong);
         color: var(--theme-text);
-        font-family: 'VT323', monospace;
+        font-family: var(--theme-font);
         box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
-        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, font-family 0.3s ease;
       }
       .retro-input:focus {
         border-color: var(--theme-border-strong);

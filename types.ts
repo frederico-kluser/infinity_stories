@@ -398,6 +398,13 @@ export interface ThemeColors {
 
   /** Shadow color for retro effects */
   shadow: string;
+
+  /**
+   * Theme font family name (Google Fonts family name).
+   * Must match a font from the THEMED_FONTS registry in constants/fonts.ts.
+   * Example: "VT323", "Press Start 2P", "Orbitron"
+   */
+  fontFamily?: string;
 }
 
 /**
@@ -426,4 +433,11 @@ export const DEFAULT_THEME_COLORS: ThemeColors = {
   danger: '#dc2626',           // red-600
 
   shadow: '#1c1917',           // stone-900
+
+  fontFamily: 'VT323',         // Default retro terminal font
 };
+
+/**
+ * Default font family (VT323 - retro terminal style)
+ */
+export const DEFAULT_FONT_FAMILY = 'VT323';

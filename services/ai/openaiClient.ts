@@ -11,8 +11,10 @@ import {
 	Item,
 	ThemeColors,
 	DEFAULT_THEME_COLORS,
+	DEFAULT_FONT_FAMILY,
 	NarrativeGenre,
 } from '../../types';
+import { THEMED_FONTS, getFontByFamily } from '../../constants/fonts';
 import { languageInfo } from '../../i18n/locales';
 import {
 	gmResponseSchema,
@@ -887,12 +889,12 @@ export interface GenerateThemeColorsParams {
 }
 
 /**
- * Generates a theme color palette based on the universe context.
- * Uses AI to create an atmospheric palette that matches the game world.
+ * Generates a theme color palette and font based on the universe context.
+ * Uses AI to create an atmospheric palette and select a matching font.
  *
  * @param apiKey - API Key.
- * @param params - Parameters for color generation.
- * @returns ThemeColors object with the generated palette, or defaults on error.
+ * @param params - Parameters for color/font generation.
+ * @returns ThemeColors object with the generated palette and font, or defaults on error.
  */
 export const generateThemeColors = async (apiKey: string, params: GenerateThemeColorsParams): Promise<ThemeColors> => {
 	const prompt = buildThemeColorsPrompt({
@@ -914,7 +916,7 @@ export const generateThemeColors = async (apiKey: string, params: GenerateThemeC
 		{
 			role: 'system',
 			content:
-				"You are a UI/UX designer specializing in atmospheric color palettes for games. Generate colors that evoke the universe's mood while maintaining readability. Always respond with valid JSON containing only hex color values.",
+				"You are a UI/UX designer specializing in atmospheric color palettes and typography for games. Generate colors and select a font that evoke the universe's mood while maintaining readability. Always respond with valid JSON.",
 		},
 		{
 			role: 'user',
@@ -923,7 +925,7 @@ export const generateThemeColors = async (apiKey: string, params: GenerateThemeC
 	];
 
 	try {
-		console.log(`[Theme Colors] Generating palette for "${params.universeName}"...`);
+		console.log(`[Theme] Generating palette and font for "${params.universeName}"...`);
 
 		const response = await queryLLM(apiKey, messages, {
 			model: MODEL_CONFIG.themeColors,
@@ -931,15 +933,15 @@ export const generateThemeColors = async (apiKey: string, params: GenerateThemeC
 		});
 
 		if (!response.text) {
-			console.warn('[Theme Colors] No response, using defaults');
+			console.warn('[Theme] No response, using defaults');
 			return DEFAULT_THEME_COLORS;
 		}
 
 		const parsed = JSON.parse(cleanJsonString(response.text));
 
-		// Validate that all required fields are present and are valid hex colors
+		// Validate that all required color fields are present and are valid hex colors
 		const hexPattern = /^#[0-9A-Fa-f]{6}$/;
-		const requiredFields = [
+		const requiredColorFields = [
 			'background',
 			'backgroundSecondary',
 			'backgroundAccent',
@@ -958,20 +960,35 @@ export const generateThemeColors = async (apiKey: string, params: GenerateThemeC
 			'shadow',
 		];
 
-		const validatedColors: any = { ...DEFAULT_THEME_COLORS };
+		const validatedTheme: any = { ...DEFAULT_THEME_COLORS };
 
-		for (const field of requiredFields) {
+		for (const field of requiredColorFields) {
 			if (parsed[field] && hexPattern.test(parsed[field])) {
-				validatedColors[field] = parsed[field];
+				validatedTheme[field] = parsed[field];
 			} else {
-				console.warn(`[Theme Colors] Invalid or missing field "${field}", using default`);
+				console.warn(`[Theme] Invalid or missing color field "${field}", using default`);
 			}
 		}
 
-		console.log('[Theme Colors] Generated palette successfully');
-		return validatedColors as ThemeColors;
+		// Validate fontFamily - must be one of the available fonts
+		if (parsed.fontFamily) {
+			const fontExists = getFontByFamily(parsed.fontFamily);
+			if (fontExists) {
+				validatedTheme.fontFamily = parsed.fontFamily;
+				console.log(`[Theme] Selected font: ${parsed.fontFamily}`);
+			} else {
+				console.warn(`[Theme] Invalid font "${parsed.fontFamily}", using default (${DEFAULT_FONT_FAMILY})`);
+				validatedTheme.fontFamily = DEFAULT_FONT_FAMILY;
+			}
+		} else {
+			console.warn(`[Theme] No font specified, using default (${DEFAULT_FONT_FAMILY})`);
+			validatedTheme.fontFamily = DEFAULT_FONT_FAMILY;
+		}
+
+		console.log('[Theme] Generated palette and font successfully');
+		return validatedTheme as ThemeColors;
 	} catch (error) {
-		console.error('[Theme Colors] Generation failed:', error);
+		console.error('[Theme] Generation failed:', error);
 		return DEFAULT_THEME_COLORS;
 	}
 };

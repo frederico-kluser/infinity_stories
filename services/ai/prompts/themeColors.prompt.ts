@@ -1,9 +1,9 @@
 /**
- * @fileoverview Prompt de Geração de Cores do Tema - UI Dinâmica baseada no Universo
+ * @fileoverview Prompt de Geração de Tema (Cores + Fonte) - UI Dinâmica baseada no Universo
  *
  * Este módulo contém o prompt responsável por gerar uma paleta de cores
- * personalizada para a interface do jogo baseada no contexto do universo.
- * As cores são geradas para criar uma atmosfera visual coerente com o mundo do jogo.
+ * E selecionar uma fonte personalizada para a interface do jogo baseada no contexto do universo.
+ * As cores e fonte são geradas para criar uma atmosfera visual coerente com o mundo do jogo.
  *
  * @module prompts/themeColors
  *
@@ -11,8 +11,9 @@
  * O Theme Colors Prompt é usado para:
  *
  * - **Gerar paleta** - Criar cores que combinem com o universo do jogo
+ * - **Selecionar fonte** - Escolher uma fonte temática do registro disponível
  * - **Manter legibilidade** - Garantir contraste adequado entre texto e fundo
- * - **Criar atmosfera** - Transmitir o tom do universo através das cores
+ * - **Criar atmosfera** - Transmitir o tom do universo através das cores e tipografia
  * - **Preservar usabilidade** - Manter a interface funcional e acessível
  *
  * @example
@@ -35,6 +36,7 @@
 
 import { Language, NarrativeGenre } from '../../../types';
 import { getLanguageName } from '../../../i18n/locales';
+import { buildFontRegistryForPrompt, THEMED_FONTS } from '../../../constants/fonts';
 
 /**
  * Parâmetros necessários para construir o prompt de geração de cores.
@@ -57,7 +59,7 @@ export interface ThemeColorsPromptParams {
 }
 
 /**
- * Formato da resposta esperada do prompt de cores.
+ * Formato da resposta esperada do prompt de cores e fonte.
  *
  * @interface ThemeColorsResponse
  */
@@ -94,6 +96,8 @@ export interface ThemeColorsResponse {
   danger: string;
   /** Shadow color (hex) */
   shadow: string;
+  /** Selected font family name (must be from available fonts list) */
+  fontFamily: string;
 }
 
 /**
@@ -118,7 +122,7 @@ const GENRE_COLOR_HINTS: Record<NarrativeGenre, string> = {
 };
 
 /**
- * Constrói o prompt para gerar cores do tema baseadas no universo.
+ * Constrói o prompt para gerar cores e fonte do tema baseadas no universo.
  *
  * @param {ThemeColorsPromptParams} params - Parâmetros de entrada
  * @returns {string} O prompt formatado para envio à API da OpenAI
@@ -133,10 +137,11 @@ export function buildThemeColorsPrompt({
 }: ThemeColorsPromptParams): string {
   const langName = getLanguageName(language);
   const genreHint = genre ? GENRE_COLOR_HINTS[genre] : '';
+  const fontRegistry = buildFontRegistryForPrompt();
 
   return `
-You are a UI/UX designer specializing in creating atmospheric color palettes for games.
-Generate a cohesive color palette that evokes the atmosphere of the given universe.
+You are a UI/UX designer specializing in creating atmospheric color palettes and typography for games.
+Generate a cohesive color palette AND select an appropriate font that evokes the atmosphere of the given universe.
 
 === UNIVERSE CONTEXT ===
 Universe Name: ${universeName}
@@ -147,7 +152,7 @@ ${genreHint ? `Genre Color Direction: ${genreHint}` : ''}
 
 ${userConsiderations ? `=== USER CUSTOMIZATION REQUESTS ===\n${userConsiderations}\n` : ''}
 
-=== DESIGN REQUIREMENTS ===
+=== COLOR DESIGN REQUIREMENTS ===
 
 1. **Contrast & Readability**
    - Text on background must have WCAG AA compliant contrast (4.5:1 minimum)
@@ -179,9 +184,26 @@ ${userConsiderations ? `=== USER CUSTOMIZATION REQUESTS ===\n${userConsideration
 - Avoid pairing hues whose relative luminance differs by less than 0.2 (≈20 L*) to prevent muddy blends
 - Prefer deliberate HSL/OKLCH adjustments instead of opacity overlays when darkening/lightening values
 
+=== FONT SELECTION ===
+
+Select ONE font from the available fonts below that best matches the universe's aesthetic.
+The font should complement the color palette and enhance the narrative experience.
+
+**AVAILABLE FONTS (choose exactly one fontFamily value):**
+${fontRegistry}
+
+**Font Selection Guidelines:**
+- For retro/pixel games: Choose from PIXEL/RETRO category (VT323, Press Start 2P, Silkscreen, etc.)
+- For medieval/fantasy: Choose from FANTASY category (MedievalSharp, Cinzel, Uncial Antiqua, etc.)
+- For cyberpunk/sci-fi: Choose from CYBERPUNK or SCI-FI categories (Orbitron, Exo 2, Share Tech Mono, etc.)
+- For horror: Choose from HORROR category (Creepster, Nosifer, Eater, etc.)
+- For elegant/classic: Choose from ELEGANT category (Playfair Display, Cormorant Garamond, etc.)
+- For noir/detective: Choose from TYPEWRITER category (Special Elite, Courier Prime, etc.)
+- Match the font mood with the universe mood!
+
 === OUTPUT FORMAT ===
 
-Return ONLY a JSON object with these hex color values:
+Return ONLY a JSON object with these values:
 
 {
   "background": "#XXXXXX",
@@ -199,18 +221,20 @@ Return ONLY a JSON object with these hex color values:
   "success": "#XXXXXX",
   "warning": "#XXXXXX",
   "danger": "#XXXXXX",
-  "shadow": "#XXXXXX"
+  "shadow": "#XXXXXX",
+  "fontFamily": "FontFamilyName"
 }
 
 IMPORTANT:
-- All values must be valid 6-character hex colors (e.g., "#1c1917", "#ff5500")
+- All color values must be valid 6-character hex colors (e.g., "#1c1917", "#ff5500")
+- fontFamily must be EXACTLY one of the font family names from the available fonts list above
 - Do NOT include any explanation or text outside the JSON object
-- Ensure the palette is cohesive and functional
+- Ensure the palette and font work together cohesively
 `;
 }
 
 /**
- * JSON Schema para validação da resposta de cores.
+ * JSON Schema para validação da resposta de cores e fonte.
  *
  * @constant
  * @type {object}
@@ -298,6 +322,10 @@ export const themeColorsSchema = {
       description: 'Shadow color (hex)',
       pattern: '^#[0-9A-Fa-f]{6}$',
     },
+    fontFamily: {
+      type: 'string',
+      description: 'Font family name from the available fonts list',
+    },
   },
   required: [
     'background',
@@ -316,5 +344,6 @@ export const themeColorsSchema = {
     'warning',
     'danger',
     'shadow',
+    'fontFamily',
   ],
 };

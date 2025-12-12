@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Palette, Loader2, RefreshCw } from 'lucide-react';
+import { X, Palette, Loader2, RefreshCw, Type } from 'lucide-react';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { getFontByFamily } from '../constants/fonts';
 
 interface ThemeColorsModalProps {
   isOpen: boolean;
@@ -10,8 +11,8 @@ interface ThemeColorsModalProps {
 }
 
 /**
- * Modal component for regenerating theme colors with optional user input.
- * Allows users to provide custom considerations for the AI color generation.
+ * Modal component for regenerating theme colors and font with optional user input.
+ * Allows users to provide custom considerations for the AI theme generation.
  */
 export const ThemeColorsModal: React.FC<ThemeColorsModalProps> = ({
   isOpen,
@@ -20,7 +21,10 @@ export const ThemeColorsModal: React.FC<ThemeColorsModalProps> = ({
   isGenerating
 }) => {
   const [userInput, setUserInput] = useState('');
-  const { colors } = useThemeColors();
+  const { colors, fontFamily, fontFamilyCSS } = useThemeColors();
+
+  // Get font info for display
+  const currentFont = getFontByFamily(fontFamily);
 
   if (!isOpen) return null;
 
@@ -59,7 +63,7 @@ export const ThemeColorsModal: React.FC<ThemeColorsModalProps> = ({
             style={{ color: colors.text }}
           >
             <Palette className="w-5 h-5" />
-            Theme Colors
+            Theme Style
           </h2>
           <button
             onClick={onClose}
@@ -104,6 +108,39 @@ export const ThemeColorsModal: React.FC<ThemeColorsModalProps> = ({
             </div>
           </div>
 
+          {/* Current Font Preview */}
+          <div>
+            <label
+              className="text-sm font-bold uppercase mb-2 block flex items-center gap-2"
+              style={{ color: colors.textSecondary }}
+            >
+              <Type className="w-4 h-4" />
+              Current Font
+            </label>
+            <div
+              className="p-3 rounded-sm"
+              style={{
+                backgroundColor: colors.background,
+                border: `2px solid ${colors.border}`,
+              }}
+            >
+              <p
+                className="text-lg mb-1"
+                style={{ fontFamily: fontFamilyCSS, color: colors.text }}
+              >
+                {fontFamily}
+              </p>
+              {currentFont && (
+                <p
+                  className="text-xs"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {currentFont.category.toUpperCase()} — {currentFont.description.split('.')[0]}
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* User Input */}
           <div>
             <label
@@ -115,7 +152,7 @@ export const ThemeColorsModal: React.FC<ThemeColorsModalProps> = ({
             <textarea
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              placeholder="e.g., 'darker tones', 'more vibrant colors', 'cyberpunk neon style'..."
+              placeholder="e.g., 'darker tones', 'more vibrant colors', 'cyberpunk neon style', 'use a pixel font'..."
               rows={3}
               disabled={isGenerating}
               className="w-full p-3 text-sm resize-none outline-none transition-all"
@@ -174,7 +211,7 @@ export const ThemeColorsModal: React.FC<ThemeColorsModalProps> = ({
             className="text-xs text-center"
             style={{ color: colors.textSecondary }}
           >
-            Regenerating will create a new color palette based on the universe theme.
+            Regenerating will create a new color palette and select a matching font based on the universe theme.
           </p>
         </div>
       </div>
