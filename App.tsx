@@ -32,7 +32,6 @@ import {
 	Volume2,
 	Palette,
 	ImageIcon,
-	ChevronsRight,
 } from 'lucide-react';
 import { version } from './package.json';
 
@@ -157,9 +156,11 @@ const App: React.FC = () => {
 	// State for pulse animation on Next button (shows when new content is available)
 	const [showNextPulse, setShowNextPulse] = useState(false);
 
-	// Callback to stop pulse animation when user navigates
+	// Callback to stop pulse animation and decrement new cards count when user navigates
 	const handleNavigate = useCallback(() => {
 		setShowNextPulse(false);
+		// Decrement new cards count when navigating forward
+		setNewCardsCount((prev) => Math.max(0, prev - 1));
 	}, []);
 
 	// Card navigation for keyboard and swipe
@@ -697,15 +698,10 @@ const App: React.FC = () => {
 								</div>
 							)}
 
-							{/* New Cards Indicator */}
+							{/* New Cards Indicator - Visual only, not clickable */}
 							{newCardsCount > 0 && !isProcessing && (
-								<button
-									onClick={() => {
-										goToLast();
-										setNewCardsCount(0);
-										setShowNextPulse(false);
-									}}
-									className="absolute bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-3 font-bold uppercase tracking-wider text-sm transition-all hover:scale-105 active:scale-95 animate-pulse border-2"
+								<div
+									className="absolute bottom-4 right-4 z-30 px-4 py-3 font-bold uppercase tracking-wider text-sm animate-pulse border-2 pointer-events-none"
 									style={{
 										backgroundColor: colors.buttonPrimary,
 										color: colors.buttonPrimaryText,
@@ -714,8 +710,7 @@ const App: React.FC = () => {
 									}}
 								>
 									<span>{newCardsCount} {t.newCards || 'new'}</span>
-									<ChevronsRight className="w-5 h-5" />
-								</button>
+								</div>
 							)}
 						</div>
 					</div>
