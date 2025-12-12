@@ -106,14 +106,57 @@ function colorsToCssVariables(colors: ThemeColors): React.CSSProperties {
   } as React.CSSProperties;
 }
 
+/** ID for the injected theme style tag */
+const THEME_STYLE_ID = 'storywell-theme-font-override';
+
+/**
+ * Injects or updates a style tag with !important font rules.
+ * This ensures the font applies to ALL elements, overriding inline styles.
+ */
+function injectFontStyleTag(fontFamilyCSS: string): void {
+  let styleTag = document.getElementById(THEME_STYLE_ID) as HTMLStyleElement | null;
+
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = THEME_STYLE_ID;
+    document.head.appendChild(styleTag);
+  }
+
+  // Use high specificity and !important to override all inline styles
+  styleTag.textContent = `
+    /* Theme Font Override - Injected by useThemeColors */
+    html, body, #root, #root *,
+    div, span, p, h1, h2, h3, h4, h5, h6,
+    button, input, textarea, select, label,
+    a, li, ul, ol, table, th, td {
+      font-family: ${fontFamilyCSS} !important;
+    }
+
+    /* Ensure CSS variable is also updated */
+    :root {
+      --theme-font: ${fontFamilyCSS};
+    }
+
+    body {
+      font-family: ${fontFamilyCSS} !important;
+    }
+
+    .retro-input {
+      font-family: ${fontFamilyCSS} !important;
+    }
+  `;
+}
+
 /**
  * Applies theme colors and font to the document root as CSS variables.
  * This allows global access to theme colors via CSS var(--theme-*).
+ * Font is injected via style tag with !important to override all inline styles.
  */
 function applyColorsToRoot(colors: ThemeColors): void {
   const root = document.documentElement;
   const fontFamilyCSS = getFontFamilyCSSValue(colors.fontFamily);
 
+  // Set CSS custom properties for colors
   root.style.setProperty('--theme-bg', colors.background);
   root.style.setProperty('--theme-bg-secondary', colors.backgroundSecondary);
   root.style.setProperty('--theme-bg-accent', colors.backgroundAccent);
@@ -132,10 +175,12 @@ function applyColorsToRoot(colors: ThemeColors): void {
   root.style.setProperty('--theme-shadow', colors.shadow);
   root.style.setProperty('--theme-font', fontFamilyCSS);
 
-  // Also update body background, text color, and font for immediate visual effect
+  // Inject font override style tag with !important
+  injectFontStyleTag(fontFamilyCSS);
+
+  // Also update body background and text color for immediate visual effect
   document.body.style.backgroundColor = colors.background;
   document.body.style.color = colors.text;
-  document.body.style.fontFamily = fontFamilyCSS;
 }
 
 interface ThemeColorsProviderProps {
