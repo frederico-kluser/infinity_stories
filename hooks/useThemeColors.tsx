@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { ThemeColors, DEFAULT_THEME_COLORS } from '../types';
+import { ThemeColors, DEFAULT_THEME_COLORS, DEFAULT_FONT_FAMILY } from '../types';
+import { getFontByFamily, buildFontFamily, DEFAULT_FONT } from '../constants/fonts';
 
 /**
  * Merges partial theme colors with defaults, ensuring no undefined values.
- * Any missing or undefined color falls back to the default.
+ * Any missing or undefined color/font falls back to the default.
  */
 export function mergeWithDefaults(colors: Partial<ThemeColors> | undefined | null): ThemeColors {
   if (!colors) return DEFAULT_THEME_COLORS;
@@ -25,6 +26,7 @@ export function mergeWithDefaults(colors: Partial<ThemeColors> | undefined | nul
     warning: colors.warning || DEFAULT_THEME_COLORS.warning,
     danger: colors.danger || DEFAULT_THEME_COLORS.danger,
     shadow: colors.shadow || DEFAULT_THEME_COLORS.shadow,
+    fontFamily: colors.fontFamily || DEFAULT_THEME_COLORS.fontFamily,
   };
 }
 
@@ -40,7 +42,7 @@ export function getColor(colors: Partial<ThemeColors> | undefined | null, key: k
 }
 
 /**
- * Context value for theme colors management.
+ * Context value for theme colors and font management.
  */
 interface ThemeColorsContextValue {
   /** Current active theme colors (always complete, never undefined) */
@@ -57,14 +59,32 @@ interface ThemeColorsContextValue {
   cssVariables: React.CSSProperties;
   /** Get a single color with fallback to default */
   getColor: (key: keyof ThemeColors) => string;
+  /** Current font family name */
+  fontFamily: string;
+  /** CSS font-family value with fallbacks (e.g., "'Orbitron', sans-serif") */
+  fontFamilyCSS: string;
 }
 
 const ThemeColorsContext = createContext<ThemeColorsContextValue | undefined>(undefined);
 
 /**
+ * Gets the CSS font-family value with fallbacks for a given font family name.
+ */
+function getFontFamilyCSSValue(fontFamilyName: string | undefined): string {
+  const font = fontFamilyName ? getFontByFamily(fontFamilyName) : DEFAULT_FONT;
+  if (font) {
+    return buildFontFamily(font);
+  }
+  // Fallback if font not found
+  return `'${fontFamilyName || DEFAULT_FONT_FAMILY}', sans-serif`;
+}
+
+/**
  * Converts ThemeColors to CSS custom properties for use in style attributes.
  */
 function colorsToCssVariables(colors: ThemeColors): React.CSSProperties {
+  const fontFamilyCSS = getFontFamilyCSSValue(colors.fontFamily);
+
   return {
     '--theme-bg': colors.background,
     '--theme-bg-secondary': colors.backgroundSecondary,
@@ -82,15 +102,61 @@ function colorsToCssVariables(colors: ThemeColors): React.CSSProperties {
     '--theme-warning': colors.warning,
     '--theme-danger': colors.danger,
     '--theme-shadow': colors.shadow,
+    '--theme-font': fontFamilyCSS,
   } as React.CSSProperties;
 }
 
+/** ID for the injected theme style tag */
+const THEME_STYLE_ID = 'storywell-theme-font-override';
+
 /**
- * Applies theme colors to the document root as CSS variables.
+ * Injects or updates a style tag with !important font rules.
+ * This ensures the font applies to ALL elements, overriding inline styles.
+ */
+function injectFontStyleTag(fontFamilyCSS: string): void {
+  let styleTag = document.getElementById(THEME_STYLE_ID) as HTMLStyleElement | null;
+
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = THEME_STYLE_ID;
+    document.head.appendChild(styleTag);
+  }
+
+  // Use high specificity and !important to override all inline styles
+  styleTag.textContent = `
+    /* Theme Font Override - Injected by useThemeColors */
+    html, body, #root, #root *,
+    div, span, p, h1, h2, h3, h4, h5, h6,
+    button, input, textarea, select, label,
+    a, li, ul, ol, table, th, td {
+      font-family: ${fontFamilyCSS} !important;
+    }
+
+    /* Ensure CSS variable is also updated */
+    :root {
+      --theme-font: ${fontFamilyCSS};
+    }
+
+    body {
+      font-family: ${fontFamilyCSS} !important;
+    }
+
+    .retro-input {
+      font-family: ${fontFamilyCSS} !important;
+    }
+  `;
+}
+
+/**
+ * Applies theme colors and font to the document root as CSS variables.
  * This allows global access to theme colors via CSS var(--theme-*).
+ * Font is injected via style tag with !important to override all inline styles.
  */
 function applyColorsToRoot(colors: ThemeColors): void {
   const root = document.documentElement;
+  const fontFamilyCSS = getFontFamilyCSSValue(colors.fontFamily);
+
+  // Set CSS custom properties for colors
   root.style.setProperty('--theme-bg', colors.background);
   root.style.setProperty('--theme-bg-secondary', colors.backgroundSecondary);
   root.style.setProperty('--theme-bg-accent', colors.backgroundAccent);
@@ -107,6 +173,10 @@ function applyColorsToRoot(colors: ThemeColors): void {
   root.style.setProperty('--theme-warning', colors.warning);
   root.style.setProperty('--theme-danger', colors.danger);
   root.style.setProperty('--theme-shadow', colors.shadow);
+  root.style.setProperty('--theme-font', fontFamilyCSS);
+
+  // Inject font override style tag with !important
+  injectFontStyleTag(fontFamilyCSS);
 
   // Also update body background and text color for immediate visual effect
   document.body.style.backgroundColor = colors.background;
@@ -156,6 +226,10 @@ export const ThemeColorsProvider: React.FC<ThemeColorsProviderProps> = ({
 
   const cssVariables = useMemo(() => colorsToCssVariables(colors), [colors]);
 
+  // Font values
+  const fontFamily = colors.fontFamily || DEFAULT_FONT_FAMILY;
+  const fontFamilyCSS = useMemo(() => getFontFamilyCSSValue(colors.fontFamily), [colors.fontFamily]);
+
   const value = useMemo(() => ({
     colors,
     setColors,
@@ -164,7 +238,9 @@ export const ThemeColorsProvider: React.FC<ThemeColorsProviderProps> = ({
     setIsGenerating,
     cssVariables,
     getColor: getColorFromContext,
-  }), [colors, setColors, resetColors, isGenerating, cssVariables, getColorFromContext]);
+    fontFamily,
+    fontFamilyCSS,
+  }), [colors, setColors, resetColors, isGenerating, cssVariables, getColorFromContext, fontFamily, fontFamilyCSS]);
 
   return (
     <ThemeColorsContext.Provider value={value}>
