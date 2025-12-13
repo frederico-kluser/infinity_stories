@@ -46,7 +46,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 	const [lastMessageCount, setLastMessageCount] = useState(0);
 	const [lastFateResult, setLastFateResult] = useState<FateResult | null>(null);
 	const [showFateToast, setShowFateToast] = useState<FateResult | null>(null);
-	const [isCollapsed, setIsCollapsed] = useState(false); // Default expanded on mobile
+	const [isCollapsed, setIsCollapsed] = useState(true); // Default collapsed - user must click to expand
 
 	// Custom action confirmation states
 	const [isAnalyzingAction, setIsAnalyzingAction] = useState(false);
@@ -577,7 +577,9 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 				{/* Mobile collapse toggle - only visible on mobile */}
 				<button
 					onClick={() => setIsCollapsed(!isCollapsed)}
-					className="md:hidden w-full p-2.5 flex items-center justify-between transition-colors"
+					className={`md:hidden w-full p-2.5 flex items-center justify-between transition-colors ${
+						isCollapsed && options.length > 0 ? 'animate-pulse-glow' : ''
+					}`}
 					style={{ backgroundColor: colors.backgroundAccent, borderBottom: `1px solid ${colors.border}` }}
 				>
 					<span className="text-xs font-bold uppercase flex items-center gap-1.5" style={{ color: colors.text }}>
