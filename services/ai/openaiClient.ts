@@ -864,29 +864,69 @@ export const processPlayerMessage = async (
 };
 
 /**
+ * A single segment of processed player input
+ */
+export interface ProcessedSegment {
+	/** Type of segment: action (narrated) or speech (dialogue) */
+	type: 'action' | 'speech';
+	/** The original text from this segment */
+	originalText: string;
+	/** The transformed text:
+	 * - Actions: third-person narrative
+	 * - Speech: adapted to character voice
+	 */
+	processedText: string;
+}
+
+/**
  * Result of classifying and processing player input
  */
 export interface ClassifiedPlayerInput {
-	/** The type of input: 'action' or 'speech' */
+	/** Array of separated segments (actions and speeches) */
+	segments: ProcessedSegment[];
+	/** Whether the input contained multiple segments */
+	hasMultipleSegments: boolean;
+
+	// Legacy fields for backwards compatibility
+	/** @deprecated Use segments[0].type instead */
 	type: 'action' | 'speech';
-	/** The processed text - original for action, rewritten for speech */
+	/** @deprecated Use segments.map(s => s.processedText).join(' ') instead */
 	processedText: string;
-	/** Whether the text was modified */
+	/** Whether any text was modified */
 	wasProcessed: boolean;
 }
 
 /**
- * Classifies the player's input as an ACTION or SPEECH and processes accordingly.
+ * Helper to clean text (remove surrounding quotes)
+ */
+const cleanSegmentText = (text: string): string => {
+	let cleaned = text.trim();
+	if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+		cleaned = cleaned.slice(1, -1);
+	}
+	if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
+		cleaned = cleaned.slice(1, -1);
+	}
+	return cleaned;
+};
+
+/**
+ * Separates and transforms player input into distinct ACTION and SPEECH segments.
  * Uses GPT-4.1-nano for fast, cheap classification.
  *
- * - ACTIONS: Commands, physical actions, verbs (attack, go, look) - kept as-is
- * - SPEECH: Dialogue, what the character SAYS - rewritten to match character/universe
+ * - ACTIONS: Transformed into third-person narrative
+ * - SPEECH: Adapted to character voice and universe style
+ *
+ * When input contains both (e.g., "I look at the guard and say 'Hello'"),
+ * it returns multiple segments in order:
+ * 1. ACTION: "His gaze turns to the guard"
+ * 2. SPEECH: "Good evening, sir"
  *
  * @param apiKey - OpenAI API Key.
  * @param rawInput - The original text from the player.
  * @param gameState - Current game state for context.
  * @param language - Target language.
- * @returns Classified and potentially processed input.
+ * @returns Classified and processed segments.
  */
 export const classifyAndProcessPlayerInput = async (
 	apiKey: string,
@@ -907,6 +947,13 @@ export const classifyAndProcessPlayerInput = async (
 		},
 	];
 
+	// Default fallback segment
+	const fallbackSegment: ProcessedSegment = {
+		type: 'action',
+		originalText: rawInput,
+		processedText: rawInput,
+	};
+
 	try {
 		const response = await queryLLM(apiKey, messages, {
 			model: MODEL_CONFIG.textClassification, // gpt-4.1-nano - classificação rápida
@@ -914,34 +961,82 @@ export const classifyAndProcessPlayerInput = async (
 		});
 
 		if (!response.text) {
-			// Fallback: treat as action and keep original
+			// Fallback: treat as single action segment
 			return {
+				segments: [fallbackSegment],
+				hasMultipleSegments: false,
 				type: 'action',
 				processedText: rawInput,
 				wasProcessed: false,
 			};
 		}
 
-		const parsed: TextClassificationResponse = JSON.parse(cleanJsonString(response.text));
+		const parsed = JSON.parse(cleanJsonString(response.text));
 
-		// Clean up the processed text (remove quotes if wrapped)
-		let processedText = (parsed.processedText || rawInput).trim();
-		if (processedText.startsWith('"') && processedText.endsWith('"')) {
-			processedText = processedText.slice(1, -1);
-		}
-		if (processedText.startsWith("'") && processedText.endsWith("'")) {
-			processedText = processedText.slice(1, -1);
+		// Handle new format with segments array
+		if (parsed.segments && Array.isArray(parsed.segments) && parsed.segments.length > 0) {
+			const segments: ProcessedSegment[] = parsed.segments.map((seg: any) => ({
+				type: seg.type || 'action',
+				originalText: cleanSegmentText(seg.originalText || ''),
+				processedText: cleanSegmentText(seg.processedText || seg.originalText || ''),
+			}));
+
+			// Build legacy fields from first segment
+			const firstSegment = segments[0];
+			const allProcessedText = segments.map((s) => s.processedText).join(' ');
+
+			console.log(`[Text Classification] Segments: ${segments.length}, Types: ${segments.map((s) => s.type).join(' → ')}`);
+			if (segments.length > 1) {
+				console.log(`[Text Classification] Multi-segment input detected`);
+				segments.forEach((seg, i) => {
+					console.log(`  [${i + 1}] ${seg.type.toUpperCase()}: "${seg.processedText.substring(0, 50)}..."`);
+				});
+			}
+
+			return {
+				segments,
+				hasMultipleSegments: segments.length > 1,
+				// Legacy fields
+				type: firstSegment.type,
+				processedText: allProcessedText,
+				wasProcessed: true,
+			};
 		}
 
+		// Handle legacy format (single type/processedText)
+		if (parsed.type && parsed.processedText) {
+			const processedText = cleanSegmentText(parsed.processedText);
+			const segment: ProcessedSegment = {
+				type: parsed.type,
+				originalText: rawInput,
+				processedText,
+			};
+
+			console.log(`[Text Classification] Legacy format - Type: ${parsed.type}`);
+
+			return {
+				segments: [segment],
+				hasMultipleSegments: false,
+				type: parsed.type,
+				processedText,
+				wasProcessed: parsed.shouldProcess || false,
+			};
+		}
+
+		// Fallback if parsing fails
 		return {
-			type: parsed.type || 'action',
-			processedText: processedText,
-			wasProcessed: parsed.shouldProcess || false,
+			segments: [fallbackSegment],
+			hasMultipleSegments: false,
+			type: 'action',
+			processedText: rawInput,
+			wasProcessed: false,
 		};
 	} catch (error) {
 		console.error('Text classification failed:', error);
 		// Return original on error to not block the game
 		return {
+			segments: [fallbackSegment],
+			hasMultipleSegments: false,
 			type: 'action',
 			processedText: rawInput,
 			wasProcessed: false,

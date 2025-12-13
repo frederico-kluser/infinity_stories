@@ -1022,45 +1022,66 @@ export const useGameEngine = (): UseGameEngineReturn => {
 
 			const storyLang = currentStoryRef.config.language || language;
 
-			// 1. Classify and process the player's input (action vs speech)
-			// Uses GPT-4.1-nano to identify if it's an action (keep as-is) or speech (rewrite)
+			// 1. Classify and process the player's input (separates actions from speech)
+			// Uses GPT-4.1-nano to identify segments and transform them appropriately
 			const classified = await classifyAndProcessPlayerInput(apiKey, rawText, currentStoryRef, storyLang);
 
-			console.log(`[Text Classification] Type: ${classified.type}, Processed: ${classified.wasProcessed}`);
-			if (classified.wasProcessed) {
-				console.log(`[Text Classification] Original: "${rawText}" -> Processed: "${classified.processedText}"`);
+			console.log(`[Text Classification] Segments: ${classified.segments.length}, HasMultiple: ${classified.hasMultipleSegments}`);
+
+			// 2. Create messages for each segment:
+			// - ACTION segments → NARRATION (third-person narrative by GM)
+			// - SPEECH segments → DIALOGUE (player's character speaks)
+			const playerMessages: ChatMessage[] = [];
+			let pageOffset = currentStoryRef.messages.length;
+
+			for (let i = 0; i < classified.segments.length; i++) {
+				const segment = classified.segments[i];
+				const msgId = `${Date.now()}_player_${i}`;
+
+				if (segment.type === 'speech') {
+					// Speech: Player dialogue with their avatar
+					playerMessages.push({
+						id: msgId,
+						senderId: currentStoryRef.playerCharacterId,
+						text: segment.processedText,
+						type: MessageType.DIALOGUE,
+						timestamp: Date.now() + i * 10,
+						pageNumber: pageOffset + i + 1,
+						voiceTone: 'neutral',
+					});
+				} else {
+					// Action: Narrated in third person by the narrator
+					playerMessages.push({
+						id: msgId,
+						senderId: 'GM',
+						text: segment.processedText,
+						type: MessageType.NARRATION,
+						timestamp: Date.now() + i * 10,
+						pageNumber: pageOffset + i + 1,
+						voiceTone: 'neutral',
+					});
+				}
 			}
-
-			// 2. Use the processed text for the player message
-			const finalText = classified.processedText;
-
-			const userMsg: ChatMessage = {
-				id: Date.now().toString(),
-				senderId: currentStoryRef.playerCharacterId,
-				text: finalText,
-				type: MessageType.DIALOGUE,
-				timestamp: Date.now(),
-				pageNumber: currentStoryRef.messages.length + 1,
-				voiceTone: 'neutral',
-			};
 
 			safeUpdateStory(
 				(s) => ({
 					...s,
-					messages: [...s.messages, userMsg],
+					messages: [...s.messages, ...playerMessages],
 				}),
 				activeStoryId,
 			);
 
-			// 3. Build context with the processed player message for game turn
+			// 3. Build context with the processed player messages for game turn
+			// Use the combined text for the GM prompt (maintains full context)
+			const combinedPlayerInput = classified.segments.map((s) => s.processedText).join(' ');
 			const contextStory = {
 				...currentStoryRef,
-				messages: [...currentStoryRef.messages, userMsg],
+				messages: [...currentStoryRef.messages, ...playerMessages],
 			};
 
 			// 4. Generate game turn response based on the processed input
 			setProcessingPhase('generating');
-			const response = await generateGameTurn(apiKey, finalText, contextStory, storyLang, fateResult, useTone);
+			const response = await generateGameTurn(apiKey, combinedPlayerInput, contextStory, storyLang, fateResult, useTone);
 
 			// 5. Logic & State Resolution
 			safeUpdateStory((prev) => {

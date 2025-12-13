@@ -55,6 +55,9 @@ jest.mock('../../services/ai/openaiClient', () => ({
   }),
   processPlayerMessage: jest.fn().mockImplementation((_, msg) => Promise.resolve({ text: msg, voiceTone: 'neutral' })),
   classifyAndProcessPlayerInput: jest.fn().mockImplementation((_, rawInput) => Promise.resolve({
+    segments: [{ type: 'action', originalText: rawInput, processedText: rawInput }],
+    hasMultipleSegments: false,
+    // Legacy fields for backwards compatibility
     type: 'action',
     processedText: rawInput,
     wasProcessed: false

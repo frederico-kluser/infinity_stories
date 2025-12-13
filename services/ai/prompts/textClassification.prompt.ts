@@ -52,62 +52,74 @@ export interface TextClassificationPromptParams {
 }
 
 /**
+ * Um segmento individual do input do jogador (ação ou fala).
+ */
+export interface InputSegment {
+  /** Tipo do segmento */
+  type: 'action' | 'speech';
+  /** Texto original do segmento (antes de transformação) */
+  originalText: string;
+  /** Texto transformado:
+   * - Para falas: adaptado ao estilo do personagem
+   * - Para ações: transformado para narrativa em terceira pessoa
+   */
+  processedText: string;
+}
+
+/**
  * Formato da resposta esperada da classificação de texto.
  *
  * @interface TextClassificationResponse
- * @property {'action' | 'speech'} type - Tipo do input: ação ou fala
- * @property {string} processedText - Texto processado (alterado se fala, original se ação)
- * @property {boolean} shouldProcess - Se o texto foi processado/alterado
+ * @property {InputSegment[]} segments - Array de segmentos separados (ações e falas)
+ * @property {boolean} hasMultipleSegments - Se o input contém mistura de ação/fala
  */
 export interface TextClassificationResponse {
-  /** Tipo do input identificado */
+  /** Array de segmentos separados */
+  segments: InputSegment[];
+  /** Indica se o input continha mistura de ação e fala */
+  hasMultipleSegments: boolean;
+
+  // Legacy fields for backwards compatibility
+  /** @deprecated Use segments[0].type instead */
   type: 'action' | 'speech';
-  /** Texto processado - adaptado se for fala, original se for ação */
+  /** @deprecated Use segments[0].processedText instead */
   processedText: string;
-  /** Indica se o texto foi modificado */
+  /** @deprecated Use hasMultipleSegments instead */
   shouldProcess: boolean;
 }
 
 /**
- * Constrói o prompt para classificar o input do jogador e processar falas.
+ * Constrói o prompt para separar e transformar o input do jogador.
  *
- * Este prompt instrui a IA (GPT-4.1-nano) a:
+ * Este prompt instrui a IA a:
  *
- * **1. Classificar o Input:**
- * - ACTION: Comandos, ações físicas, verbos de ação (atacar, ir, olhar, pegar, etc.)
- * - SPEECH: Diálogos, falas, o que o personagem DIZ a outros
+ * **1. Separar em Segmentos:**
+ * - Identificar partes que são AÇÕES vs FALAS
+ * - Criar um array de segmentos ordenados
  *
  * **2. Para AÇÕES:**
- * - Retornar o texto ORIGINAL sem alterações
- * - type: "action", shouldProcess: false
+ * - Transformar para narrativa em terceira pessoa
+ * - Usar linguagem literária e interessante
+ * - Evitar literalidade ("O jogador caminhou" → "Seus passos ecoam pelo corredor")
  *
  * **3. Para FALAS:**
  * - Reescrever para se adequar ao personagem e universo
- * - Considerar: personalidade, background, estilo do universo
- * - Considerar: contexto das últimas mensagens
  * - Manter a intenção e significado original
- * - type: "speech", shouldProcess: true
- *
- * @param {TextClassificationPromptParams} params - Parâmetros de entrada
- * @returns {string} O prompt formatado para envio à API da OpenAI
  *
  * @example
  * ```typescript
- * // Input é uma AÇÃO - não altera
- * const actionPrompt = buildTextClassificationPrompt({
+ * // Input MISTO: ação + fala + ação
+ * const mixedPrompt = buildTextClassificationPrompt({
  *   gameState,
- *   rawInput: 'Atacar o goblin com minha espada',
+ *   rawInput: 'Olho para o guarda e digo: "Boa noite" antes de fazer uma reverência',
  *   language: 'pt'
  * });
- * // Resultado: { type: "action", processedText: "Atacar o goblin com minha espada", shouldProcess: false }
- *
- * // Input é uma FALA - reescreve
- * const speechPrompt = buildTextClassificationPrompt({
- *   gameState: medievalGameState,
- *   rawInput: 'e aí cara, beleza?',
- *   language: 'pt'
- * });
- * // Resultado: { type: "speech", processedText: "Salve, bom homem! Como passas?", shouldProcess: true }
+ * // Resultado:
+ * // segments: [
+ * //   { type: "action", originalText: "Olho para o guarda", processedText: "Seus olhos encontram o olhar atento do guarda" },
+ * //   { type: "speech", originalText: "Boa noite", processedText: "Boa noite, senhor guarda" },
+ * //   { type: "action", originalText: "antes de fazer uma reverência", processedText: "Uma reverência elegante completa a saudação" }
+ * // ]
  * ```
  */
 export function buildTextClassificationPrompt({
@@ -121,6 +133,7 @@ export function buildTextClassificationPrompt({
   const currentLocation: Location | undefined =
     gameState.locations[gameState.currentLocationId];
   const recentMessages = getRecentMessagesForPrompt(gameState.messages);
+  const playerName = player?.name || 'The adventurer';
 
   // Formatar mensagens recentes para contexto
   const recentContext = recentMessages.map((m) => {
@@ -130,13 +143,13 @@ export function buildTextClassificationPrompt({
   }).join('\n');
 
   return `
-You are a text classifier for an interactive RPG game. Your task is to:
-1. Identify if the player's input is an ACTION or SPEECH
-2. If it's SPEECH, rewrite it to match the character's voice and the universe's style
+You are a text parser for an interactive RPG game. Your CRITICAL task is to:
+1. SEPARATE the player's input into distinct ACTION and SPEECH segments
+2. TRANSFORM each segment appropriately for narrative presentation
 
 CONTEXT:
 - Universe: ${gameState.config.universeName} (${gameState.config.universeType})
-- Character Name: ${player?.name || 'Unknown'}
+- Character Name: ${playerName}
 - Character Description: ${player?.description || 'A mysterious adventurer'}
 - Character Background: ${(gameState.config as any).background || 'Unknown background'}
 - Character Personality: ${(gameState.config as any).personality || 'Unknown personality'}
@@ -146,48 +159,81 @@ CONTEXT:
 RECENT CONVERSATION:
 ${recentContext || 'No recent messages'}
 
-CLASSIFICATION RULES:
+=== SEGMENT IDENTIFICATION ===
 
-**ACTION** - The player is describing what their character DOES:
-- Physical actions: attack, move, jump, run, hide, climb, swim
-- Interactions with objects: pick up, open, close, use, examine, search
-- Movement commands: go to, enter, exit, follow, approach
-- Combat actions: strike, parry, dodge, cast spell, shoot
-- Observation: look around, inspect, observe, watch
-- Examples: "Atacar o goblin", "Ir para a taverna", "Pegar a espada", "Olhar ao redor"
+**ACTION segments** - What the character DOES:
+- Physical actions: attack, move, jump, run, hide, climb
+- Object interactions: pick up, open, close, use, examine
+- Movement: go to, enter, exit, follow, approach
+- Combat: strike, parry, dodge, cast spell
+- Observation: look around, inspect, observe
+- Emotional expressions: smile, frown, sigh, laugh
 
-**SPEECH** - The player is saying what their character SAYS to others:
-- Dialogue with NPCs or other characters
+**SPEECH segments** - What the character SAYS:
+- Dialogue with NPCs or others
 - Questions directed at someone
 - Greetings, farewells, exclamations
-- Negotiations, requests, demands
-- Storytelling or explanations to others
-- Examples: "Oi, tudo bem?", "Quanto custa isso?", "Me conta sobre a dungeon", "Precisamos de ajuda!"
+- Anything between quotes or after "digo:", "falo:", "pergunto:"
 
-PROCESSING RULES:
+=== TRANSFORMATION RULES ===
 
-For ACTIONS:
-- Return the EXACT original text unchanged
-- Set type: "action" and shouldProcess: false
+**For ACTION segments:**
+Transform into THIRD-PERSON NARRATIVE with literary style:
+- DO NOT use first person ("I", "eu", "yo")
+- Use third person or poetic descriptions
+- Avoid being literal - be creative and atmospheric
+- Match the universe's tone
 
-For SPEECH:
-- Rewrite the dialogue to match:
-  * The universe's style (medieval fantasy = archaic speech, sci-fi = technical jargon, etc.)
-  * The character's personality and background
-  * The tone appropriate for the situation
-- Keep the MEANING and INTENT identical
-- Keep similar length to the original
-- Write in ${langName}
-- Set type: "speech" and shouldProcess: true
+Examples of ACTION transformation:
+- "Olho ao redor" → "${playerName} percorre o ambiente com o olhar, absorvendo cada detalhe"
+- "Pego a espada" → "Os dedos se fecham em torno do cabo da espada, sentindo o peso familiar do aço"
+- "Corro em direção à porta" → "Seus pés ecoam pelo piso de pedra enquanto corre em direção à porta"
+- "Sorrio" → "Um sorriso sutil se forma em seus lábios"
+
+**For SPEECH segments:**
+Adapt to character's voice and universe style:
+- Medieval fantasy: archaic, formal
+- Sci-fi: technical, modern
+- Keep meaning and intent identical
+- Keep similar length
+
+=== CRITICAL: SEGMENT SEPARATION ===
+
+When input contains BOTH actions and speech, SEPARATE them:
+
+Example: "Olho para o guarda e digo: 'Boa noite' antes de sorrir"
+→ 3 segments:
+1. ACTION: "Olho para o guarda" → "Seu olhar se dirige ao guarda de plantão"
+2. SPEECH: "Boa noite" → "Boa noite, senhor"
+3. ACTION: "antes de sorrir" → "Um sorriso cordial acompanha a saudação"
+
+Example: "Pergunto onde fica a taverna enquanto caminho até ele"
+→ 2 segments:
+1. ACTION: "caminho até ele" → "${playerName} se aproxima com passos decididos"
+2. SPEECH: "Pergunto onde fica a taverna" → "Poderia me indicar onde fica a taverna?"
+
+=== RESPONSE FORMAT ===
 
 RESPOND WITH JSON ONLY:
 {
-  "type": "action" or "speech",
-  "processedText": "the text (original for action, rewritten for speech)",
-  "shouldProcess": true or false
+  "segments": [
+    {
+      "type": "action" or "speech",
+      "originalText": "the original part",
+      "processedText": "the transformed text"
+    }
+  ],
+  "hasMultipleSegments": true or false
 }
 
-Player input to classify: "${rawInput}"
+IMPORTANT:
+- segments array must preserve the ORDER of the original input
+- Each segment must be a complete, standalone piece
+- All text must be in ${langName}
+- Actions MUST be in third person narrative style
+- Speech should match character personality
+
+Player input to parse and transform: "${rawInput}"
 `;
 }
 
@@ -200,19 +246,33 @@ Player input to classify: "${rawInput}"
 export const textClassificationSchema = {
   type: 'object',
   properties: {
-    type: {
-      type: 'string',
-      enum: ['action', 'speech'],
-      description: 'Classification of the input: action or speech',
+    segments: {
+      type: 'array',
+      description: 'Array of separated segments (actions and speeches)',
+      items: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['action', 'speech'],
+            description: 'Type of segment: action or speech',
+          },
+          originalText: {
+            type: 'string',
+            description: 'The original text of this segment',
+          },
+          processedText: {
+            type: 'string',
+            description: 'The transformed text (narrative for actions, adapted for speech)',
+          },
+        },
+        required: ['type', 'originalText', 'processedText'],
+      },
     },
-    processedText: {
-      type: 'string',
-      description: 'The processed text (original for action, rewritten for speech)',
-    },
-    shouldProcess: {
+    hasMultipleSegments: {
       type: 'boolean',
-      description: 'Whether the text was modified',
+      description: 'Whether the input contained a mix of action and speech',
     },
   },
-  required: ['type', 'processedText', 'shouldProcess'],
+  required: ['segments', 'hasMultipleSegments'],
 };
