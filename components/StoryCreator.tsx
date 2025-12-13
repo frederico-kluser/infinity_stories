@@ -114,6 +114,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 
 		// 1. Capture current context before clearing
 		const questionAsked = currentStep.question;
+		const previousStep = currentStep;
 
 		// 2. Immediately clear current step to remove UI (Select/Input)
 		setCurrentStep(null);
@@ -131,25 +132,33 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 			setCurrentStep(nextStep);
 		} catch (e) {
 			console.error(e);
-			alert('AI Agent Connection Lost.');
-			// If error, maybe restore previous step so user can try again,
-			// but for now simple alert.
+			alert('AI Agent Connection Lost. Please try again.');
+			// Restore previous step so user can retry
+			setCurrentStep(previousStep);
+			// Remove the failed answer from history
+			setHistory(history);
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	const handleFinalSubmit = () => {
-		if (currentStep?.isComplete && currentStep.finalConfig) {
-			// Merge AI config with defaults
-			const fullConfig = {
-				...currentStep.finalConfig,
-				universeType,
-				combatStyle: 'descriptive',
-				dialogueHeavy: true,
-			};
-			onCreate(fullConfig);
+		if (!currentStep?.isComplete) return;
+
+		if (!currentStep.finalConfig) {
+			console.error('Missing finalConfig in completed step');
+			alert('Configuration error. Please try again.');
+			return;
 		}
+
+		// Merge AI config with defaults
+		const fullConfig = {
+			...currentStep.finalConfig,
+			universeType,
+			combatStyle: 'descriptive',
+			dialogueHeavy: true,
+		};
+		onCreate(fullConfig);
 	};
 
 	return (

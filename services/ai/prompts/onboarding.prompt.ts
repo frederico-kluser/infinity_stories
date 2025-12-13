@@ -253,5 +253,5 @@ export const onboardingSchema = {
       },
     },
   },
-  required: ['question', 'controlType', 'isComplete'],
+  required: ['question', 'controlType', 'isComplete', 'options'],
 };

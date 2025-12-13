@@ -117,6 +117,7 @@ describe('systemPrompts', () => {
       expect(onboardingSchema.required).toContain('question');
       expect(onboardingSchema.required).toContain('controlType');
       expect(onboardingSchema.required).toContain('isComplete');
+      expect(onboardingSchema.required).toContain('options');
     });
 
     it('should define controlType enum values', () => {
