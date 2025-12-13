@@ -165,6 +165,7 @@ This approach prevents hallucination and reduces token usage.
 **WHEN TO UPDATE ELEMENTS:**
 - New important object/feature is mentioned in the scene (door, chest, table, tree, lever, etc.)
 - An element is destroyed, moved, or removed from the scene
+- An element is TRANSFORMED (opened, broken, cut, burned, etc.) - see ELEMENT TRANSFORMATION below
 - Location change (elements should reflect the new location)
 
 **WHEN NOT TO UPDATE:**
@@ -180,6 +181,24 @@ This approach prevents hallucination and reduces token usage.
 - Only include elements that are IMPORTANT to the scene (interactable, mentioned, relevant)
 - Do NOT include trivial background items that aren't relevant to gameplay
 
+**ELEMENT TRANSFORMATION (CRITICAL):**
+When an element changes state but doesn't disappear completely, you must:
+1. REMOVE the original element (add its symbol to "removedElements")
+2. ADD the transformed element(s) with NEW symbol(s) and updated description
+
+Examples of transformations:
+- **Tree cut down**: Remove [T] "Oak Tree", Add [S] "Tree Stump" (same position) + [L] "Fallen Log" (adjacent cell)
+- **Chest opened**: Remove [C] "Locked Chest", Add [O] "Open Chest" (same position, new description)
+- **Door broken**: Remove [D] "Wooden Door", Add [B] "Broken Door" (same position)
+- **Barrel smashed**: Remove [B] "Barrel", Add [D] "Debris" (same position) - contents may spawn nearby
+- **Fire started on haystack**: Remove [H] "Haystack", Add [F] "Burning Haystack" (same position)
+- **Lever pulled**: Keep same symbol but update description to reflect new state
+
+When something is cut/broken and creates debris or byproducts:
+- Place the main remnant in the SAME position as the original
+- Place secondary pieces (logs, debris, shards) in ADJACENT cells (choose a logical direction)
+- If player cut something, fallen piece typically falls AWAY from player
+
 **CHARACTER OUTPUT RULES (DELTA ONLY):**
 - Return ONLY characters whose position CHANGED
 - Do NOT include characters that stayed in the same place
@@ -187,8 +206,9 @@ This approach prevents hallucination and reduces token usage.
 - Always set isPlayer=true for the player character
 
 **ELEMENT OUTPUT RULES (DELTA ONLY):**
-- Return ONLY new elements or elements that MOVED
-- Use "removedElements" array to list symbols of elements that were destroyed/removed
+- Return ONLY new elements, transformed elements, or elements that MOVED
+- Use "removedElements" array to list symbols of elements that were destroyed/removed/transformed
+- When transforming: FIRST add to removedElements, THEN add new element(s) to elements array
 - Do NOT repeat elements that haven't changed
 
 **POSITIONING GUIDELINES:**
@@ -196,10 +216,28 @@ This approach prevents hallucination and reduces token usage.
 - NPCs in conversation should be within 1-2 cells of each other
 - Hostile NPCs might be further away (3-5 cells)
 - Place elements logically: doors near edges, tables/furniture toward center, etc.
+- When placing fallen/broken pieces, consider physics (things fall down, roll away, etc.)
 
 Respond with a JSON object following the schema.
 If no update is needed, set shouldUpdate to false and return empty arrays.
 If positions OR elements changed, set shouldUpdate to true and include ONLY the changed data.
+
+**TRANSFORMATION EXAMPLE:**
+Narrative: "You swing your axe and cut down the oak tree. It falls to the east with a loud crash."
+Current state: [T] Oak Tree at (5, 5)
+Player at (4, 5)
+
+Response:
+{
+  "shouldUpdate": true,
+  "characterPositions": [],
+  "elements": [
+    { "symbol": "S", "name": "Tree Stump", "description": "The remains of the oak tree you cut down. Fresh sawdust surrounds it.", "x": 5, "y": 5 },
+    { "symbol": "L", "name": "Fallen Oak Log", "description": "A large oak log that fell when you cut the tree. Could be used for lumber.", "x": 6, "y": 5 }
+  ],
+  "removedElements": ["T"],
+  "reasoning": "Tree was cut down. Stump remains at original position. Log fell eastward (away from player at x=4)."
+}
 `;
 }
 

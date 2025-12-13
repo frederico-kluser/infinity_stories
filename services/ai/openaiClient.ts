@@ -99,8 +99,8 @@ const MODEL_CONFIG = {
 	textClassification: 'gpt-4.1-nano', // Classificar texto como ação ou fala
 	themeColors: 'gpt-4.1-mini', // Gerar paleta de cores baseada no universo
 
-	// Grid update - usa gpt-4.1-nano (95% economia) para análise espacial simples
-	gridUpdate: 'gpt-4.1-nano', // Atualizar posições no grid do mapa
+	// Grid update - usa gpt-4.1 para análise espacial complexa (transformações de elementos)
+	gridUpdate: 'gpt-4.1', // Atualizar posições e transformações no grid do mapa
 } as const;
 
 // Modelo padrão para fallback
