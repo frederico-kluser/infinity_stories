@@ -390,6 +390,183 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 											/>
 										</div>
 									</div>
+									{/* Refine Style button - visible when there's text */}
+									{customNarrativeStyle.trim() && (
+										<button
+											onClick={handleStartNarrativeStyleRefinement}
+											disabled={narrativeStyleLoading}
+											className="w-full py-3 bg-amber-500 text-white font-black uppercase tracking-wide hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 border-2 border-amber-600"
+										>
+											{narrativeStyleLoading ? (
+												<Loader2 className="w-5 h-5 animate-spin" />
+											) : (
+												<Sparkles className="w-5 h-5" />
+											)}
+											{t.narrativeStyleRefineBtn || 'Refine Style'}
+										</button>
+									)}
+								</div>
+							)}
+							{/* Narrative Style Refinement Flow (shown when refining, before world creation) */}
+							{narrativeStyleMode === 'custom' && isNarrativeStyleRefining && (
+								<div className="mt-4 border-3 border-amber-400 bg-amber-50 p-4 space-y-4">
+									{/* Header */}
+									<div className="flex items-center justify-between">
+										<div className="flex items-center gap-2 text-amber-800">
+											<Sparkles className="w-5 h-5" />
+											<span className="font-black uppercase text-sm">
+												{t.narrativeStyleRefiningTitle || 'Refining Your Style'}
+											</span>
+										</div>
+										<button
+											onClick={handleResetNarrativeStyle}
+											className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 font-bold uppercase"
+										>
+											<RotateCcw className="w-3 h-3" />
+											{t.reset || 'Reset'}
+										</button>
+									</div>
+
+									{/* Original Description */}
+									<div className="bg-white border-2 border-amber-200 p-3">
+										<span className="text-[10px] font-bold uppercase text-amber-600 block mb-1">
+											{t.narrativeStyleYourDescription || 'Your description'}
+										</span>
+										<p className="text-sm text-stone-700">{customNarrativeStyle}</p>
+									</div>
+
+									{/* Refinement History */}
+									{narrativeStyleHistory.map((item, idx) => (
+										<div key={idx} className="space-y-2">
+											<div className="flex gap-2">
+												<div className="w-7 h-7 bg-amber-200 border-2 border-amber-400 flex items-center justify-center flex-shrink-0">
+													<MessageSquare className="w-4 h-4 text-amber-700" />
+												</div>
+												<div className="bg-white border-2 border-amber-200 p-3 text-sm text-stone-700 flex-1">
+													{item.question}
+												</div>
+											</div>
+											<div className="flex gap-2 justify-end">
+												<div className="bg-amber-600 text-white p-3 text-sm font-bold max-w-[80%]">
+													{item.answer}
+												</div>
+											</div>
+										</div>
+									))}
+
+									{/* Current Question */}
+									{narrativeStyleStep && !narrativeStyleStep.isComplete && (
+										<div className="flex gap-2">
+											<div className="w-7 h-7 bg-amber-600 border-2 border-amber-700 flex items-center justify-center flex-shrink-0 text-white">
+												<Sparkles className="w-4 h-4" />
+											</div>
+											<div className="bg-white border-3 border-amber-600 p-3 text-stone-900 font-bold flex-1">
+												{narrativeStyleStep.question}
+											</div>
+										</div>
+									)}
+
+									{/* Loading */}
+									{narrativeStyleLoading && (
+										<div className="flex gap-2 items-center">
+											<div className="w-7 h-7 bg-amber-200 border-2 border-amber-400 flex items-center justify-center flex-shrink-0">
+												<Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+											</div>
+											<span className="text-amber-600 italic text-sm">
+												{t.narrativeStyleAnalyzing || 'Analyzing your style...'}
+											</span>
+										</div>
+									)}
+
+									{/* Complete */}
+									{narrativeStyleStep?.isComplete && (
+										<div className="bg-green-100 border-3 border-green-600 p-4">
+											<div className="flex items-center gap-2 text-green-800 mb-3">
+												<Check className="w-5 h-5" />
+												<span className="font-black uppercase text-sm">
+													{t.narrativeStyleComplete || 'Style Defined'}
+												</span>
+											</div>
+											<div className="bg-white border-2 border-green-200 p-3 text-xs text-stone-600 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+												{narrativeStyleStep.finalStyle}
+											</div>
+										</div>
+									)}
+
+									{/* Options for current question */}
+									{narrativeStyleStep && !narrativeStyleStep.isComplete && narrativeStyleStep.options && !narrativeStyleLoading && (
+										<div className="space-y-2">
+											{!isNarrativeStyleCustomInput ? (
+												<div className="grid grid-cols-1 gap-2">
+													{narrativeStyleStep.options.map((opt, idx) => (
+														<button
+															key={idx}
+															onClick={() => handleNarrativeStyleAnswer(opt)}
+															disabled={narrativeStyleLoading}
+															className="p-3 border-2 border-amber-300 bg-white hover:border-amber-600 hover:bg-amber-50 text-left font-bold text-sm transition-all disabled:opacity-50"
+														>
+															{opt}
+														</button>
+													))}
+													<button
+														onClick={() => setIsNarrativeStyleCustomInput(true)}
+														disabled={narrativeStyleLoading}
+														className="p-3 border-2 border-dashed border-amber-400 bg-white hover:border-amber-600 text-left font-bold text-sm flex items-center gap-2 text-amber-700"
+													>
+														<Edit3 className="w-4 h-4" />
+														{t.otherOption || 'Other...'}
+													</button>
+												</div>
+											) : (
+												<div className="space-y-2">
+													<button
+														onClick={() => {
+															setIsNarrativeStyleCustomInput(false);
+															setNarrativeStyleInputValue('');
+														}}
+														className="flex items-center gap-2 text-amber-600 hover:text-amber-800 text-xs font-bold uppercase"
+													>
+														<ArrowLeft className="w-3 h-3" />
+														{t.backToOptions || 'Back to options'}
+													</button>
+													<div className="flex gap-2">
+														<div className="relative flex-1">
+															<textarea
+																rows={2}
+																value={narrativeStyleInputValue}
+																onChange={(e) => setNarrativeStyleInputValue(e.target.value)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter' && !e.shiftKey && narrativeStyleInputValue.trim()) {
+																		e.preventDefault();
+																		handleNarrativeStyleAnswer(narrativeStyleInputValue);
+																	}
+																}}
+																className="w-full bg-white border-2 border-amber-400 p-3 pr-10 text-sm text-stone-900 focus:border-amber-600 outline-none"
+																placeholder={t.typeYourAnswer || 'Type your answer...'}
+																disabled={narrativeStyleLoading}
+																autoFocus
+															/>
+															<div className="absolute right-2 top-2">
+																<VoiceInput
+																	apiKey={apiKey}
+																	language={language}
+																	onTranscription={(text) => setNarrativeStyleInputValue(text)}
+																	className="text-amber-400 hover:text-amber-600"
+																/>
+															</div>
+														</div>
+														<button
+															onClick={() => handleNarrativeStyleAnswer(narrativeStyleInputValue)}
+															disabled={!narrativeStyleInputValue.trim() || narrativeStyleLoading}
+															className="bg-amber-600 text-white px-4 font-bold disabled:opacity-50 hover:bg-amber-700 transition-colors"
+														>
+															<ArrowRight className="w-5 h-5" />
+														</button>
+													</div>
+												</div>
+											)}
+										</div>
+									)}
 								</div>
 							)}
 						</div>
