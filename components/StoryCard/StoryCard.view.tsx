@@ -278,10 +278,10 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 	);
 
 	return (
-		<div className="w-full h-full flex flex-col">
+		<div className="w-full h-full flex flex-col max-w-full overflow-hidden">
 			{/* Card Container with 3D Flip - Book Page Style */}
 			<div
-				className="flex-1 relative mx-auto w-full max-w-4xl"
+				className="flex-1 relative mx-auto w-full max-w-full md:max-w-4xl px-0 md:px-2"
 				style={{ perspective: '1000px' }}
 			>
 				{/* Flip Container */}
@@ -328,7 +328,7 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 						/>
 
 						{/* Content Area */}
-						<div className="relative h-full flex flex-col p-4 md:p-8">
+						<div className="relative h-full flex flex-col p-3 md:p-8">
 							{/* Header - Speaker & Controls */}
 							<div className="flex items-center justify-between mb-4 md:mb-6">
 								<div className="flex items-center gap-3">
@@ -457,19 +457,19 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 			</div>
 
 			{/* Navigation Buttons - Visible on Mobile & Desktop */}
-			<div className="flex items-center justify-center gap-4 mt-4 px-4">
+			<div className="flex items-center justify-between gap-2 mt-2 md:mt-4 px-1 md:px-4 w-full max-w-full">
 				<button
 					onClick={onPrevious}
 					disabled={!canGoPrevious}
-					className="flex items-center gap-2 px-4 py-3 md:px-6 md:py-3 font-bold uppercase text-sm transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100"
+					className="flex items-center gap-1 px-2 py-2 md:px-6 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 flex-shrink-0"
 					style={{
 						backgroundColor: colors.buttonSecondary,
 						color: colors.buttonSecondaryText,
 						border: `2px solid ${colors.border}`,
-						boxShadow: canGoPrevious ? `4px 4px 0px ${colors.shadow}` : 'none',
+						boxShadow: canGoPrevious ? `3px 3px 0px ${colors.shadow}` : 'none',
 					}}
 				>
-					<ChevronLeft className="w-5 h-5" />
+					<ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
 					<span className="hidden md:inline">{t.back || 'Previous'}</span>
 				</button>
 
@@ -477,25 +477,25 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 				{hasGridData && (
 					<button
 						onClick={() => setIsMapFlipped(!isMapFlipped)}
-						className="flex items-center gap-2 px-3 py-3 md:px-4 md:py-3 font-bold uppercase text-sm transition-all hover:scale-105"
+						className="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0"
 						style={{
 							backgroundColor: isMapFlipped ? colors.buttonPrimary : colors.buttonSecondary,
 							color: isMapFlipped ? colors.buttonPrimaryText : colors.buttonSecondaryText,
 							border: `2px solid ${colors.border}`,
-							boxShadow: `4px 4px 0px ${colors.shadow}`,
+							boxShadow: `3px 3px 0px ${colors.shadow}`,
 						}}
 						title={t.viewMap || 'View Map'}
 					>
-						<Map className="w-5 h-5" />
+						<Map className="w-4 h-4 md:w-5 md:h-5" />
 						<span className="hidden md:inline">{t.map || 'Map'}</span>
 					</button>
 				)}
 
 				{/* Position Indicator - Progress Bar Style */}
-				<div className="flex items-center gap-2 min-w-[120px] md:min-w-[180px]">
+				<div className="flex items-center gap-1 md:gap-2 flex-1 min-w-0 max-w-[100px] md:max-w-[180px] mx-1 md:mx-2">
 					{/* Progress Bar Container */}
 					<div
-						className="flex-1 h-2 rounded-full overflow-hidden relative"
+						className="flex-1 h-1.5 md:h-2 rounded-full overflow-hidden relative min-w-0"
 						style={{ backgroundColor: colors.border }}
 					>
 						{/* Progress Fill */}
@@ -509,7 +509,7 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 					</div>
 					{/* Numeric Indicator */}
 					<span
-						className="text-xs font-mono font-bold whitespace-nowrap"
+						className="text-[10px] md:text-xs font-mono font-bold whitespace-nowrap flex-shrink-0"
 						style={{ color: colors.textSecondary }}
 					>
 						{currentIndex + 1}/{totalCards}
@@ -519,18 +519,18 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 				<button
 					onClick={onNext}
 					disabled={!canGoNext}
-					className={`flex items-center gap-2 px-4 py-3 md:px-6 md:py-3 font-bold uppercase text-sm transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 ${
+					className={`flex items-center gap-1 px-2 py-2 md:px-6 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 flex-shrink-0 ${
 						showNextPulse && canGoNext ? 'animate-pulse-glow' : ''
 					}`}
 					style={{
 						backgroundColor: showNextPulse && canGoNext ? colors.buttonPrimary : colors.buttonSecondary,
 						color: showNextPulse && canGoNext ? colors.buttonPrimaryText : colors.buttonSecondaryText,
 						border: `2px solid ${showNextPulse && canGoNext ? colors.buttonPrimary : colors.border}`,
-						boxShadow: canGoNext ? `4px 4px 0px ${colors.shadow}` : 'none',
+						boxShadow: canGoNext ? `3px 3px 0px ${colors.shadow}` : 'none',
 					}}
 				>
 					<span className="hidden md:inline">{t.next || 'Next'}</span>
-					<ChevronRight className="w-5 h-5" />
+					<ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
 				</button>
 			</div>
 		</div>
