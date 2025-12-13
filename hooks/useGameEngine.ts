@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
 	GameState,
 	ChatMessage,
@@ -118,6 +118,11 @@ interface UseGameEngineReturn {
 	// Viewed Cards - Track which cards have been displayed with typewriter
 	markCardAsViewed: (messageId: string) => void;
 	updateNarrativeStyle: (mode: NarrativeStyleMode, customStyle?: string) => Promise<void>;
+
+	// Grid Map - Track unviewed grid updates
+	markGridAsViewed: (messageNumber: number) => void;
+	hasUnviewedGridChanges: boolean;
+	latestGridMessageNumber: number;
 }
 
 const stripDiacritics = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1441,6 +1446,38 @@ export const useGameEngine = (): UseGameEngineReturn => {
 		});
 	};
 
+	/**
+	 * Marks the grid as viewed at the current message number.
+	 * @param messageNumber - The message number where the grid was viewed
+	 */
+	const markGridAsViewed = (messageNumber: number) => {
+		if (!currentStoryId) return;
+
+		safeUpdateStory((prev) => {
+			// Only update if the new message number is greater than the last viewed
+			if (prev.gridLastViewedMessageNumber !== undefined && prev.gridLastViewedMessageNumber >= messageNumber) {
+				return prev;
+			}
+
+			return {
+				...prev,
+				gridLastViewedMessageNumber: messageNumber,
+			};
+		});
+	};
+
+	// Calculate if there are unviewed grid changes
+	const latestGridMessageNumber = useMemo(() => {
+		if (!activeStory?.gridSnapshots?.length) return 0;
+		return Math.max(...activeStory.gridSnapshots.map((g) => g.atMessageNumber));
+	}, [activeStory?.gridSnapshots]);
+
+	const hasUnviewedGridChanges = useMemo(() => {
+		if (!activeStory?.gridSnapshots?.length) return false;
+		const lastViewed = activeStory.gridLastViewedMessageNumber ?? 0;
+		return latestGridMessageNumber > lastViewed;
+	}, [activeStory?.gridSnapshots, activeStory?.gridLastViewedMessageNumber, latestGridMessageNumber]);
+
 	return {
 		apiKey,
 		setApiKey,
@@ -1497,5 +1534,9 @@ export const useGameEngine = (): UseGameEngineReturn => {
 		// Viewed Cards
 		markCardAsViewed,
 		updateNarrativeStyle,
+		// Grid Map
+		markGridAsViewed,
+		hasUnviewedGridChanges,
+		latestGridMessageNumber,
 	};
 };

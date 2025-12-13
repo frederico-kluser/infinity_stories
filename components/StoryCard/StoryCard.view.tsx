@@ -34,6 +34,8 @@ export interface StoryCardProps {
 	gridSnapshots?: GridSnapshot[];
 	currentLocationName?: string;
 	characterAvatars?: Record<string, string | undefined>;
+	hasUnviewedGridChanges?: boolean;
+	onMapViewed?: () => void;
 	// Actions and character sheet controls (mobile navigation)
 	isActionsCollapsed?: boolean;
 	setIsActionsCollapsed?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -73,6 +75,8 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 	gridSnapshots,
 	currentLocationName,
 	characterAvatars,
+	hasUnviewedGridChanges = false,
+	onMapViewed,
 	isActionsCollapsed = true,
 	setIsActionsCollapsed,
 	onShowCharacterSheet,
@@ -622,11 +626,20 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 				{/* Map Button */}
 				{hasGridData && (
 					<button
-						onClick={() => setIsMapFlipped(!isMapFlipped)}
-						className="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0"
+						onClick={() => {
+							const newFlipState = !isMapFlipped;
+							setIsMapFlipped(newFlipState);
+							// Mark grid as viewed when opening the map
+							if (newFlipState && onMapViewed) {
+								onMapViewed();
+							}
+						}}
+						className={`flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 ${
+							hasUnviewedGridChanges && !isMapFlipped ? 'animate-pulse-glow' : ''
+						}`}
 						style={{
-							backgroundColor: isMapFlipped ? colors.buttonPrimary : colors.buttonSecondary,
-							color: isMapFlipped ? colors.buttonPrimaryText : colors.buttonSecondaryText,
+							backgroundColor: isMapFlipped || hasUnviewedGridChanges ? colors.buttonPrimary : colors.buttonSecondary,
+							color: isMapFlipped || hasUnviewedGridChanges ? colors.buttonPrimaryText : colors.buttonSecondaryText,
 							border: `2px solid ${colors.border}`,
 							boxShadow: `3px 3px 0px ${colors.shadow}`,
 						}}

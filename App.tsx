@@ -141,6 +141,9 @@ const App: React.FC = () => {
 		processingPhase,
 		markCardAsViewed,
 		updateNarrativeStyle,
+		markGridAsViewed,
+		hasUnviewedGridChanges,
+		latestGridMessageNumber,
 	} = useGameEngine();
 
 	const { colors } = useThemeColors();
@@ -705,6 +708,8 @@ const App: React.FC = () => {
 												characterAvatars={Object.fromEntries(
 													Object.entries(activeStory.characters).map(([id, char]) => [id, char.avatarBase64]),
 												)}
+												hasUnviewedGridChanges={hasUnviewedGridChanges}
+												onMapViewed={() => markGridAsViewed(latestGridMessageNumber)}
 												isActionsCollapsed={isActionsCollapsed}
 												setIsActionsCollapsed={setIsActionsCollapsed}
 												onShowCharacterSheet={() => setShowStatus(true)}

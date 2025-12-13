@@ -216,6 +216,10 @@ export interface GameState {
 	// Grid Map Snapshots - Historical grid positions associated with message numbers
 	// Each snapshot captures character positions at a specific point in the story
 	gridSnapshots?: GridSnapshot[];
+
+	// Grid Last Viewed - Tracks the message number of the last viewed grid snapshot
+	// Used to highlight the map button when there are unviewed grid updates
+	gridLastViewedMessageNumber?: number;
 }
 
 /**
