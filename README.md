@@ -1789,10 +1789,593 @@ Funções exportadas devem ter TSDoc:
 
 ---
 
+## Testes Automatizados
+
+O projeto utiliza **Jest** e **React Testing Library** para testes unitários, de integração e snapshots. A cobertura de testes foca nos componentes críticos da UI e na lógica de negócios.
+
+### Executando Testes
+
+```bash
+# Executar todos os testes
+npm test
+
+# Executar em modo watch
+npm run test:watch
+
+# Executar com cobertura
+npm run test:coverage
+```
+
+### Estrutura de Testes
+
+```
+__tests__/
+├── components/           # Testes de componentes React
+│   ├── ActionInput.test.tsx
+│   ├── ChatBubble.test.tsx
+│   ├── ErrorModal.test.tsx
+│   ├── FateToast.test.tsx
+│   ├── GridMap.test.tsx
+│   ├── NarrativeStyleModal.test.tsx
+│   ├── SettingsModal.test.tsx
+│   └── StoryCard.test.tsx
+├── hooks/               # Testes de custom hooks
+│   ├── useGameEngine.test.ts
+│   └── useMessageQueue.test.ts
+├── services/            # Testes de serviços
+│   ├── db.test.ts
+│   ├── openaiClient.test.ts
+│   └── systemPrompts.test.ts
+├── utils/               # Testes de utilitários
+│   ├── errorHandler.test.ts
+│   └── helpers.test.ts
+├── i18n/               # Testes de internacionalização
+│   └── locales.test.ts
+└── types.test.ts       # Testes de tipos TypeScript
+```
+
+### Casos de Teste por Componente
+
+#### StoryCard (`components/StoryCard.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should render without crashing` | Verifica renderização básica |
+| | `should render player message correctly` | Mensagem do jogador exibe "YOU" |
+| | `should render narrator message correctly` | Mensagem de narração exibe "NARRATOR" com ícone Terminal |
+| | `should render system message correctly` | Mensagem de sistema exibe "SYSTEM" com ícone Info |
+| | `should render NPC message correctly` | Mensagem de NPC exibe nome em uppercase |
+| | `should display page number correctly` | Exibe página atual e total |
+| | `should display avatar when provided` | Avatar base64 é exibido como imagem |
+| **Efeito Typewriter** | `should animate text character by character` | Texto aparece letra por letra |
+| | `should skip animation when skipAnimation is true` | Texto aparece instantaneamente |
+| | `should call onTypingComplete when animation finishes` | Callback é chamado ao finalizar |
+| | `should show typing cursor during animation` | Cursor piscante durante digitação |
+| **Navegação** | `should call onPrevious when Previous button is clicked` | Botão anterior funciona |
+| | `should call onNext when Next button is clicked` | Botão próximo funciona |
+| | `should disable Previous button when canGoPrevious is false` | Botão desabilitado corretamente |
+| | `should disable Next button when canGoNext is false` | Botão desabilitado corretamente |
+| **Grid Map** | `should show Map button when grid data is available` | Botão mapa visível com dados |
+| | `should not show Map button when no grid data` | Botão mapa oculto sem dados |
+| | `should toggle map view when Map button is clicked` | Flip 3D para mapa funciona |
+| **Snapshots** | 6 testes de snapshot | Captura visual de diferentes estados |
+
+#### GridMap (`components/GridMap.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should render without crashing` | Verifica renderização básica |
+| | `should render map title` | Título "Map" é exibido |
+| | `should render location name` | Nome da localização é exibido |
+| | `should render back button` | Botão voltar é exibido |
+| | `should call onToggleFlip when back button is clicked` | Callback de voltar funciona |
+| | `should render 100 grid cells (10x10)` | Grid 10x10 completo |
+| **Posições de Personagens** | `should display player character on the grid` | Jogador aparece na célula correta |
+| | `should display NPC character on the grid` | NPCs aparecem corretamente |
+| | `should display multiple characters in same cell` | Múltiplos personagens na mesma célula |
+| | `should show character avatar when provided` | Avatar exibido na célula |
+| | `should show character initial when no avatar` | Inicial do nome sem avatar |
+| **Estados Históricos** | `should show correct grid state for current message` | Snapshot correto por mensagem |
+| | `should show latest snapshot for future message numbers` | Snapshot mais recente para futuro |
+| **Estado Vazio** | `should show no data message when no snapshots` | Mensagem de sem dados |
+| **Legenda** | `should show character legend when characters are present` | Legenda com coordenadas |
+| | `should not show legend when no characters` | Legenda oculta sem personagens |
+| **Animação** | `should toggle player cell blinking state` | Célula do jogador pisca |
+| **Snapshots** | 6 testes de snapshot | Captura visual de diferentes estados |
+
+#### ActionInput (`components/ActionInput.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should render without crashing` | Verifica renderização básica |
+| | `should show loading or options initially` | Exibe loading ou opções |
+| **Modo Input Customizado** | `should switch to custom input when custom action is clicked` | Muda para input manual |
+| **Estado de Processamento** | `should handle processing state` | Componente em estado de processamento |
+| **Traduções** | `should use provided translations` | Usa traduções fornecidas |
+| **Snapshots** | 4 testes de snapshot | Captura visual de diferentes estados |
+
+#### ChatBubble (`components/ChatBubble.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should render without crashing` | Verifica renderização básica |
+| | `should render player message correctly` | Mensagem do jogador estilizada |
+| | `should render narrator message correctly` | Narração com aspas decorativas |
+| | `should render system message correctly` | Mensagem de sistema azul |
+| | `should render NPC message correctly` | Mensagem de NPC com nome |
+| | `should display avatar when provided` | Avatar exibido corretamente |
+| | `should show YOU for player without avatar` | Placeholder para jogador |
+| | `should show first letter for NPC without avatar` | Inicial para NPC |
+| **Efeito Typewriter** | `should animate text character by character` | Animação de digitação |
+| | `should skip animation when skipAnimation is true` | Pular animação |
+| | `should call onTypingComplete when animation finishes` | Callback de conclusão |
+| | `should show typing cursor during animation` | Cursor durante digitação |
+| **Áudio** | `should show play button when apiKey is provided` | Botão TTS visível |
+| | `should disable play button while typing` | Botão desabilitado durante digitação |
+| | `should disable play button when no apiKey` | Botão desabilitado sem API key |
+| **Click no Avatar** | `should call onAvatarClick when avatar is clicked` | Callback de zoom |
+| | `should not call onAvatarClick when no avatar` | Sem callback sem avatar |
+| **Estilização** | `should apply dark styling for player messages` | Estilo escuro para jogador |
+| | `should apply light styling for NPC messages` | Estilo claro para NPCs |
+| **Snapshots** | 6 testes de snapshot | Captura visual de diferentes estados |
+
+#### SettingsModal (`components/SettingsModal.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should render nothing when isOpen is false` | Modal oculto quando fechado |
+| | `should render when isOpen is true` | Modal visível quando aberto |
+| | `should display settings icon in header` | Ícone no cabeçalho |
+| | `should display all settings options` | Todas as opções visíveis |
+| | `should display option descriptions` | Descrições das opções |
+| | `should display icons for each option` | Ícones de cada opção |
+| **Funcionalidade Fechar** | `should call onClose when X button is clicked` | Botão X fecha modal |
+| | `should call onClose when Close button is clicked` | Botão Fechar fecha modal |
+| **Configurações de Voz** | `should call onOpenVoiceSettings and onClose when Voice Settings is clicked` | Abre config de voz |
+| **Estilo Narrativo** | `should call onOpenNarrativeStyle and onClose when Edit Narrative Style is clicked` | Abre editor de estilo narrativo |
+| | `should not call onOpenNarrativeStyle when canEditNarrativeStyle is false` | Desabilita quando não há história |
+| | `should show disabled message when canEditNarrativeStyle is false` | Mostra mensagem de desabilitado |
+| | `should show enabled description when canEditNarrativeStyle is true` | Mostra descrição quando habilitado |
+| | `should disable narrative style button when canEditNarrativeStyle is false` | Botão desabilitado |
+| **Excluir Banco de Dados** | `should show confirmation when Delete All Saves is clicked` | Confirmação de exclusão |
+| | `should hide confirmation when Cancel is clicked` | Cancelar oculta confirmação |
+| | `should call onDeleteDatabase when Delete All is clicked` | Executa exclusão |
+| | `should show loading state while deleting` | Estado de carregamento |
+| | `should handle deletion errors gracefully` | Trata erros graciosamente |
+| **Excluir API Key** | `should show confirmation when Remove API Key is clicked` | Confirmação de remoção |
+| | `should hide confirmation when Cancel is clicked` | Cancelar oculta confirmação |
+| | `should call onDeleteApiKey and onClose when Remove Key is clicked` | Remove chave API |
+| **Traduções** | `should use provided translations` | Usa traduções fornecidas |
+| **Snapshots** | 6 testes de snapshot | Captura visual de diferentes estados |
+
+#### NarrativeStyleModal (`components/NarrativeStyleModal.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should render nothing when isOpen is false` | Modal oculto quando fechado |
+| | `should render when isOpen is true` | Modal visível quando aberto |
+| | `should display sparkles icon in header` | Ícone sparkles no cabeçalho |
+| | `should display current mode and genre` | Mostra modo e gênero atual |
+| | `should display mode selection buttons` | Botões de seleção de modo |
+| | `should display genre fallback when no genre is provided` | Fallback quando sem gênero |
+| | `should display last custom style when provided` | Mostra último estilo customizado |
+| **Seleção de Modo** | `should switch to custom mode when Custom Brief button is clicked` | Troca para modo custom |
+| | `should show textarea only in custom mode` | Textarea apenas em modo custom |
+| | `should show info box in custom mode` | Info box em modo custom |
+| **Funcionalidade Fechar** | `should call onClose when X button is clicked` | Botão X fecha modal |
+| | `should call onClose when Cancel button is clicked` | Botão Cancelar fecha modal |
+| **Funcionalidade Salvar** | `should call onSave with auto mode` | Salva com modo auto |
+| | `should call onSave with custom mode and style` | Salva com modo custom e estilo |
+| | `should show error when saving custom mode without style` | Erro ao salvar custom vazio |
+| | `should show error when onSave fails` | Trata erro de salvamento |
+| | `should show saving state while saving` | Estado de salvando |
+| | `should disable buttons while saving` | Desabilita botões durante save |
+| **Comportamento Textarea** | `should update custom style on input` | Atualiza estilo no input |
+| | `should preserve custom style when switching modes` | Preserva estilo entre modos |
+| **Traduções** | `should use provided translations` | Usa traduções fornecidas |
+| **Snapshots** | 5 testes de snapshot | Captura visual de diferentes estados |
+
+#### FateToast (`components/FateToast.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should render good toast with sparkles icon` | Toast verde com sparkles |
+| | `should render bad toast with alert icon` | Toast vermelho com alerta |
+| | `should not render neutral toast` | Toast neutro não renderiza |
+| | `should display hint when provided` | Exibe dica quando fornecida |
+| **Estilização** | `should have green/emerald styling for good toast` | Estilo verde para bom |
+| | `should have red styling for bad toast` | Estilo vermelho para ruim |
+| **Auto-fechamento** | `should auto-close after 4 seconds` | Fecha após 4 segundos |
+| | `should not call onClose before 4 seconds` | Não fecha antes de 4s |
+| **Fechamento Manual** | `should close when close button is clicked` | Botão X fecha toast |
+| | `should trigger exit animation before calling onClose` | Animação de saída |
+| **Acessibilidade** | `should have a clickable close button` | Botão acessível |
+
+#### ErrorModal (`components/ErrorModal.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| **Renderização** | `should not render when isOpen is false` | Modal oculto quando fechado |
+| | `should render when isOpen is true` | Modal visível quando aberto |
+| **Tipos de Erro** | `should display insufficient_quota error correctly` | Erro de quota |
+| | `should display invalid_key error correctly` | Erro de chave inválida |
+| | `should display rate_limit error correctly` | Erro de rate limit |
+| | `should display network error correctly` | Erro de rede |
+| | `should display generic error correctly` | Erro genérico |
+| **Interações** | `should call onClose when X button is clicked` | Fechar com X |
+| | `should call onClose when CLOSE button is clicked` | Fechar com botão |
+| **Links Externos** | `should render external link for insufficient_quota error` | Link para billing |
+| | `should render external link for invalid_key error` | Link para API keys |
+| **Acessibilidade** | Testes de acessibilidade | Atributos ARIA corretos |
+
+### Testes de Hooks
+
+#### useGameEngine (`hooks/useGameEngine.test.ts`)
+
+- Inicialização e estado padrão
+- Gerenciamento de idioma (detecção, mudança)
+- Gerenciamento de API key (validação, salvamento, logout)
+- Gerenciamento de histórias (criar, selecionar, deletar)
+- Envio de mensagens
+- Transcrição de voz
+- Exportação/Importação de jornadas
+- Tratamento de erros
+
+#### useMessageQueue (`hooks/useMessageQueue.test.ts`)
+
+- Ordenação de mensagens por pageNumber
+- Fallback para timestamp quando pageNumber é igual
+
+### Testes de Serviços
+
+#### Database Service (`services/db.test.ts`)
+
+- Abertura do IndexedDB
+- Salvar e carregar jogos
+- Deletar jogos
+- Validar importações
+- Exportar/Importar jogos
+
+#### OpenAI Client (`services/openaiClient.test.ts`)
+
+- Sistema de rolagem de destino (fate)
+- Geração de avatar
+- Geração de fala (TTS)
+- Geração de opções de ação
+- Processamento de mensagens do jogador
+- Atualização de contexto pesado
+
+### Testes de Utilitários
+
+#### Error Handler (`utils/errorHandler.test.ts`)
+
+- Parse de erros da OpenAI (códigos, status HTTP, mensagens)
+- Identificação de erros de quota
+- Identificação de erros recuperáveis
+
+#### Helpers (`utils/helpers.test.ts`)
+
+- Conversão de Blob para base64
+- Limpeza de strings JSON
+- Reprodução de áudio raw
+- Conversão de URL de imagem para base64
+
+### Testes de i18n
+
+#### Locales (`i18n/locales.test.ts`)
+
+- Idiomas suportados (en, pt, es, fr, ru, zh)
+- Nomes de idiomas
+- Cookies de idioma
+- Detecção de idioma do navegador
+- Consistência de traduções entre idiomas
+
+### Cobertura de Snapshots
+
+Os testes de snapshot capturam a renderização visual dos componentes para detectar mudanças não intencionais:
+
+- **StoryCard**: 6 snapshots (jogador, narrador, sistema, NPC, com mapa, com pulso)
+- **GridMap**: 6 snapshots (básico, múltiplos personagens, com fundo, vazio, com avatares, não flipado)
+- **ActionInput**: 4 snapshots (loading, processando, com opções, idioma diferente)
+- **ChatBubble**: 6 snapshots (jogador, narrador, sistema, NPC com avatar, jogador com avatar, com API key)
+- **SettingsModal**: 6 snapshots (padrão, fechado, confirmação DB, confirmação API key, português, estilo narrativo desabilitado)
+- **NarrativeStyleModal**: 5 snapshots (modo auto, modo custom, fechado, com estilo existente, português)
+
+**Total: 33 snapshots**
+
+Para atualizar snapshots após mudanças intencionais:
+
+```bash
+npm test -- --updateSnapshot
+```
+
+---
+
 ## Licença
 
 Este projeto é privado e de uso restrito.
 
 ---
 
-**Desenvolvido com IA** | storywell.games v1.4.2
+## Documentação de Testes
+
+Esta seção documenta todos os casos de teste implementados para os componentes React do projeto, utilizando Jest e Testing Library.
+
+### Visão Geral
+
+O projeto possui cobertura de testes abrangente com **641 testes** distribuídos em **25 suites de teste**. Os testes incluem:
+
+- **Testes Unitários**: Verificam comportamento isolado de componentes
+- **Testes de Integração**: Verificam interações entre componentes e serviços
+- **Testes de Snapshot**: Capturam renderizações visuais para detectar alterações não intencionais
+
+### Componentes Testados
+
+#### StoryCard (`__tests__/components/StoryCard.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render without crashing | Verifica renderização básica |
+| Rendering | should match snapshot for NPC dialogue | Snapshot para diálogo de NPC |
+| Rendering | should match snapshot for player message | Snapshot para mensagem do jogador |
+| Rendering | should match snapshot for narrator message | Snapshot para narração |
+| Rendering | should match snapshot for system message | Snapshot para mensagem de sistema |
+| Rendering | should match snapshot with avatar | Snapshot com avatar base64 |
+| Rendering | should match snapshot with location background | Snapshot com imagem de fundo |
+| Typewriter | should show typing cursor during animation | Verifica cursor de digitação |
+| Typewriter | should complete animation and call callback | Verifica callback de conclusão |
+| Typewriter | should skip animation when skipAnimation is true | Verifica pular animação |
+| Navigation | should call onPrevious when previous button is clicked | Navegação anterior |
+| Navigation | should call onNext when next button is clicked | Navegação próxima |
+| Navigation | should disable previous/next buttons appropriately | Desabilitar navegação |
+| Page Counter | should display correct page number | Contador de páginas correto |
+| Speaker Labels | should show YOU/NARRATOR/SYSTEM/character name labels | Rótulos de locutor |
+| Grid Map | should show/hide map button based on grid data | Botão de mapa condicional |
+| Play Button | should render and disable play button appropriately | Botão de áudio |
+
+#### GridMap (`__tests__/components/GridMap.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should match snapshot with characters | Snapshot com personagens |
+| Rendering | should match snapshot with no characters | Snapshot sem personagens |
+| Rendering | should match snapshot when not flipped | Snapshot não virado |
+| Rendering | should match snapshot with location background | Snapshot com fundo |
+| Rendering | should match snapshot with multiple characters at same position | Snapshot com sobreposição |
+| Grid Display | should display 10x10 grid (100 cells) | Verifica grid 10x10 |
+| Grid Display | should display location name | Nome da localização |
+| Grid Display | should display map title | Título do mapa |
+| Character Display | should display character names in legend | Nomes na legenda |
+| Character Display | should display character positions | Posições (x, y) |
+| Interactions | should call onToggleFlip when back button is clicked | Botão voltar |
+| Snapshot Selection | should show correct snapshot for message number | Seleção de snapshot |
+| No Data State | should show no map data message | Mensagem de dados ausentes |
+| Player Blinking | should toggle player visibility | Efeito piscante |
+| Character Avatars | should display avatars/initials appropriately | Avatares e iniciais |
+
+#### ActionInput (`__tests__/components/ActionInput.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render without crashing | Renderização básica |
+| Rendering | should show loading or options initially | Estado inicial |
+| Custom Input | should switch to custom input mode | Modo de entrada customizada |
+| Processing State | should handle processing state | Estado de processamento |
+| Translations | should use provided translations | Traduções corretas |
+| Snapshots | should match snapshot for loading/options/processing/custom states | Snapshots de estados |
+| Option Buttons | should display action options with risk indicators | Indicadores de risco |
+| Option Buttons | should display Safe label for zero-risk actions | Label "Safe" |
+| Option Buttons | should call onSendMessage when option is clicked | Callback de envio |
+| Voice Input | should render voice input button | Botão de voz |
+| Voice Input | should call onVoiceTranscription when used | Transcrição de voz |
+
+#### ChatBubble (`__tests__/components/ChatBubble.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should match snapshot for NPC/player/narrator/system | Snapshots por tipo |
+| Rendering | should match snapshot with avatar base64/URL | Snapshots com avatar |
+| Typewriter | should show typing cursor during animation | Cursor de digitação |
+| Typewriter | should complete animation and call callback | Callback de conclusão |
+| Message Types | should display NARRATOR/SYSTEM/PLAYER/sender name labels | Rótulos de tipo |
+| Avatar Display | should display avatar/initials appropriately | Avatar ou iniciais |
+| Avatar Click | should call onAvatarClick when avatar is clicked | Click no avatar |
+| Play Button | should render/disable play button appropriately | Botão de áudio |
+| Narrator Styling | should render narrator message | Estilização de narrador |
+
+#### SettingsModal (`__tests__/components/SettingsModal.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render nothing when isOpen is false | Não renderiza fechado |
+| Rendering | should render modal when isOpen is true | Renderiza aberto |
+| Rendering | should match snapshot when open | Snapshot aberto |
+| Rendering | should match snapshot with confirmations | Snapshots de confirmação |
+| Voice Settings | should display voice settings option | Opção de voz |
+| Voice Settings | should call onOpenVoiceSettings | Callback de configurações |
+| Narrative Style | should display narrative style option | Opção de estilo narrativo |
+| Narrative Style | should display enabled/disabled descriptions | Descrições por estado |
+| Narrative Style | should call onOpenNarrativeStyle when enabled | Callback quando habilitado |
+| Narrative Style | should NOT call when disabled | Bloqueia quando desabilitado |
+| Delete Database | should show/hide confirmation | Confirmação de exclusão |
+| Delete Database | should call onDeleteDatabase when confirmed | Callback de exclusão |
+| Delete Database | should show loading state during deletion | Estado de loading |
+| Delete API Key | should show confirmation | Confirmação de remoção |
+| Delete API Key | should call onDeleteApiKey | Callback de remoção |
+| Close | should call onClose on X/Close button click | Fechar modal |
+
+#### VoiceSettings (`__tests__/components/VoiceSettings.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render nothing when isOpen is false | Não renderiza fechado |
+| Rendering | should match snapshot with different configurations | Snapshots de config |
+| Voice List | should display all 11 voice options | 11 opções de voz |
+| Voice List | should display voice descriptions | Descrições de voz |
+| Voice List | should highlight selected voice | Destaque de seleção |
+| Voice Selection | should call onVoiceChange when clicked | Callback de seleção |
+| Tone Toggle | should display/toggle voice tone | Toggle de tom |
+| Tone Toggle | should show expressive/standard description | Descrição de tom |
+| Preview Text | should display/change preview text | Texto de preview |
+| Voice Preview | should have preview buttons for each voice | Botões de preview |
+| Voice Preview | should call generateSpeechWithTTS when clicked | Callback de preview |
+| Close | should call onClose on X/Done button click | Fechar modal |
+
+#### ProcessingIndicator (`__tests__/components/ProcessingIndicator.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render nothing when phase is null | Não renderiza nulo |
+| Rendering | should render for classifying/generating/updating phases | Renderização por fase |
+| Snapshots | should match snapshot for each phase | Snapshots de fases |
+| Languages | should display EN/PT/ES labels | Rótulos por idioma |
+| Progress Bar | should show 20%/60%/90% for each phase | Barra de progresso |
+| Phase Indicators | should display 3 phase indicator dots | Indicadores de fase |
+| Animated Dots | should animate dots over time | Animação de pontos |
+| Icons | should display Brain/BookOpen/Sparkles icons | Ícones por fase |
+| Custom ClassName | should apply custom className | Classe customizada |
+
+#### ProgressLoader (`__tests__/components/ProgressLoader.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render all steps with title/subtitle | Renderização completa |
+| Snapshots | should match snapshot for modal/inline/compact variants | Snapshots de variantes |
+| Snapshots | should match snapshot with all completed/pending | Snapshots de estados |
+| Variants | should render compact/inline/modal correctly | Variantes de exibição |
+| Progress | should calculate 0%/50%/100% correctly | Cálculo de progresso |
+| Step Status | should show check/custom/loader icons | Ícones de status |
+| createLoadingStep | should create step with defaults/icon | Helper de criação |
+| Preset Steps | should have EN/PT/ES steps for story/message | Steps pré-definidos |
+| Custom ClassName | should apply custom className | Classe customizada |
+
+#### StoryCreationLoader (`__tests__/components/StoryCreationLoader.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render without crashing | Renderização básica |
+| Rendering | should render all 6 phases | Todas as 6 fases |
+| Snapshots | should match snapshot for each phase | Snapshots de fases |
+| Phase Labels | should display correct label for each phase | Rótulos de fase |
+| Phase Descriptions | should display description for phases | Descrições de fase |
+| Languages | should display EN/PT/ES labels | Rótulos por idioma |
+| Progress | should show correct percentage for each phase | Progresso por fase |
+| Step Indicators | should display 6 indicators and highlight current | Indicadores de fase |
+| Animated Dots | should animate dots over time | Animação de pontos |
+| Tips | should display/rotate tips | Dicas rotativas |
+| Icons | should display correct icon for each phase | Ícones por fase |
+
+#### ThemeColorsModal (`__tests__/components/ThemeColorsModal.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render nothing when isOpen is false | Não renderiza fechado |
+| Rendering | should match snapshot when open/generating/with input | Snapshots de estados |
+| Color Palette | should display current palette with 8 swatches | 8 amostras de cor |
+| Font Preview | should display current font section and name | Preview de fonte |
+| User Input | should display/allow changing considerations | Input customizado |
+| Quick Regenerate | should call onRegenerate without input | Regeneração rápida |
+| Apply Custom | should enable/call onRegenerate with input | Aplicar customizado |
+| Close | should call onClose when X clicked | Fechar modal |
+| Loading State | should show loader icons when generating | Estado de loading |
+
+#### VoiceInput (`__tests__/components/VoiceInput.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render microphone icon when not recording | Ícone de microfone |
+| Rendering | should match snapshot in idle/disabled/custom className | Snapshots de estados |
+| Button State | should be disabled when disabled prop is true | Desabilitar botão |
+| Recording Flow | should start recording when clicked | Iniciar gravação |
+| Recording Flow | should show stop icon/indicator when recording | Indicadores de gravação |
+| Recording Flow | should stop recording when clicked again | Parar gravação |
+| API Key | should alert when API key is missing | Alerta de API key |
+| Transcription | should call onTranscription after processing | Callback de transcrição |
+| Error Handling | should handle getUserMedia error gracefully | Tratamento de erro |
+| Button Styling | should have recording/idle styles | Estilos de botão |
+
+#### CharacterZoomModal (`__tests__/components/CharacterZoomModal.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render nothing when isOpen is false/imageSrc is null | Não renderiza inválido |
+| Rendering | should match snapshot with different configurations | Snapshots de config |
+| Character Name | should display character name in header | Nome do personagem |
+| Image Display | should display image with base64/URL source | Exibição de imagem |
+| Close | should call onClose on X/backdrop/ESC | Fechar modal |
+| Close | should NOT call onClose when modal content clicked | Prevenção de propagação |
+| Keyboard Events | should add/remove keydown listener | Eventos de teclado |
+| Styling | should have backdrop blur and animation class | Classes de estilo |
+| Accessibility | should have proper alt text and button | Acessibilidade |
+
+#### NarrativeStyleModal (`__tests__/components/NarrativeStyleModal.test.tsx`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| Rendering | should render nothing when isOpen is false | Não renderiza fechado |
+| Rendering | should render modal when isOpen is true | Renderiza aberto |
+| Rendering | should match snapshot for auto/custom modes | Snapshots de modos |
+| Mode Selection | should display both mode options | Exibir opções de modo |
+| Mode Selection | should highlight current mode | Destacar modo atual |
+| Mode Selection | should switch between modes | Alternar entre modos |
+| Context Display | should display current mode/genre | Exibir contexto atual |
+| Context Display | should display last custom brief | Exibir último brief |
+| Custom Mode | should display info box | Caixa de informações |
+| Custom Mode | should allow typing in textarea | Permitir digitação |
+| Save | should call onSave with mode and style | Callback de salvamento |
+| Save | should show error when custom style empty | Erro para estilo vazio |
+| Save | should show saving/error states | Estados de loading/erro |
+| Close | should call onClose on X/Cancel click | Fechar modal |
+| State Reset | should reset state when reopened | Resetar ao reabrir |
+
+### Utilitários Testados
+
+#### actionOptionsCache (`__tests__/utils/actionOptionsCache.test.ts`)
+
+| Categoria | Caso de Teste | Descrição |
+|-----------|---------------|-----------|
+| saveCachedActionOptions | should save options to localStorage | Salvar opções no cache |
+| saveCachedActionOptions | should overwrite existing cache | Sobrescrever cache existente |
+| saveCachedActionOptions | should handle localStorage errors | Tratamento de erros |
+| saveCachedActionOptions | should save empty options array | Salvar array vazio |
+| getCachedActionOptions | should return cached options | Retornar opções do cache |
+| getCachedActionOptions | should return null when no cache | Retornar null se não existir |
+| getCachedActionOptions | should handle invalid JSON | Tratamento de JSON inválido |
+| getCachedActionOptions | should handle localStorage errors | Tratamento de erros |
+| Cache Isolation | should keep separate caches for stories | Isolamento por história |
+| Interface | should have correct structure | Estrutura correta |
+
+### Como Executar os Testes
+
+```bash
+# Executar todos os testes
+npm test
+
+# Executar testes em modo watch
+npm run test:watch
+
+# Gerar relatório de cobertura
+npm run test:coverage
+
+# Atualizar snapshots
+npm test -- --updateSnapshot
+```
+
+### Configuração do Ambiente de Testes
+
+Os testes utilizam as seguintes configurações (ver `jest.config.js` e `jest.setup.ts`):
+
+- **Test Environment**: jsdom (ambiente de navegador simulado)
+- **Preset**: ts-jest (suporte a TypeScript)
+- **Test Pattern**: `**/__tests__/**/*.test.ts(x)`
+- **Coverage Threshold**: 70% para branches, functions, lines e statements
+- **Mocks Configurados**:
+  - `@testing-library/jest-dom` para matchers de DOM
+  - `fake-indexeddb` para testes de banco de dados
+  - Mocks de AudioContext, MediaRecorder, crypto.randomUUID
+  - Mock de window.matchMedia e navigator
+  - Mock de FileReader e document.cookie
+
+---
+
+**Desenvolvido com IA** | storywell.games v2.0.4

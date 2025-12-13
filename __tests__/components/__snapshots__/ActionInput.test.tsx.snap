@@ -1,0 +1,580 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionInput snapshots should match snapshot for custom input mode 1`] = `
+<div>
+  <div
+    class="p-2 md:p-6 border-t-2 w-full max-w-full overflow-hidden"
+    style="background-color: rgb(255, 255, 255); border-top-color: #d6d3d1;"
+  >
+    <div
+      class="max-w-full md:max-w-5xl mx-auto space-y-2 md:space-y-3"
+    >
+      <div
+        class="flex items-center gap-2 md:gap-4"
+      >
+        <button
+          data-testid="voice-input"
+        >
+          Voice
+        </button>
+        <div
+          class="relative flex-1 min-w-0"
+        >
+          <textarea
+            class="retro-input w-full pl-3 md:pl-6 pr-14 md:pr-16 py-2.5 md:py-4 text-base md:text-xl transition-all disabled:opacity-50 resize-none overflow-y-auto"
+            placeholder="Enter action..."
+            rows="4"
+            style="min-height: 120px; max-height: 200px; background-color: rgb(255, 255, 255); color: rgb(28, 25, 23); border-color: #d6d3d1;"
+          />
+          <button
+            class="absolute right-1.5 md:right-3 top-1.5 md:top-3 bottom-1.5 md:bottom-3 px-3 md:px-4 font-bold transition-opacity rounded-none flex items-center justify-center disabled:opacity-50"
+            disabled=""
+            style="background-color: rgb(28, 25, 23); color: rgb(255, 255, 255);"
+          >
+            <span
+              data-testid="send-icon"
+            >
+              Send
+            </span>
+          </button>
+        </div>
+      </div>
+      <button
+        class="text-xs uppercase font-bold transition-colors"
+        style="color: rgb(120, 113, 108);"
+      >
+        ← 
+        Back
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ActionInput snapshots should match snapshot for loading state 1`] = `
+<div>
+  <div
+    class="border-t-2 w-full max-w-full overflow-hidden"
+    style="background-color: rgb(255, 255, 255); border-top-color: #d6d3d1;"
+  >
+    <button
+      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors"
+      style="background-color: rgb(231, 229, 228); border-bottom: 1px solid #d6d3d1;"
+    >
+      <span
+        class="text-xs font-bold uppercase flex items-center gap-1.5"
+        style="color: rgb(28, 25, 23);"
+      >
+        Actions
+        <span
+          class="text-[10px] px-1.5 py-0.5 rounded-full"
+          style="background-color: rgb(28, 25, 23); color: rgb(245, 245, 244);"
+        >
+          6
+        </span>
+      </span>
+      <span
+        class="flex items-center gap-1 text-[10px]"
+        style="color: rgb(120, 113, 108);"
+      >
+        Hide
+        <span
+          data-testid="chevron-down"
+        >
+          Down
+        </span>
+      </span>
+    </button>
+    <div
+      class="p-1.5 md:p-6 block"
+    >
+      <div
+        class="max-w-full md:max-w-5xl mx-auto"
+      >
+        <div
+          class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2"
+        >
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Look around
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Find something"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                10
+                %
+              </span>
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Get spotted"
+              >
+                <span
+                  data-testid="alert-icon"
+                >
+                  Alert
+                </span>
+                5
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Talk to merchant
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(68, 64, 60);"
+                title="Get info"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                20
+                %
+              </span>
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Offend them"
+              >
+                <span
+                  data-testid="alert-icon"
+                >
+                  Alert
+                </span>
+                10
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Move forward
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(68, 64, 60);"
+                title="Progress"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                15
+                %
+              </span>
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(217, 119, 6);"
+                title="Danger"
+              >
+                <span
+                  data-testid="alert-icon"
+                >
+                  Alert
+                </span>
+                15
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Check inventory
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Find item"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                5
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Rest
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                style="color: rgb(120, 113, 108);"
+              >
+                Safe
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 border-dashed text-left font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[9px] md:text-sm flex items-center gap-1 md:gap-2 min-w-0 overflow-hidden"
+            style="border-color: #d6d3d1; background-color: rgb(231, 229, 228); color: rgb(120, 113, 108);"
+          >
+            <span
+              data-testid="more-icon"
+            >
+              More
+            </span>
+            <span
+              class="truncate"
+            >
+              Custom Action
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ActionInput snapshots should match snapshot in processing state 1`] = `
+<div>
+  <div
+    class="border-t-2 w-full max-w-full overflow-hidden"
+    style="background-color: rgb(255, 255, 255); border-top-color: #d6d3d1;"
+  >
+    <button
+      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors"
+      style="background-color: rgb(231, 229, 228); border-bottom: 1px solid #d6d3d1;"
+    >
+      <span
+        class="text-xs font-bold uppercase flex items-center gap-1.5"
+        style="color: rgb(28, 25, 23);"
+      >
+        Actions
+        <span
+          class="text-[10px] px-1.5 py-0.5 rounded-full"
+          style="background-color: rgb(28, 25, 23); color: rgb(245, 245, 244);"
+        >
+          1
+        </span>
+      </span>
+      <span
+        class="flex items-center gap-1 text-[10px]"
+        style="color: rgb(120, 113, 108);"
+      >
+        Hide
+        <span
+          data-testid="chevron-down"
+        >
+          Down
+        </span>
+      </span>
+    </button>
+    <div
+      class="p-1.5 md:p-6 block"
+    >
+      <div
+        class="max-w-full md:max-w-5xl mx-auto"
+      >
+        <div
+          class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2"
+        >
+          <button
+            class="p-1.5 md:p-3 border-2 border-dashed text-left font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[9px] md:text-sm flex items-center gap-1 md:gap-2 min-w-0 overflow-hidden"
+            disabled=""
+            style="border-color: #d6d3d1; background-color: rgb(231, 229, 228); color: rgb(120, 113, 108);"
+          >
+            <span
+              data-testid="more-icon"
+            >
+              More
+            </span>
+            <span
+              class="truncate"
+            >
+              Custom Action
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ActionInput snapshots should match snapshot with options loaded 1`] = `
+<div>
+  <div
+    class="border-t-2 w-full max-w-full overflow-hidden"
+    style="background-color: rgb(255, 255, 255); border-top-color: #d6d3d1;"
+  >
+    <button
+      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors"
+      style="background-color: rgb(231, 229, 228); border-bottom: 1px solid #d6d3d1;"
+    >
+      <span
+        class="text-xs font-bold uppercase flex items-center gap-1.5"
+        style="color: rgb(28, 25, 23);"
+      >
+        Actions
+        <span
+          class="text-[10px] px-1.5 py-0.5 rounded-full"
+          style="background-color: rgb(28, 25, 23); color: rgb(245, 245, 244);"
+        >
+          6
+        </span>
+      </span>
+      <span
+        class="flex items-center gap-1 text-[10px]"
+        style="color: rgb(120, 113, 108);"
+      >
+        Hide
+        <span
+          data-testid="chevron-down"
+        >
+          Down
+        </span>
+      </span>
+    </button>
+    <div
+      class="p-1.5 md:p-6 block"
+    >
+      <div
+        class="max-w-full md:max-w-5xl mx-auto"
+      >
+        <div
+          class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2"
+        >
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Look around
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Find something"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                10
+                %
+              </span>
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Get spotted"
+              >
+                <span
+                  data-testid="alert-icon"
+                >
+                  Alert
+                </span>
+                5
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Talk to merchant
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(68, 64, 60);"
+                title="Get info"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                20
+                %
+              </span>
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Offend them"
+              >
+                <span
+                  data-testid="alert-icon"
+                >
+                  Alert
+                </span>
+                10
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Move forward
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(68, 64, 60);"
+                title="Progress"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                15
+                %
+              </span>
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(217, 119, 6);"
+                title="Danger"
+              >
+                <span
+                  data-testid="alert-icon"
+                >
+                  Alert
+                </span>
+                15
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Check inventory
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                class="flex items-center gap-0.5"
+                style="color: rgb(120, 113, 108);"
+                title="Find item"
+              >
+                <span
+                  data-testid="sparkles-icon"
+                >
+                  Sparkles
+                </span>
+                5
+                %
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
+            style="background-color: rgb(255, 255, 255); border-color: #d6d3d1; color: rgb(28, 25, 23);"
+          >
+            <div
+              class="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words"
+            >
+              Rest
+            </div>
+            <div
+              class="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap"
+            >
+              <span
+                style="color: rgb(120, 113, 108);"
+              >
+                Safe
+              </span>
+            </div>
+          </button>
+          <button
+            class="p-1.5 md:p-3 border-2 border-dashed text-left font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[9px] md:text-sm flex items-center gap-1 md:gap-2 min-w-0 overflow-hidden"
+            style="border-color: #d6d3d1; background-color: rgb(231, 229, 228); color: rgb(120, 113, 108);"
+          >
+            <span
+              data-testid="more-icon"
+            >
+              More
+            </span>
+            <span
+              class="truncate"
+            >
+              Custom Action
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
