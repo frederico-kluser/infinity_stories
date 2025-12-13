@@ -9,7 +9,16 @@ if [ -z "$SKIP_VERSION_BUMP" ]; then
 	}
 	NEW_VERSION=$(node -pe "require('./package.json').version")
 	printf '✅ Version bumped to %s\n' "$NEW_VERSION"
-	git add package.json package-lock.json
+
+	# Update version in README.md
+	node -e "
+const fs = require('fs');
+const content = fs.readFileSync('README.md', 'utf-8');
+const newContent = content.replace(/(\*\*Versão narrativa:\*\* )[\d.]+/, '\$1$NEW_VERSION');
+fs.writeFileSync('README.md', newContent);
+"
+
+	git add package.json package-lock.json README.md
 fi
 
 printf '🧪 Running tests...\n'
