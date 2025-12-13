@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageType, ChatMessage, ThemeColors, Language, GridSnapshot } from '../../types';
-import { Terminal, Info, Play, Loader2, StopCircle, ChevronLeft, ChevronRight, Map } from 'lucide-react';
+import { Terminal, Info, Play, Loader2, StopCircle, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Map } from 'lucide-react';
 import { generateSpeech } from '../../services/ai/openaiClient';
 import { playMP3Audio, TTSVoice } from '../../utils/ai';
 import { GridMap } from '../GridMap';
@@ -81,40 +81,85 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 	// State for Grid Map flip
 	const [isMapFlipped, setIsMapFlipped] = useState(false);
 
-	// Custom scroll refs/state
+	// Manual scroll controls
 	const textContainerRef = useRef<HTMLDivElement>(null);
 	const textContentRef = useRef<HTMLDivElement>(null);
-	const [scrollPosition, setScrollPosition] = useState(0);
-	const [scrollMetrics, setScrollMetrics] = useState({
-		max: 0,
-		thumbHeight: 0,
-		thumbTrack: 0,
-		containerHeight: 0,
-		contentHeight: 0,
-	});
-	const [isDraggingThumb, setIsDraggingThumb] = useState(false);
-	const [isDraggingContent, setIsDraggingContent] = useState(false);
-	const dragStateRef = useRef<{
-		mode: 'content' | 'thumb' | null;
-		startY: number;
-		startScroll: number;
-		startThumbOffset: number;
-	}>({ mode: null, startY: 0, startScroll: 0, startThumbOffset: 0 });
+	const [scrollOffset, setScrollOffset] = useState(0);
+	const [scrollMetrics, setScrollMetrics] = useState({ maxOffset: 0, hasOverflow: false });
 
 	// Reset flip state when navigating to a different card
 	useEffect(() => {
 		setIsMapFlipped(false);
 	}, [currentIndex]);
 
+	const SCROLL_STEP = 140;
+
 	useEffect(() => {
-		setScrollPosition(0);
-		dragStateRef.current = { mode: null, startY: 0, startScroll: 0, startThumbOffset: 0 };
+		setScrollOffset(0);
 	}, [message.id]);
+
+	const updateScrollMetrics = useCallback(() => {
+		const container = textContainerRef.current;
+		const content = textContentRef.current;
+		if (!container || !content) return;
+
+		const maxOffset = Math.max(0, content.scrollHeight - container.clientHeight);
+		setScrollMetrics((prev) => {
+			const hasOverflow = maxOffset > 0;
+			if (prev.maxOffset === maxOffset && prev.hasOverflow === hasOverflow) {
+				return prev;
+			}
+			return { maxOffset, hasOverflow };
+		});
+		setScrollOffset((prev) => Math.min(prev, maxOffset));
+	}, []);
+
+	useEffect(() => {
+		updateScrollMetrics();
+	}, [displayedText, updateScrollMetrics]);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		if ('ResizeObserver' in window) {
+			const observer = new ResizeObserver(() => updateScrollMetrics());
+			if (textContainerRef.current) observer.observe(textContainerRef.current);
+			if (textContentRef.current) observer.observe(textContentRef.current);
+
+			return () => observer.disconnect();
+		}
+
+		window.addEventListener('resize', updateScrollMetrics);
+		return () => window.removeEventListener('resize', updateScrollMetrics);
+	}, [updateScrollMetrics]);
+
+	const scrollBy = useCallback(
+		(delta: number) => {
+			setScrollOffset((prev) => {
+				const next = Math.max(0, Math.min(prev + delta, scrollMetrics.maxOffset));
+				return next === prev ? prev : next;
+			});
+		},
+		[scrollMetrics.maxOffset],
+	);
+
+	const handleScrollUp = useCallback(() => scrollBy(-SCROLL_STEP), [scrollBy]);
+	const handleScrollDown = useCallback(() => scrollBy(SCROLL_STEP), [scrollBy]);
+
+	const handleWheelScroll = useCallback(
+		(event: React.WheelEvent<HTMLDivElement>) => {
+			if (!scrollMetrics.hasOverflow) return;
+			event.preventDefault();
+			scrollBy(event.deltaY);
+		},
+		[scrollBy, scrollMetrics.hasOverflow],
+	);
+
+	const canScrollUp = scrollOffset > 0;
+	const canScrollDown = scrollOffset < scrollMetrics.maxOffset;
 
 	// Check if grid map is available
 	const hasGridData = gridSnapshots && gridSnapshots.length > 0;
-	const canScroll = scrollMetrics.max > 1;
-	const thumbOffset = scrollMetrics.max > 0 ? (scrollPosition / scrollMetrics.max) * scrollMetrics.thumbTrack : 0;
 
 	// Refs to prevent multiple callback calls
 	const hasCalledCompleteRef = useRef(false);
@@ -163,179 +208,6 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 
 		return () => clearInterval(interval);
 	}, [message.text, message.id, skipAnimation, isActive]);
-
-	const applyScroll = useCallback(
-		(value: number) => {
-			setScrollPosition((prev) => {
-				const clamped = Math.max(0, Math.min(value, scrollMetrics.max));
-				return clamped;
-			});
-		},
-		[scrollMetrics.max],
-	);
-
-	const updateScrollMetrics = useCallback(() => {
-		const container = textContainerRef.current;
-		const content = textContentRef.current;
-		if (!container || !content) return;
-
-		const containerHeight = container.clientHeight;
-		const contentHeight = content.scrollHeight;
-		const max = Math.max(0, contentHeight - containerHeight);
-		const ratio = contentHeight === 0 ? 1 : containerHeight / contentHeight;
-		const thumbHeight = max > 0 ? Math.max(32, containerHeight * ratio) : containerHeight;
-		const thumbTrack = Math.max(0, containerHeight - thumbHeight);
-
-		setScrollMetrics((prev) => {
-			if (
-				prev.max === max &&
-				prev.thumbHeight === thumbHeight &&
-				prev.thumbTrack === thumbTrack &&
-				prev.containerHeight === containerHeight &&
-				prev.contentHeight === contentHeight
-			) {
-				return prev;
-			}
-			return { max, thumbHeight, thumbTrack, containerHeight, contentHeight };
-		});
-
-		setScrollPosition((prev) => Math.min(prev, max));
-	}, []);
-
-	useEffect(() => {
-		updateScrollMetrics();
-	}, [displayedText, updateScrollMetrics]);
-
-	useEffect(() => {
-		if (typeof window === 'undefined') return;
-
-		if ('ResizeObserver' in window) {
-			const observer = new ResizeObserver(() => updateScrollMetrics());
-			if (textContainerRef.current) observer.observe(textContainerRef.current);
-			if (textContentRef.current) observer.observe(textContentRef.current);
-
-			return () => observer.disconnect();
-		}
-
-		window.addEventListener('resize', updateScrollMetrics);
-		return () => window.removeEventListener('resize', updateScrollMetrics);
-	}, [updateScrollMetrics]);
-
-	const startContentDrag = useCallback(
-		(clientY: number) => {
-			if (!canScroll) return;
-			dragStateRef.current = { mode: 'content', startY: clientY, startScroll: scrollPosition, startThumbOffset: 0 };
-			setIsDraggingContent(true);
-		},
-		[canScroll, scrollPosition],
-	);
-
-	const startThumbDrag = useCallback(
-		(clientY: number, presetOffset?: number) => {
-			if (!canScroll) return;
-			const effectiveOffset =
-				typeof presetOffset === 'number'
-					? presetOffset
-					: scrollMetrics.max > 0
-					? (scrollPosition / scrollMetrics.max) * scrollMetrics.thumbTrack
-					: 0;
-
-			dragStateRef.current = {
-				mode: 'thumb',
-				startY: clientY,
-				startScroll: scrollPosition,
-				startThumbOffset: effectiveOffset,
-			};
-			setIsDraggingThumb(true);
-		},
-		[canScroll, scrollMetrics.max, scrollMetrics.thumbTrack, scrollPosition],
-	);
-
-	useEffect(() => {
-		if (typeof window === 'undefined') return;
-
-		const handlePointerMove = (event: PointerEvent) => {
-			if (!dragStateRef.current.mode) return;
-			event.preventDefault();
-			event.stopPropagation();
-			const deltaY = event.clientY - dragStateRef.current.startY;
-
-			if (dragStateRef.current.mode === 'content') {
-				applyScroll(dragStateRef.current.startScroll - deltaY);
-			} else if (dragStateRef.current.mode === 'thumb') {
-				const track = scrollMetrics.thumbTrack || 1;
-				const nextOffset = Math.min(Math.max(dragStateRef.current.startThumbOffset + deltaY, 0), track);
-				const ratio = track === 0 ? 0 : nextOffset / track;
-				applyScroll(ratio * scrollMetrics.max);
-			}
-		};
-
-		const stopDragging = () => {
-			if (dragStateRef.current.mode) {
-				dragStateRef.current.mode = null;
-				setIsDraggingThumb(false);
-				setIsDraggingContent(false);
-			}
-		};
-
-		window.addEventListener('pointermove', handlePointerMove, { passive: false });
-		window.addEventListener('pointerup', stopDragging);
-		window.addEventListener('pointercancel', stopDragging);
-
-		return () => {
-			window.removeEventListener('pointermove', handlePointerMove);
-			window.removeEventListener('pointerup', stopDragging);
-			window.removeEventListener('pointercancel', stopDragging);
-		};
-	}, [applyScroll, scrollMetrics.thumbTrack, scrollMetrics.max]);
-
-	const handleWheel = useCallback(
-		(event: React.WheelEvent<HTMLDivElement>) => {
-			if (!canScroll) return;
-			event.preventDefault();
-			event.stopPropagation();
-			applyScroll(scrollPosition + event.deltaY);
-		},
-		[applyScroll, canScroll, scrollPosition],
-	);
-
-	const handleThumbPointerDown = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (!canScroll || event.button !== 0) return;
-			event.preventDefault();
-			event.stopPropagation();
-			startThumbDrag(event.clientY);
-		},
-		[canScroll, startThumbDrag],
-	);
-
-	const handleTrackPointerDown = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (!canScroll || event.button !== 0) return;
-			if (event.target !== event.currentTarget) return;
-			event.preventDefault();
-			event.stopPropagation();
-			const rect = event.currentTarget.getBoundingClientRect();
-			const offset = Math.min(
-				Math.max(event.clientY - rect.top - scrollMetrics.thumbHeight / 2, 0),
-				scrollMetrics.thumbTrack,
-			);
-			const ratio = scrollMetrics.thumbTrack === 0 ? 0 : offset / scrollMetrics.thumbTrack;
-			applyScroll(ratio * scrollMetrics.max);
-			startThumbDrag(event.clientY, offset);
-		},
-		[applyScroll, canScroll, scrollMetrics.thumbHeight, scrollMetrics.thumbTrack, scrollMetrics.max, startThumbDrag],
-	);
-
-	const handleContentPointerDown = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (!canScroll || event.button !== 0) return;
-			event.preventDefault();
-			event.stopPropagation();
-			startContentDrag(event.clientY);
-		},
-		[canScroll, startContentDrag],
-	);
 
 	// Get avatar source
 	const getAvatarSrc = () => {
@@ -478,10 +350,10 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 	);
 
 	return (
-		<div className="w-full h-full flex flex-col max-w-full overflow-hidden min-h-0">
+		<div className="w-full h-full flex flex-col max-w-full overflow-hidden">
 			{/* Card Container with 3D Flip - Book Page Style */}
 			<div
-				className="flex-1 relative mx-auto w-full max-w-full md:max-w-4xl px-0 md:px-2 min-h-0"
+				className="flex-1 relative mx-auto w-full max-w-full md:max-w-4xl px-0 md:px-2"
 				style={{ perspective: '1000px' }}
 			>
 				{/* Flip Container */}
@@ -528,7 +400,7 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 						/>
 
 						{/* Content Area */}
-						<div className="relative h-full flex flex-col p-3 md:p-8 min-h-0">
+						<div className="relative h-full flex flex-col p-3 md:p-8">
 							{/* Header - Speaker & Controls */}
 							<div className="flex items-center justify-between mb-4 md:mb-6">
 								<div className="flex items-center gap-3">
@@ -576,70 +448,78 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 							</div>
 
 							{/* Message Text - Book Typography */}
-							<div
-								className="flex-1 relative overflow-hidden min-h-0"
-								ref={textContainerRef}
-								onWheel={handleWheel}
-								style={{ touchAction: canScroll ? 'pan-y' : 'auto' }}
-							>
-								<div
-									ref={textContentRef}
-									onPointerDown={handleContentPointerDown}
-									className={`leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 ${
-										isNarrator ? 'text-lg md:text-2xl italic text-center' : 'text-base md:text-xl'
-									}`}
-									style={{
-										color: colors.text,
-										transform: `translateY(-${scrollPosition}px)`,
-										transition: isDraggingThumb || isDraggingContent ? 'none' : 'transform 120ms ease-out',
-										cursor: canScroll ? (isDraggingContent ? 'grabbing' : 'grab') : 'default',
-										userSelect: isDraggingContent ? 'none' : 'text',
-									}}
+					<div
+						className="flex-1 relative overflow-hidden min-h-0"
+						ref={textContainerRef}
+						onWheel={handleWheelScroll}
+					>
+						<div
+							ref={textContentRef}
+							className={`leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 ${
+								isNarrator ? 'text-lg md:text-2xl italic text-center' : 'text-base md:text-xl'
+							}`}
+							style={{
+								color: colors.text,
+								transform: `translateY(-${scrollOffset}px)`,
+								transition: 'transform 120ms ease-out',
+							}}
+						>
+							{isNarrator && (
+								<span
+									className="text-3xl md:text-4xl leading-none align-text-top mr-2"
+									style={{ color: colors.textSecondary }}
 								>
-									{isNarrator && (
-										<span
-											className="text-3xl md:text-4xl leading-none align-text-top mr-2"
-											style={{ color: colors.textSecondary }}
-										>
-											&ldquo;
-										</span>
-									)}
-									{displayedText}
-									{isTyping && <span className="animate-pulse ml-0.5">|</span>}
-									{isNarrator && !isTyping && (
-										<span
-											className="text-3xl md:text-4xl leading-none align-text-bottom ml-2"
-											style={{ color: colors.textSecondary }}
-										>
-											&rdquo;
-										</span>
-									)}
-								</div>
+									&ldquo;
+								</span>
+							)}
+							{displayedText}
+							{isTyping && <span className="animate-pulse ml-0.5">|</span>}
+							{isNarrator && !isTyping && (
+								<span
+									className="text-3xl md:text-4xl leading-none align-text-bottom ml-2"
+									style={{ color: colors.textSecondary }}
+								>
+									&rdquo;
+								</span>
+							)}
+						</div>
 
-								{canScroll && (
-									<div className="absolute inset-y-2 right-2 w-3 flex items-center justify-center pointer-events-none">
-										<div
-											className="relative w-1 rounded-full h-full pointer-events-auto"
-											style={{ backgroundColor: colors.border, opacity: 0.4 }}
-											onPointerDown={handleTrackPointerDown}
-										>
-											<div
-												data-scroll-thumb
-												className="absolute left-1/2 -translate-x-1/2 w-3 rounded-full"
-												style={{
-													height: scrollMetrics.thumbHeight,
-													transform: `translateY(${thumbOffset}px)`,
-													backgroundColor: colors.textSecondary,
-													cursor: isDraggingThumb ? 'grabbing' : 'grab',
-												}}
-												onPointerDown={handleThumbPointerDown}
-											/>
-										</div>
-									</div>
-								)}
+						{scrollMetrics.hasOverflow && (
+							<div className="absolute top-2 right-2 flex flex-col gap-2">
+								<button
+									type="button"
+									onClick={handleScrollUp}
+									disabled={!canScrollUp}
+									className="p-1 rounded-sm border"
+									style={{
+										backgroundColor: colors.backgroundSecondary,
+										color: colors.text,
+										borderColor: colors.border,
+										opacity: canScrollUp ? 1 : 0.4,
+									}}
+									aria-label="Scroll up"
+								>
+									<ChevronUp className="w-4 h-4" />
+								</button>
+								<button
+									type="button"
+									onClick={handleScrollDown}
+									disabled={!canScrollDown}
+									className="p-1 rounded-sm border"
+									style={{
+										backgroundColor: colors.backgroundSecondary,
+										color: colors.text,
+										borderColor: colors.border,
+										opacity: canScrollDown ? 1 : 0.4,
+									}}
+									aria-label="Scroll down"
+								>
+									<ChevronDown className="w-4 h-4" />
+								</button>
 							</div>
-
-							{/* Footer - Page Number & Navigation Hint */}
+						)}
+					</div>
+					{/* Footer - Page Number & Navigation Hint */}
 							<div
 								className="mt-4 md:mt-6 pt-4 flex items-center justify-between"
 								style={{ borderTop: `1px solid ${colors.border}` }}
