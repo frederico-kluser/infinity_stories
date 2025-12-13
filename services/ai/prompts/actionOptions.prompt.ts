@@ -165,7 +165,7 @@ export function buildActionOptionsPrompt({
     gameState.characters[gameState.playerCharacterId];
   const currentLocation: Location | undefined =
     gameState.locations[gameState.currentLocationId];
-  const recentMessages: ChatMessage[] = gameState.messages.slice(-5);
+  const recentMessages: ChatMessage[] = gameState.messages.slice(-100);
 
   // Get player inventory and gold
   const normalizedInventory = normalizeInventory(player?.inventory);
@@ -252,23 +252,36 @@ ${recentMessages.map((m) => m.text).join(' | ')}
 
 ${getItemAwarenessRulesForPrompt()}
 
+=== PROBABILITY CALIBRATION ===
+- Safe: badChance 0-10%, goodChance 5-15% (fallback/maintenance plays)
+- Moderate: badChance 11-25%, goodChance 16-30% (balanced risk/reward)
+- High Risk: badChance 26-40%, goodChance 20-40% (bold tactical swings)
+- Extreme: badChance 41-50%, goodChance 30-50% (only when narrative stakes justify it)
+Always clamp each value to 0-50 and ensure goodChance + badChance ≤ 80 so neutral outcomes remain possible.
+
+=== QUALITY RUBRIC ===
+- "Good" options must advance missions, reveal intel, or leverage resources the player actually has.
+- "Cautious" options should proactively mitigate danger (retreat, regroup, prepare, heal) and keep risks in the Safe band.
+- "Bold" options can use High/Extreme bands only when the potential reward (goodHint) is explicit and meaningful.
+- Avoid duplicate phrasing from the last 3 actions shown in the prompt context.
+
 Rules:
 1. Generate exactly 5 distinct, contextually appropriate actions
 2. Actions should be short (3-8 words each)
 3. Mix action types: dialogue, exploration, combat, interaction
 4. Write in ${langName}
 5. Make them specific to the current situation
-6. Include at least one cautious/defensive option
+6. Include at least one cautious/defensive option (keep every such option inside the Safe band)
 ${hasHealingItems && healthPercent < 70 ? '7. IMPORTANT: Player has low HP and healing items - suggest using them!\n' : ''}
-8. For each action, assign probability percentages for good and bad events
+8. For each action, assign probability percentages for good and bad events using the calibration table above (decide the band first, then pick numbers). Never exceed 50 on any field and keep goodChance + badChance ≤ 80.
    - goodChance: 0-50 (probability of something beneficial happening)
    - badChance: 0-50 (probability of something harmful happening)
    - The remaining percentage (100 - goodChance - badChance) is neutral (nothing special happens)
-   - Risky actions should have higher badChance, safe actions lower
-   - Interesting/bold actions may have both good and bad chances
-9. For each action, provide brief hints about what could happen:
+   - Internally tag each action as Safe/Moderate/High/Extreme to guide the numbers (do not output the tag)
+9. For each action, provide brief hints about what could happen and explicitly connect the hint to the risk level you chose:
    - goodHint: brief description of the potential benefit (e.g., "find hidden treasure", "gain ally trust")
    - badHint: brief description of the potential harm (e.g., "alert enemies", "trigger trap")
+10. If you assign High or Extreme risk, the goodHint must describe the concrete payoff that justifies the danger.
 
 Respond with JSON:
 {
