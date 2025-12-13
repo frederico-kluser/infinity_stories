@@ -2,6 +2,12 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { NarrativeStyleModal } from '../../components/NarrativeStyleModal/NarrativeStyleModal';
 
+const mockVoiceInput = jest.fn(() => null);
+
+jest.mock('../../components/VoiceInput', () => ({
+  VoiceInput: (props: any) => mockVoiceInput(props),
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   X: () => <span data-testid="x-icon">X</span>,
@@ -35,11 +41,14 @@ const createDefaultProps = () => ({
   genre: 'fantasy' as const,
   onSave: jest.fn().mockResolvedValue(undefined),
   t: mockTranslations,
+  apiKey: 'test-key',
+  language: 'en' as any,
 });
 
 describe('NarrativeStyleModal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockVoiceInput.mockImplementation(() => null);
   });
 
   describe('rendering', () => {
@@ -198,6 +207,27 @@ describe('NarrativeStyleModal', () => {
 
       const textarea = screen.getByPlaceholderText('Describe your narrative style...');
       expect(textarea).toHaveValue('Existing style');
+    });
+
+    it('should append transcription when voice input fires', () => {
+      const transcription = 'Voice dictated brief';
+      mockVoiceInput.mockImplementation(({ onTranscription }: any) => (
+        <button data-testid="voice-input" onClick={() => onTranscription(transcription)}>
+          Voice
+        </button>
+      ));
+
+      const props = {
+        ...createDefaultProps(),
+        currentMode: 'custom' as const,
+        currentStyle: 'Existing style',
+      };
+      render(<NarrativeStyleModal {...props} />);
+
+      fireEvent.click(screen.getByTestId('voice-input'));
+
+      const textarea = screen.getByPlaceholderText('Describe your narrative style...');
+      expect(textarea).toHaveValue(`Existing style\n${transcription}`);
     });
   });
 

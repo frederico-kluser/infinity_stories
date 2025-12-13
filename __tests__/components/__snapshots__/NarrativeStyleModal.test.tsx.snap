@@ -244,10 +244,17 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in custom
               </p>
             </div>
           </div>
-          <textarea
-            class="w-full bg-white border-2 border-stone-400 p-3 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
-            placeholder="Describe your narrative style..."
-          />
+          <div
+            class="relative"
+          >
+            <textarea
+              class="w-full bg-white border-2 border-stone-400 p-3 pr-12 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
+              placeholder="Describe your narrative style..."
+            />
+            <div
+              class="absolute top-3 right-3"
+            />
+          </div>
         </div>
       </div>
       <div
@@ -403,12 +410,19 @@ exports[`NarrativeStyleModal rendering should match snapshot with custom style t
               </p>
             </div>
           </div>
-          <textarea
-            class="w-full bg-white border-2 border-stone-400 p-3 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
-            placeholder="Describe your narrative style..."
+          <div
+            class="relative"
           >
-            Present tense, cinematic style, focus on dialogue.
-          </textarea>
+            <textarea
+              class="w-full bg-white border-2 border-stone-400 p-3 pr-12 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
+              placeholder="Describe your narrative style..."
+            >
+              Present tense, cinematic style, focus on dialogue.
+            </textarea>
+            <div
+              class="absolute top-3 right-3"
+            />
+          </div>
         </div>
       </div>
       <div

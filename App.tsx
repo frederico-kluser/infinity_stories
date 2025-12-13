@@ -1018,6 +1018,8 @@ const App: React.FC = () => {
 				genre={narrativeGenre}
 				onSave={updateNarrativeStyle}
 				t={t}
+				apiKey={apiKey}
+				language={storyLanguage}
 			/>
 
 			{/* Character Zoom Modal */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Sparkles, Info, BookText } from 'lucide-react';
-import { NarrativeStyleMode, NarrativeGenre } from '../../types';
+import { VoiceInput } from '../VoiceInput';
+import { Language, NarrativeStyleMode, NarrativeGenre } from '../../types';
 
 interface NarrativeStyleModalProps {
 	isOpen: boolean;
@@ -10,6 +11,8 @@ interface NarrativeStyleModalProps {
 	genre?: NarrativeGenre;
 	onSave: (mode: NarrativeStyleMode, customStyle?: string) => Promise<void> | void;
 	t: Record<string, string>;
+	apiKey: string;
+	language: Language;
 }
 
 const MODE_DETAILS: Record<NarrativeStyleMode, { title: string; description: string }> = {
@@ -32,6 +35,8 @@ export const NarrativeStyleModal: React.FC<NarrativeStyleModalProps> = ({
 	genre,
 	onSave,
 	t,
+	apiKey,
+	language,
 }) => {
 	const [mode, setMode] = useState<NarrativeStyleMode>(currentMode);
 	const [customStyle, setCustomStyle] = useState<string>(currentStyle || '');
@@ -67,6 +72,16 @@ export const NarrativeStyleModal: React.FC<NarrativeStyleModalProps> = ({
 	};
 
 	const modeInfo = MODE_DETAILS[mode];
+
+	const handleVoiceTranscription = (text: string) => {
+		setCustomStyle((prev) => {
+			if (!prev.trim()) {
+				return text;
+			}
+			return `${prev.trimEnd()}\n${text}`;
+		});
+		setError(null);
+	};
 
 	return (
 		<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
@@ -137,12 +152,28 @@ export const NarrativeStyleModal: React.FC<NarrativeStyleModalProps> = ({
 									</p>
 								</div>
 							</div>
-							<textarea
-								value={customStyle}
-								onChange={(e) => setCustomStyle(e.target.value)}
-								className="w-full bg-white border-2 border-stone-400 p-3 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
-								placeholder={t.narrativeStylePlaceholder}
+					<div className="relative">
+						<textarea
+							value={customStyle}
+							onChange={(e) => {
+								setCustomStyle(e.target.value);
+								if (error) {
+									setError(null);
+								}
+							}}
+							className="w-full bg-white border-2 border-stone-400 p-3 pr-12 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
+							placeholder={t.narrativeStylePlaceholder}
+						/>
+						<div className="absolute top-3 right-3">
+							<VoiceInput
+								apiKey={apiKey}
+								language={language}
+								onTranscription={handleVoiceTranscription}
+								disabled={saving}
+								className="text-stone-400 hover:text-stone-900"
 							/>
+						</div>
+					</div>
 						</div>
 					)}
 
