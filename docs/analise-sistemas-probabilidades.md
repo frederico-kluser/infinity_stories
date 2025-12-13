@@ -715,3 +715,353 @@ Isso permite que o jogador entenda o que cada símbolo representa sem sobrecarre
 1. Adicionar cache de elementos por localização para evitar recálculo quando jogador volta a um local já visitado
 2. Implementar validação de colisão de elementos (dois elementos não devem ocupar a mesma célula)
 3. Criar sistema de "elementos temporários" com TTL para efeitos como fogo, fumaça, etc.
+
+### Extração Proativa de Elementos Narrativos
+
+O prompt `gridUpdate.prompt.ts` foi reformulado para ser **proativo** na detecção de elementos. A filosofia mudou de "só atualize quando necessário" para "um mapa vazio em uma cena descrita é um ERRO".
+
+**Nova missão do prompt:**
+```
+You are a PROACTIVE spatial positioning analyzer for an RPG game.
+Your MISSION is to make the 10x10 grid map ALIVE and RICH with elements from the narrative.
+An EMPTY or SPARSE map is a FAILURE. The map should visually represent the scene!
+```
+
+**Três passos obrigatórios de extração:**
+
+1. **SCAN FOR ELEMENTS IN LOCATION DESCRIPTION**
+   - Furniture: tables, chairs, beds, thrones, counters, shelves
+   - Structures: doors, windows, stairs, pillars, arches, walls
+   - Nature: trees, rocks, bushes, water, fire pits, gardens
+   - Interactive: chests, levers, switches, altars, pedestals
+   - Ambient: torches, lamps, fountains, statues, paintings
+
+2. **SCAN FOR ELEMENTS IN RECENT MESSAGES**
+   - Characters interacting with something? ADD IT
+   - Environment details? ADD THEM
+   - NPCs near objects? ADD THOSE OBJECTS
+   - Combat references? ADD weapons, obstacles, cover
+
+3. **SCAN FOR CHARACTERS/CREATURES**
+   - NPCs mentioned but not in character list
+   - Creatures: wolves, dragons, spiders, ghosts
+   - Groups: guards, bandits, villagers
+
+**Guia de elementos por tipo de local:**
+
+| Local | Elementos Típicos |
+|-------|------------------|
+| Tavern/Inn | [B] Bar Counter, [T] Tables, [F] Fireplace, [S] Stairs, [D] Door, [K] Kitchen |
+| Forest | [T] Trees, [R] Rocks, [B] Bushes, [P] Path, [S] Stream, [C] Campfire |
+| Cave/Dungeon | [R] Rocks, [P] Pillars, [C] Chest, [A] Altar, [D] Door, [W] Web |
+| Castle/Throne | [T] Throne, [P] Pillars, [B] Banners, [G] Guards, [D] Doors |
+| Market/Town | [S] Stalls, [F] Fountain, [C] Carts, [B] Barrels, [W] Well |
+| Beach/Shore | [R] Rocks, [B] Boat, [D] Driftwood, [S] Shells, [W] Waves |
+| Library/Study | [B] Bookshelves, [D] Desk, [C] Candles, [G] Globe, [S] Scrolls |
+
+**Exemplo de população automática de mapa vazio:**
+
+```
+Localização: "The Dragon's Breath Tavern - A cozy tavern with a large fireplace,
+wooden tables scattered about, and a long bar counter where the innkeeper serves
+drinks. Stairs lead to the upper rooms."
+
+Current elements: None
+
+→ LLM detecta mapa vazio + descrição rica
+
+Response:
+{
+  "shouldUpdate": true,
+  "elements": [
+    { "symbol": "D", "name": "Tavern Door", "x": 5, "y": 9 },
+    { "symbol": "F", "name": "Fireplace", "x": 1, "y": 2 },
+    { "symbol": "B", "name": "Bar Counter", "x": 7, "y": 2 },
+    { "symbol": "T", "name": "Wooden Table", "x": 3, "y": 5 },
+    { "symbol": "S", "name": "Stairs", "x": 9, "y": 3 }
+  ],
+  "reasoning": "Populated tavern with elements from description"
+}
+```
+
+## 7. Sistema de Reutilização de Locais (KNOWN_LOCATIONS)
+
+O sistema de gerenciamento de locais foi aprimorado para evitar a criação de locais duplicados quando o jogador retorna a um lugar já visitado.
+
+### Problema Original
+
+A LLM não tinha conhecimento dos IDs de locais existentes, então sempre criava novos IDs quando o jogador viajava. Isso causava:
+- Duplicação de locais no banco de dados
+- Perda de imagens de fundo já geradas
+- Inconsistência no mapa de conexões
+
+### Solução Implementada
+
+**1. Lista KNOWN_LOCATIONS no prompt do GM:**
+
+```typescript
+// Em gameMaster.prompt.ts
+const allLocations = Object.values(gameState.locations);
+const knownLocationsList = allLocations.map((loc) =>
+  `- "${loc.name}" (ID: ${loc.id}) - ${loc.description.substring(0, 80)}...`
+).join('\n    ');
+```
+
+**2. Nova seção no prompt:**
+
+```
+=== KNOWN_LOCATIONS (ALL LOCATIONS IN THE GAME) ===
+These locations ALREADY EXIST in the game. When the player travels to one of these, use its EXACT ID.
+- "Dragon's Breath Tavern" (ID: loc_1_tavern_2847) - A cozy tavern with a large fireplace...
+- "Town Square" (ID: loc_1_square_3921) - The central plaza of the village...
+- "Dark Forest Path" (ID: loc_2_forest_1234) - A winding path through ancient trees...
+```
+
+**3. Regras de mudança de localização (LOCATION CHANGE RULES):**
+
+```
+=== LOCATION CHANGE RULES (CRITICAL) ===
+When the player moves to a different location:
+
+**STEP 1: Check KNOWN_LOCATIONS list above**
+- If the destination matches a location in KNOWN_LOCATIONS, use its EXACT ID in "locationChange"
+- Match by semantic meaning, not exact name (e.g., "tavern", "the inn", "bar" = same location if context fits)
+
+**STEP 2: Only create new location if truly new**
+- If the player goes somewhere NOT in KNOWN_LOCATIONS, create it via "newLocations"
+- Format: { "id": "loc_[turnNumber]_[shortname]_[random4digits]", ... }
+```
+
+**4. Exemplos no prompt:**
+
+```
+**EXAMPLE - Returning to existing location:**
+Player says: "I go back to the tavern"
+KNOWN_LOCATIONS includes: "Dragon's Breath Tavern" (ID: loc_1_tavern_2847)
+
+CORRECT:
+"stateUpdates": {
+  "locationChange": "loc_1_tavern_2847",
+  "eventLog": "Player returned to the tavern"
+}
+
+WRONG (creates duplicate):
+"stateUpdates": {
+  "newLocations": [{ "id": "loc_5_tavern_9999", "name": "Dragon's Breath Tavern", ... }],
+  "locationChange": "loc_5_tavern_9999"
+}
+```
+
+### Preservação de Imagens de Fundo
+
+No `useGameEngine.ts`, ao atualizar locais, a imagem existente é preservada:
+
+```typescript
+if (response.stateUpdates.newLocations) {
+  response.stateUpdates.newLocations.forEach((l) => {
+    const existingLocation = next.locations[l.id];
+    next.locations[l.id] = {
+      ...l,
+      // Preserva imagem existente quando atualiza um local
+      backgroundImage: existingLocation?.backgroundImage || l.backgroundImage,
+    };
+  });
+}
+```
+
+### Benefícios
+
+1. **Economia de tokens**: Não gera novas descrições para locais já conhecidos
+2. **Consistência visual**: Imagens de fundo são reutilizadas
+3. **Integridade do mapa**: Conexões entre locais permanecem válidas
+4. **Melhor UX**: Jogador reconhece visualmente locais já visitados
+
+## 8. Sistema de Separação de Ações e Falas (Input Segmentation)
+
+O sistema de processamento de input do jogador foi completamente reformulado para separar ações de falas, permitindo uma apresentação visual mais rica e narrativa mais interessante.
+
+### Problema Original
+
+O sistema anterior tratava todo input do jogador como um único bloco, sempre exibido como diálogo do personagem:
+
+```
+Input: "Olho para o guarda e digo: 'Boa noite' antes de sorrir"
+
+Resultado anterior:
+[Diálogo - Avatar do Jogador] "Olho para o guarda e digo: 'Boa noite' antes de sorrir"
+```
+
+Isso causava:
+- Ações sendo apresentadas como falas
+- Perda do tom narrativo literário
+- Mistura visual confusa entre ação e diálogo
+
+### Nova Arquitetura
+
+**Interface de Segmento:**
+
+```typescript
+interface InputSegment {
+  type: 'action' | 'speech';
+  originalText: string;
+  processedText: string;  // Transformado para narrativa (ações) ou adaptado (falas)
+}
+
+interface ClassifiedPlayerInput {
+  segments: ProcessedSegment[];
+  hasMultipleSegments: boolean;
+  // Legacy fields mantidos para compatibilidade
+  type: 'action' | 'speech';
+  processedText: string;
+  wasProcessed: boolean;
+}
+```
+
+### Regras de Transformação
+
+**Para AÇÕES (terceira pessoa narrativa):**
+
+| Input Original | Texto Transformado |
+|----------------|-------------------|
+| "Olho ao redor" | "Seus olhos percorrem o ambiente, absorvendo cada detalhe" |
+| "Pego a espada" | "Os dedos se fecham em torno do cabo da espada, sentindo o peso familiar do aço" |
+| "Corro em direção à porta" | "Seus pés ecoam pelo piso de pedra enquanto corre em direção à porta" |
+| "Sorrio" | "Um sorriso sutil se forma em seus lábios" |
+
+**Para FALAS (adaptadas ao personagem/universo):**
+
+| Input Original | Texto Adaptado (Medieval) |
+|----------------|--------------------------|
+| "Oi, tudo bem?" | "Salve, bom homem! Como passas?" |
+| "Onde fica a taverna?" | "Poderia me indicar onde fica a taverna, senhor?" |
+| "Me ajuda!" | "Imploro vossa ajuda!" |
+
+### Exemplo de Separação Completa
+
+```
+Input do Jogador: "Olho para o guarda e digo: 'Boa noite' antes de fazer uma reverência"
+
+→ LLM identifica 3 segmentos:
+
+Segment 1 (action):
+  original: "Olho para o guarda"
+  processed: "Seus olhos encontram o olhar atento do guarda de plantão"
+
+Segment 2 (speech):
+  original: "Boa noite"
+  processed: "Boa noite, senhor guarda"
+
+Segment 3 (action):
+  original: "antes de fazer uma reverência"
+  processed: "Uma reverência elegante completa a saudação cortês"
+```
+
+### Criação de Mensagens no useGameEngine
+
+O hook agora cria uma mensagem para cada segmento:
+
+```typescript
+for (let i = 0; i < classified.segments.length; i++) {
+  const segment = classified.segments[i];
+
+  if (segment.type === 'speech') {
+    // Speech: Player dialogue com avatar
+    playerMessages.push({
+      id: msgId,
+      senderId: currentStoryRef.playerCharacterId, // Mostra avatar do jogador
+      text: segment.processedText,
+      type: MessageType.DIALOGUE,
+      ...
+    });
+  } else {
+    // Action: Narrada em terceira pessoa pelo GM
+    playerMessages.push({
+      id: msgId,
+      senderId: 'GM', // Narrador
+      text: segment.processedText,
+      type: MessageType.NARRATION,
+      ...
+    });
+  }
+}
+```
+
+### Resultado Visual
+
+```
+Antes (sistema antigo):
+┌─────────────────────────────────────┐
+│ [Avatar Jogador] "Olho para o       │
+│ guarda e digo: 'Boa noite' antes    │
+│ de fazer uma reverência"            │
+└─────────────────────────────────────┘
+
+Depois (novo sistema):
+┌─────────────────────────────────────┐
+│ [Narrador] Seus olhos encontram o   │
+│ olhar atento do guarda de plantão   │
+├─────────────────────────────────────┤
+│ [Avatar Jogador] "Boa noite, senhor │
+│ guarda"                             │
+├─────────────────────────────────────┤
+│ [Narrador] Uma reverência elegante  │
+│ completa a saudação cortês          │
+└─────────────────────────────────────┘
+```
+
+### Prompt de Classificação Reformulado
+
+O `textClassification.prompt.ts` agora:
+
+1. **Identifica segmentos** separando ações de falas
+2. **Transforma ações** para terceira pessoa literária
+3. **Adapta falas** ao estilo do personagem/universo
+4. **Preserva ordem** dos segmentos conforme o input original
+
+```
+=== SEGMENT IDENTIFICATION ===
+
+**ACTION segments** - What the character DOES:
+- Physical actions: attack, move, jump, run, hide, climb
+- Object interactions: pick up, open, close, use, examine
+- Emotional expressions: smile, frown, sigh, laugh
+
+**SPEECH segments** - What the character SAYS:
+- Dialogue with NPCs or others
+- Anything between quotes or after "digo:", "falo:", "pergunto:"
+
+=== TRANSFORMATION RULES ===
+
+**For ACTION segments:**
+Transform into THIRD-PERSON NARRATIVE with literary style:
+- DO NOT use first person ("I", "eu", "yo")
+- Use third person or poetic descriptions
+- Avoid being literal - be creative and atmospheric
+```
+
+### Arquivos Modificados
+
+| Arquivo | Mudanças |
+|---------|----------|
+| `textClassification.prompt.ts` | Novo prompt para separação e transformação de segmentos |
+| `openaiClient.ts` | Nova interface `ProcessedSegment`, função `classifyAndProcessPlayerInput` reformulada |
+| `useGameEngine.ts` | Loop de criação de múltiplas mensagens por segmento |
+| `types.ts` | Interface `InputSegment` exportada |
+
+### Benefícios
+
+1. **Separação visual clara**: Falas com avatar, ações narradas
+2. **Narrativa literária**: Ações não são mais literais ("eu fiz X")
+3. **Imersão aumentada**: Jogador vê a história sendo contada, não comandos
+4. **Flexibilidade**: Input misto é tratado corretamente
+5. **Consistência de estilo**: Todas as ações seguem o tom do universo
+
+**O que está sendo bem executado:**
+- Transformação para terceira pessoa evita quebra de imersão
+- Separação permite UI mais rica com avatares corretos
+- Sistema delta de segmentos reduz complexidade no downstream
+
+**Sugestões de melhoria (3):**
+1. Adicionar cache de transformações comuns para reduzir chamadas ao LLM
+2. Permitir configuração de "nível de literariedade" por gênero narrativo
+3. Implementar fallback local quando transformação falha (manter original)
