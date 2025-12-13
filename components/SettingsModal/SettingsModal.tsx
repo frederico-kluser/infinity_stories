@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { X, Settings, Volume2, Trash2, Key, AlertTriangle, Loader2, Edit3 } from 'lucide-react';
+import { X, Settings, Volume2, Trash2, Key, AlertTriangle, Loader2, Edit3, Palette } from 'lucide-react';
 
 interface SettingsModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onOpenVoiceSettings: () => void;
 	onOpenNarrativeStyle: () => void;
+	onOpenThemeColors: () => void;
 	onDeleteDatabase: () => Promise<void>;
 	onDeleteApiKey: () => void;
 	canEditNarrativeStyle: boolean;
+	canEditThemeColors: boolean;
 	t: Record<string, string>;
 }
 
@@ -17,9 +19,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 	onClose,
 	onOpenVoiceSettings,
 	onOpenNarrativeStyle,
+	onOpenThemeColors,
 	onDeleteDatabase,
 	onDeleteApiKey,
 	canEditNarrativeStyle,
+	canEditThemeColors,
 	t,
 }) => {
 	const [showDeleteDbConfirm, setShowDeleteDbConfirm] = useState(false);
@@ -37,6 +41,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 		if (!canEditNarrativeStyle) return;
 		onClose();
 		onOpenNarrativeStyle();
+	};
+
+	const handleOpenThemeColors = () => {
+		if (!canEditThemeColors) return;
+		onClose();
+		onOpenThemeColors();
 	};
 
 	const handleDeleteDatabase = async () => {
@@ -60,9 +70,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-			<div className="bg-[#f5f5f4] border-2 border-stone-900 w-full max-w-md shadow-[12px_12px_0px_rgba(0,0,0,1)] relative">
+			<div className="bg-[#f5f5f4] border-2 border-stone-900 w-full max-w-md max-h-[90vh] shadow-[12px_12px_0px_rgba(0,0,0,1)] relative flex flex-col">
 				{/* Header */}
-				<div className="p-5 border-b-2 border-stone-900 bg-stone-800 flex justify-between items-center">
+				<div className="p-5 border-b-2 border-stone-900 bg-stone-800 flex justify-between items-center flex-shrink-0">
 					<h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tight">
 						<Settings className="w-6 h-6" />
 						{t.settings || 'Settings'}
@@ -73,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 				</div>
 
 				{/* Content */}
-				<div className="p-4 space-y-3">
+				<div className="p-4 space-y-3 overflow-y-auto flex-1">
 					{/* Narrative Style Option */}
 					<button
 						onClick={handleOpenNarrativeStyle}
@@ -99,6 +109,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 								{canEditNarrativeStyle
 									? t.settingsNarrativeStyleDesc || 'Adjust tone presets or inject a custom writing brief.'
 									: t.settingsNarrativeStyleDisabled || 'Start a story to edit its narrative tone.'}
+							</p>
+						</div>
+					</button>
+
+					{/* Theme Colors Option */}
+					<button
+						onClick={handleOpenThemeColors}
+						className={`w-full p-4 border-2 bg-white transition-all flex items-center gap-4 group ${
+							canEditThemeColors
+								? 'border-stone-300 hover:border-stone-900'
+								: 'border-dashed border-stone-200 cursor-not-allowed opacity-60'
+						}`}
+						disabled={!canEditThemeColors}
+					>
+						<div
+							className={`w-12 h-12 flex items-center justify-center transition-colors ${
+								canEditThemeColors ? 'bg-stone-100 group-hover:bg-stone-200' : 'bg-stone-50'
+							}`}
+						>
+							<Palette className="w-6 h-6 text-stone-700" />
+						</div>
+						<div className="text-left flex-1">
+							<h3 className="font-bold uppercase text-stone-900">
+								{t.settingsThemeColors || 'Theme Colors'}
+							</h3>
+							<p className="text-xs text-stone-500">
+								{canEditThemeColors
+									? t.settingsThemeColorsDesc || 'Customize colors, fonts and text size.'
+									: t.settingsThemeColorsDisabled || 'Start a story to customize its theme.'}
 							</p>
 						</div>
 					</button>
@@ -218,7 +257,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="p-4 border-t-2 border-stone-300 bg-stone-50">
+				<div className="p-4 border-t-2 border-stone-300 bg-stone-50 flex-shrink-0">
 					<button
 						onClick={onClose}
 						className="w-full py-2 px-6 bg-stone-900 text-white font-bold uppercase tracking-widest hover:bg-stone-700 transition-colors text-sm"
