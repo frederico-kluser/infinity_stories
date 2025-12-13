@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { StoryCardView, StoryCardProps } from '../../components/StoryCard/StoryCard.view';
-import { MessageType, ChatMessage, DEFAULT_THEME_COLORS } from '../../types';
+import { MessageType, ChatMessage, ThemeColors, DEFAULT_THEME_COLORS } from '../../types';
 
 // Mock the AI services
 jest.mock('../../services/ai/openaiClient', () => ({
@@ -15,8 +15,8 @@ jest.mock('../../utils/ai', () => ({
 
 // Mock GridMap component
 jest.mock('../../components/GridMap', () => ({
-  GridMap: ({ onToggleFlip }: { onToggleFlip: () => void }) => (
-    <div data-testid="grid-map">
+  GridMap: ({ isFlipped, onToggleFlip }: { isFlipped: boolean; onToggleFlip: () => void }) => (
+    <div data-testid="grid-map" data-visible={isFlipped}>
       <button onClick={onToggleFlip}>Toggle Map</button>
     </div>
   ),
@@ -261,6 +261,17 @@ describe('StoryCard', () => {
 
       expect(screen.getByText('3/10')).toBeInTheDocument();
     });
+
+    it('should show textual page indicator when page number is provided', () => {
+      const props = createDefaultProps({
+        totalCards: 5,
+        message: createMockMessage({ pageNumber: 1 }),
+        skipAnimation: true,
+      });
+      render(<StoryCardView {...props} />);
+
+      expect(screen.getByText('Page 1 of 5')).toBeInTheDocument();
+    });
   });
 
   describe('speaker labels', () => {
@@ -340,6 +351,33 @@ describe('StoryCard', () => {
 
       expect(screen.queryByTitle('View Map')).not.toBeInTheDocument();
     });
+
+    it('should toggle map view when the map button is clicked', () => {
+      const props = createDefaultProps({
+        gridSnapshots: [
+          {
+            id: 'grid-1',
+            gameId: 'game-1',
+            atMessageNumber: 1,
+            timestamp: Date.now(),
+            locationId: 'loc-1',
+            locationName: 'Forest',
+            characterPositions: [],
+          },
+        ],
+        skipAnimation: true,
+      });
+
+      render(<StoryCardView {...props} />);
+
+      const mapButton = screen.getByTitle('View Map');
+      fireEvent.click(mapButton);
+
+      expect(screen.getByTestId('grid-map')).toHaveAttribute('data-visible', 'true');
+
+      fireEvent.click(screen.getByText('Toggle Map'));
+      expect(screen.getByTestId('grid-map')).toHaveAttribute('data-visible', 'false');
+    });
   });
 
   describe('play button', () => {
@@ -361,6 +399,54 @@ describe('StoryCard', () => {
 
       const playButton = screen.getByTitle('Read Aloud');
       expect(playButton).toBeDisabled();
+    });
+
+    it('should keep play button disabled while text is typing', () => {
+      const props = createDefaultProps({
+        apiKey: 'test-key',
+        skipAnimation: false,
+      });
+      render(<StoryCardView {...props} />);
+
+      const playButton = screen.getByTitle('Read Aloud');
+      expect(playButton).toBeDisabled();
+    });
+  });
+
+  describe('scroll controls', () => {
+    it('should match snapshot when content overflows', () => {
+      const longText = 'A'.repeat(2000);
+      const props = createDefaultProps({
+        message: createMockMessage({ text: longText }),
+        skipAnimation: true,
+      });
+
+      const { container } = render(<StoryCardView {...props} />);
+      expect(container).toMatchSnapshot();
+    });
+  });
+
+  describe('theming', () => {
+    it('should apply custom theme colors', () => {
+      const customColors: ThemeColors = {
+        ...DEFAULT_THEME_COLORS,
+        background: '#1a1a2e',
+        text: '#eeeeee',
+        buttonPrimary: '#e94560',
+      };
+
+      const { container } = render(
+        <StoryCardView {...createDefaultProps({ colors: customColors })} />
+      );
+      expect(container).toMatchSnapshot();
+    });
+  });
+
+  describe('responsive design', () => {
+    it('should render mobile-friendly layout', () => {
+      const props = createDefaultProps({ isMobile: true });
+      const { container } = render(<StoryCardView {...props} />);
+      expect(container).toMatchSnapshot();
     });
   });
 });
