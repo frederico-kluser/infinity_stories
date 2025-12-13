@@ -59,7 +59,7 @@ exports[`StoryCard rendering should match snapshot for NPC dialogue 1`] = `
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 0% 0);"
               >
                 Welcome to the adventure, brave hero!
               </div>
@@ -232,7 +232,7 @@ exports[`StoryCard rendering should match snapshot for narrator message 1`] = `
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-lg md:text-2xl italic text-center"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 0% 0);"
               >
                 <span
                   class="text-3xl md:text-4xl leading-none align-text-top mr-2"
@@ -407,7 +407,7 @@ exports[`StoryCard rendering should match snapshot for player message 1`] = `
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 0% 0);"
               >
                 I draw my sword and prepare for battle!
               </div>
@@ -580,7 +580,7 @@ exports[`StoryCard rendering should match snapshot for system message 1`] = `
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 0% 0);"
               >
                 Your progress has been saved.
               </div>
@@ -753,7 +753,7 @@ exports[`StoryCard rendering should match snapshot with avatar 1`] = `
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 0% 0);"
               >
                 Welcome to the adventure, brave hero!
               </div>
@@ -916,7 +916,7 @@ exports[`StoryCard rendering should match snapshot with location background 1`] 
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 0% 0);"
               >
                 Welcome to the adventure, brave hero!
               </div>
@@ -1079,13 +1079,9 @@ exports[`StoryCard responsive design should render mobile-friendly layout 1`] = 
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 100% 0);"
               >
-                <span
-                  class="animate-pulse ml-0.5"
-                >
-                  |
-                </span>
+                Welcome to the adventure, brave hero!
               </div>
             </div>
             <div
@@ -1246,7 +1242,7 @@ exports[`StoryCard scroll controls should match snapshot when content overflows 
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(28, 25, 23); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 0% 0);"
               >
                 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
               </div>
@@ -1409,13 +1405,9 @@ exports[`StoryCard theming should apply custom theme colors 1`] = `
             >
               <div
                 class="leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 text-base md:text-xl"
-                style="color: rgb(238, 238, 238); transform: translateY(-0px); transition: transform 120ms ease-out;"
+                style="color: rgb(238, 238, 238); transform: translateY(-0px); transition: transform 120ms ease-out; clip-path: inset(0 0 100% 0);"
               >
-                <span
-                  class="animate-pulse ml-0.5"
-                >
-                  |
-                </span>
+                Welcome to the adventure, brave hero!
               </div>
             </div>
             <div

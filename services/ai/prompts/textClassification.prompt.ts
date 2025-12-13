@@ -30,8 +30,9 @@
  * ```
  */
 
-import { GameState, Language, ChatMessage, Character, Location } from '../../../types';
+import { GameState, Language, Character, Location } from '../../../types';
 import { getLanguageName } from '../../../i18n/locales';
+import { getRecentMessagesForPrompt } from './helpers';
 
 /**
  * Parâmetros necessários para construir o prompt de classificação de texto.
@@ -119,7 +120,7 @@ export function buildTextClassificationPrompt({
     gameState.characters[gameState.playerCharacterId];
   const currentLocation: Location | undefined =
     gameState.locations[gameState.currentLocationId];
-  const recentMessages: ChatMessage[] = gameState.messages.slice(-10);
+  const recentMessages = getRecentMessagesForPrompt(gameState.messages);
 
   // Formatar mensagens recentes para contexto
   const recentContext = recentMessages.map((m) => {

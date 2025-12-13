@@ -155,30 +155,27 @@ describe('StoryCard', () => {
     });
   });
 
-  describe('typewriter effect', () => {
-    it('should show typing cursor during animation', () => {
+  describe('text reveal effect', () => {
+    it('should display text content during reveal animation', () => {
       const props = createDefaultProps({
         message: createMockMessage({ text: 'Hello' }),
       });
       render(<StoryCardView {...props} />);
 
-      // Initial state should show cursor
-      expect(screen.queryByText('|')).toBeInTheDocument();
+      // Text should be present in the DOM during reveal animation
+      expect(screen.getByText(/Hello/)).toBeInTheDocument();
     });
 
-    it('should complete animation and call callback', () => {
+    it('should call onTypingComplete when skipAnimation is true', () => {
       const onTypingComplete = jest.fn();
       const props = createDefaultProps({
         message: createMockMessage({ text: 'Hi' }),
         onTypingComplete,
+        skipAnimation: true,
       });
       render(<StoryCardView {...props} />);
 
-      // Advance timers to complete animation (20ms per char + buffer)
-      act(() => {
-        jest.advanceTimersByTime(100);
-      });
-
+      // With skipAnimation=true, callback should be called immediately
       expect(onTypingComplete).toHaveBeenCalled();
     });
 

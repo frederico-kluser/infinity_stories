@@ -21,6 +21,7 @@
 
 import { GameState, Language, Character, Location, HeavyContext, GridCharacterPosition } from '../../../types';
 import { getLanguageName } from '../../../i18n/locales';
+import { getRecentMessagesForPrompt } from './helpers';
 
 /**
  * Parâmetros necessários para construir o prompt de análise de ação customizada.
@@ -100,7 +101,7 @@ Important Notes: ${(heavyContext.importantNotes || []).join(' | ') || 'None'}
     : '';
 
   // Get recent messages for context
-  const recentMessages = gameState.messages.slice(-10);
+  const recentMessages = getRecentMessagesForPrompt(gameState.messages);
   const recentMessagesText = recentMessages
     .map((m) => `[${m.senderId}]: ${m.text}`)
     .join('\n');

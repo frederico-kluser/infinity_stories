@@ -42,6 +42,7 @@ import {
 	heavyContextSchema,
 	gridUpdateSchema,
 } from './prompts';
+import { getRecentMessagesForPrompt } from './prompts/helpers';
 import type { TextClassificationResponse, CustomActionAnalysisResponse } from './prompts';
 import type { HeavyContextResponse, HeavyContextFieldChange, HeavyContextListChange } from './prompts';
 import {
@@ -919,7 +920,7 @@ export const generateGameTurn = async (
 		},
 		{
 			role: 'user',
-			content: `History (Context): ${JSON.stringify(gameState.messages.slice(-100))}`,
+			content: `History (Context): ${JSON.stringify(getRecentMessagesForPrompt(gameState.messages))}`,
 		},
 		{
 			role: 'user',

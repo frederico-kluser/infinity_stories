@@ -29,7 +29,7 @@ O **storywell.games** segue como RPG em navegador com GPT-4.1, mas a versão 1.1
 
 | # | Problema | Status (11/12) | Evidências | O que ainda falta |
 |---|----------|----------------|------------|-------------------|
-| 1 | Perda de contexto de conversas antigas | **Parcialmente resolvido** | `generateGameTurn()` agora envia `slice(-100)` (linha 494) e heavy context é atualizado turno a turno | Ainda não há sumarização/embeddings, heavy context continua com apenas 5 slots e é atualizado após a resposta bloquear a UI |
+| 1 | Perda de contexto de conversas antigas | **Parcialmente resolvido** | `generateGameTurn()` agora usa o helper `getRecentMessagesForPrompt` (janela padrão de 100 mensagens) e heavy context é atualizado turno a turno | Ainda não há sumarização/embeddings, heavy context continua com apenas 5 slots e é atualizado após a resposta bloquear a UI |
 | 2 | Sistema parafraseia ao invés de criar NPCs | **Parcialmente resolvido** | Prompt do GM ganhou regras severas de criação (linhas 314–356) + lista de personagens conhecidos | Falta classificar intenção do jogador e deduplicar NPCs; ainda não há gatilho automático para "quero encontrar X" |
 | 3 | IA cria diálogos pelo jogador | **Resolvido** | `useGameEngine` envia texto bruto (linha 421) e filtra mensagens cujo speaker coincide com o player (linhas 487–521) | Monitoramento opcional (logs) apenas; funcionalidade atende ao requisito |
 
@@ -48,13 +48,13 @@ Problema 3 → hooks/useGameEngine.ts (agência garantida e processPlayerMessage
 **Status (11/12):** Parcialmente resolvido. A janela agora leva 100 mensagens, mas continuamos sem sumarização/embeddings e o heavy context segue minimalista.
 
 ### O que melhorou
-- `generateGameTurn()` envia `gameState.messages.slice(-100)` (linha 494), multiplicando por 10 a janela original.
+- `generateGameTurn()` envia `getRecentMessagesForPrompt(gameState.messages)` (janela padrão de 100 mensagens, linha 494), multiplicando por 10 a janela original.
 - O heavy context é recalculado após cada turno (`updateHeavyContext`), reduzindo esquecimentos imediatos.
 
 ```typescript
 {
   role: 'user',
-  content: `History (Context): ${JSON.stringify(gameState.messages.slice(-100))}`
+  content: `History (Context): ${JSON.stringify(getRecentMessagesForPrompt(gameState.messages))}`
 }
 ```
 

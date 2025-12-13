@@ -34,7 +34,7 @@
 
 import { GameState, Language, ChatMessage, Character, Location } from '../../../types';
 import { getLanguageName } from '../../../i18n/locales';
-import { formatInventorySimple, normalizeInventory } from './helpers';
+import { formatInventorySimple, normalizeInventory, getRecentMessagesForPrompt } from './helpers';
 import { getItemAwarenessRulesForPrompt } from '../../../constants/economy';
 
 /**
@@ -165,7 +165,7 @@ export function buildActionOptionsPrompt({
     gameState.characters[gameState.playerCharacterId];
   const currentLocation: Location | undefined =
     gameState.locations[gameState.currentLocationId];
-  const recentMessages: ChatMessage[] = gameState.messages.slice(-100);
+  const recentMessages: ChatMessage[] = getRecentMessagesForPrompt(gameState.messages);
 
   // Get player inventory and gold
   const normalizedInventory = normalizeInventory(player?.inventory);
