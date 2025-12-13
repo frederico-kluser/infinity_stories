@@ -101,7 +101,7 @@ const GridCell: React.FC<{
 
   // Determine cell styling based on content
   const isOccupied = charsAtPosition.length > 0;
-  const borderColor = isOccupied ? colors.borderStrong : `${colors.border}40`;
+  const borderColor = isOccupied ? colors.borderStrong : colors.border;
   const bgColor = hasPlayer
     ? blinkState
       ? colors.buttonPrimary
@@ -394,7 +394,7 @@ export const GridMap: React.FC<GridMapProps> = ({
                   maxHeight: '100%',
                   aspectRatio: gridSize > 0 ? undefined : '1',
                   backgroundColor: 'transparent',
-                  border: `2px solid ${colors.borderStrong}40`,
+                  border: `2px solid ${colors.borderStrong}`,
                   borderRadius: '4px',
                   overflow: 'hidden',
                   position: 'relative',
