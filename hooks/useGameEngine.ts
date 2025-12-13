@@ -20,7 +20,6 @@ import {
 	generateGameTurn,
 	initializeStory,
 	validateApiKey,
-	processPlayerMessage,
 	updateHeavyContext,
 	classifyAndProcessPlayerInput,
 	StoryInitializationResult,
@@ -29,6 +28,8 @@ import {
 	updateGridPositions,
 	createInitialGridSnapshot,
 	normalizeNarrativeStyleBrief,
+	generateActionOptions,
+	generateCharacterAvatar,
 } from '../services/ai/openaiClient';
 import { dbService, ExportedGameData } from '../services/db';
 import { getBrowserLanguage, translations, setLanguageCookie } from '../i18n/locales';
@@ -36,6 +37,7 @@ import { parseOpenAIError } from '../utils/errorHandler';
 import { ErrorType } from '../components/ErrorModal';
 import { migrateGameState, needsMigration } from '../utils/migration';
 import { DEFAULT_PLAYER_STATS, getStartingGold } from '../constants/economy';
+import { getCachedActionOptions, saveCachedActionOptions } from '../utils/actionOptionsCache';
 import { useThemeColors } from './useThemeColors';
 
 // Creation phase type for progress tracking
@@ -214,6 +216,8 @@ export const useGameEngine = (): UseGameEngineReturn => {
 	const [isGeneratingBackground, setIsGeneratingBackground] = useState(false);
 	const [backgroundLocationName, setBackgroundLocationName] = useState('');
 	const generatingBackgroundRef = useRef<Set<string>>(new Set()); // Track which locations are currently generating
+	const actionOptionsPrefetchRef = useRef<Record<string, string>>({});
+	const pendingAvatarRef = useRef<Set<string>>(new Set());
 
 	// Creation Progress
 	const [creationPhase, setCreationPhase] = useState<CreationPhase>(null);
@@ -449,15 +453,17 @@ export const useGameEngine = (): UseGameEngineReturn => {
 	 * Persists state changes to IndexedDB immediately after React state updates.
 	 * Automatically deduplicates messages to prevent duplicates from entering state.
 	 */
-	const safeUpdateStory = (updater: (s: GameState) => GameState) => {
+	const safeUpdateStory = (updater: (s: GameState) => GameState, targetStoryId?: string | null) => {
 		setStories((prevStories) => {
-			const index = prevStories.findIndex((s) => s.id === currentStoryId);
+			const effectiveId = targetStoryId ?? currentStoryId;
+			if (!effectiveId) return prevStories;
+
+			const index = prevStories.findIndex((s) => s.id === effectiveId);
 			if (index === -1) return prevStories;
 
 			const oldStory = prevStories[index];
 			const newStory = updater(oldStory);
 
-			// Ensure the message timeline stays normalized
 			const sanitizedStory = {
 				...newStory,
 				messages: sanitizeMessages(newStory.messages),
@@ -744,6 +750,7 @@ export const useGameEngine = (): UseGameEngineReturn => {
 			loadedStoriesRef.current.add(newStoryId);
 			setStories((prev) => [...prev, newState]);
 			setCurrentStoryId(newStoryId);
+			queueAvatarGeneration(newState, Object.keys(newState.characters));
 			setIsGenerating(false);
 			setCreationPhase(null);
 		} catch (e: any) {
@@ -795,9 +802,90 @@ export const useGameEngine = (): UseGameEngineReturn => {
 		}
 	};
 
+	const prefetchActionOptions = async (story: GameState) => {
+		if (!apiKey || !story.messages.length) return;
+
+		const lastMessage = story.messages[story.messages.length - 1];
+		const cached = getCachedActionOptions(story.id);
+		if (cached && cached.lastMessageId === lastMessage.id && cached.options.length > 0) {
+			return;
+		}
+
+		if (actionOptionsPrefetchRef.current[story.id] === lastMessage.id) {
+			return;
+		}
+
+		actionOptionsPrefetchRef.current[story.id] = lastMessage.id;
+
+		try {
+			const storyLang = story.config?.language || language;
+			const newOptions = await generateActionOptions(apiKey, story, storyLang);
+			if (newOptions.length > 0) {
+				saveCachedActionOptions(story.id, lastMessage.id, newOptions);
+			}
+		} catch (error) {
+			console.error('Action options prefetch failed:', error);
+		} finally {
+			if (actionOptionsPrefetchRef.current[story.id] === lastMessage.id) {
+				delete actionOptionsPrefetchRef.current[story.id];
+			}
+		}
+	};
+
+	const queueAvatarGeneration = (story: GameState, characterIds: string[]) => {
+		if (!apiKey || !characterIds.length) return;
+		const universeName = story.config?.universeName;
+		if (!universeName) return;
+		const visualStyle = story.config?.visualStyle;
+
+		characterIds.forEach((charId) => {
+			const character = story.characters[charId];
+			if (!character || character.avatarBase64) return;
+			const characterName = character.name || 'Unknown Character';
+			const queueKey = `${story.id}:${charId}`;
+			if (pendingAvatarRef.current.has(queueKey)) return;
+			pendingAvatarRef.current.add(queueKey);
+
+			(async () => {
+				try {
+					const avatarBase64 = await generateCharacterAvatar(
+						apiKey,
+						characterName,
+						character.description || '',
+						universeName,
+						visualStyle,
+					);
+					if (avatarBase64) {
+						safeUpdateStory((prev) => {
+							const existing = prev.characters[charId];
+							if (!existing || existing.avatarBase64) {
+								return prev;
+							}
+							return {
+								...prev,
+								characters: {
+									...prev.characters,
+									[charId]: {
+										...existing,
+										avatarBase64,
+									},
+								},
+							};
+						}, story.id);
+					}
+				} catch (error) {
+					console.error(`Avatar generation failed for ${characterName}:`, error);
+				} finally {
+					pendingAvatarRef.current.delete(queueKey);
+				}
+			})();
+		});
+	};
+
 	const handleSendMessage = async (directMessage?: string, fateResult?: FateResult) => {
 		const rawText = directMessage || inputValue;
 		if (!rawText.trim() || !apiKey || !currentStoryId || isProcessing || isUpdatingContext) return;
+		const activeStoryId = currentStoryId;
 
 		setInputValue('');
 		setIsProcessing(true);
@@ -831,10 +919,13 @@ export const useGameEngine = (): UseGameEngineReturn => {
 				voiceTone: 'neutral',
 			};
 
-			safeUpdateStory((s) => ({
-				...s,
-				messages: [...s.messages, userMsg],
-			}));
+			safeUpdateStory(
+				(s) => ({
+					...s,
+					messages: [...s.messages, userMsg],
+				}),
+				activeStoryId,
+			);
 
 			// 3. Build context with the processed player message for game turn
 			const contextStory = {
@@ -983,69 +1074,90 @@ export const useGameEngine = (): UseGameEngineReturn => {
 
 				next.messages = [...next.messages, ...botMessages];
 				return next;
-			});
+			}, activeStoryId);
 
-			// 6. Update Heavy Context (blocks UI until complete)
-			// Use contextStory which has the state before the action + the response which has what happened
-			setIsUpdatingContext(true);
-			setProcessingPhase('updating');
-			try {
-				const contextUpdate = await updateHeavyContext(apiKey, contextStory, response, storyLang);
+			const newCharacterIds = (response.stateUpdates.newCharacters || [])
+				.map((char) => char.id)
+				.filter((id): id is string => Boolean(id));
 
-				// Only update if there are meaningful changes
-				if (contextUpdate.shouldUpdate && contextUpdate.newContext) {
-					safeUpdateStory((prev) => ({
-						...prev,
-						heavyContext: contextUpdate.newContext,
-					}));
+			const storyAfterTurn = storiesRef.current.find((s) => s.id === activeStoryId);
+			if (storyAfterTurn) {
+				void prefetchActionOptions(storyAfterTurn);
+				if (newCharacterIds.length > 0) {
+					queueAvatarGeneration(storyAfterTurn, newCharacterIds);
 				}
-			} catch (contextErr) {
-				// Log error but don't block the game - heavy context update is non-critical
-				console.error('Heavy context update failed:', contextErr);
-			} finally {
-				setIsUpdatingContext(false);
 			}
 
-			// 7. Update Grid Positions (runs in background, non-blocking)
-			try {
-				// Get the latest message number after the response was added
-				const latestStory = storiesRef.current.find((s) => s.id === currentStoryId);
-				const currentMessageNumber = latestStory
-					? latestStory.messages.length
-					: contextStory.messages.length + (response.messages?.length || 0);
+			// 6. Kick off post-turn tasks in parallel
+			setProcessingPhase(null);
+			setIsProcessing(false);
 
-				// Check if this is the first grid snapshot or if we need to update
-				const hasGridSnapshots = latestStory?.gridSnapshots && latestStory.gridSnapshots.length > 0;
+			const heavyContextPromise = (async () => {
+				setIsUpdatingContext(true);
+				try {
+					const contextUpdate = await updateHeavyContext(apiKey, contextStory, response, storyLang);
 
-				if (!hasGridSnapshots) {
-					// Create initial grid snapshot
-					const initialSnapshot = createInitialGridSnapshot(latestStory || contextStory, currentMessageNumber);
-					safeUpdateStory((prev) => ({
-						...prev,
-						gridSnapshots: [...(prev.gridSnapshots || []), initialSnapshot],
-					}));
-					console.log('[Grid] Created initial grid snapshot');
-				} else {
-					// Try to update grid positions based on recent events
-					const gridResult = await updateGridPositions(
-						apiKey,
-						latestStory || contextStory,
-						response,
-						storyLang,
-						currentMessageNumber,
-					);
-
-					if (gridResult.updated && gridResult.snapshot) {
-						safeUpdateStory((prev) => ({
-							...prev,
-							gridSnapshots: [...(prev.gridSnapshots || []), gridResult.snapshot!],
-						}));
+					if (contextUpdate.shouldUpdate && contextUpdate.newContext) {
+						safeUpdateStory(
+							(prev) => ({
+								...prev,
+								heavyContext: contextUpdate.newContext,
+							}),
+							activeStoryId,
+						);
 					}
+				} catch (contextErr) {
+					console.error('Heavy context update failed:', contextErr);
+				} finally {
+					setIsUpdatingContext(false);
 				}
-			} catch (gridErr) {
-				// Log error but don't block the game - grid update is non-critical
-				console.error('Grid update failed:', gridErr);
-			}
+			})();
+
+			const gridUpdatePromise = (async () => {
+				try {
+					const latestStory = storiesRef.current.find((s) => s.id === activeStoryId);
+					const currentMessageNumber = latestStory
+						? latestStory.messages.length
+						: contextStory.messages.length + (response.messages?.length || 0);
+					const hasGridSnapshots = latestStory?.gridSnapshots && latestStory.gridSnapshots.length > 0;
+
+					if (!hasGridSnapshots) {
+						const initialSnapshot = createInitialGridSnapshot(latestStory || contextStory, currentMessageNumber);
+						safeUpdateStory(
+							(prev) => ({
+								...prev,
+								gridSnapshots: [...(prev.gridSnapshots || []), initialSnapshot],
+							}),
+							activeStoryId,
+						);
+						console.log('[Grid] Created initial grid snapshot');
+					} else {
+						const gridResult = await updateGridPositions(
+							apiKey,
+							latestStory || contextStory,
+							response,
+							storyLang,
+							currentMessageNumber,
+						);
+
+						if (gridResult.updated && gridResult.snapshot) {
+							safeUpdateStory(
+								(prev) => ({
+									...prev,
+									gridSnapshots: [...(prev.gridSnapshots || []), gridResult.snapshot!],
+								}),
+								activeStoryId,
+							);
+						}
+					}
+				} catch (gridErr) {
+					console.error('Grid update failed:', gridErr);
+				}
+			})();
+
+			Promise.allSettled([heavyContextPromise, gridUpdatePromise]).catch((err) =>
+				console.error('Post-turn background tasks failed:', err),
+			);
 		} catch (err: any) {
 			console.error(err);
 
@@ -1055,20 +1167,23 @@ export const useGameEngine = (): UseGameEngineReturn => {
 				showError(err);
 			} else {
 				// For other errors, show in-game message
-				safeUpdateStory((s) => ({
-					...s,
-					messages: [
-						...s.messages,
-						{
-							id: Date.now().toString(),
-							senderId: 'GM',
-							text: t.gmError,
-							type: MessageType.SYSTEM,
-							timestamp: Date.now(),
-							pageNumber: s.messages.length + 1,
-						},
-					],
-				}));
+				safeUpdateStory(
+					(s) => ({
+						...s,
+						messages: [
+							...s.messages,
+							{
+								id: Date.now().toString(),
+								senderId: 'GM',
+								text: t.gmError,
+								type: MessageType.SYSTEM,
+								timestamp: Date.now(),
+								pageNumber: s.messages.length + 1,
+							},
+						],
+					}),
+					activeStoryId,
+				);
 			}
 		} finally {
 			setIsProcessing(false);

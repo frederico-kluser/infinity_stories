@@ -10,37 +10,7 @@ import {
 	CustomActionAnalysisResult,
 } from '../../services/ai/openaiClient';
 import { useThemeColors } from '../../hooks/useThemeColors';
-
-// Cache key prefix for storing generated options
-const OPTIONS_CACHE_KEY = 'storywell_options_cache';
-
-interface CachedOptions {
-	lastMessageId: string;
-	options: ActionOption[];
-}
-
-// Helper to get cached options for a story
-const getCachedOptions = (storyId: string): CachedOptions | null => {
-	try {
-		const cached = localStorage.getItem(`${OPTIONS_CACHE_KEY}_${storyId}`);
-		if (cached) {
-			return JSON.parse(cached);
-		}
-	} catch (e) {
-		console.error('Failed to read options cache:', e);
-	}
-	return null;
-};
-
-// Helper to save options to cache
-const saveCachedOptions = (storyId: string, lastMessageId: string, options: ActionOption[]) => {
-	try {
-		const cacheData: CachedOptions = { lastMessageId, options };
-		localStorage.setItem(`${OPTIONS_CACHE_KEY}_${storyId}`, JSON.stringify(cacheData));
-	} catch (e) {
-		console.error('Failed to save options cache:', e);
-	}
-};
+import { getCachedActionOptions, saveCachedActionOptions } from '../../utils/actionOptionsCache';
 
 interface ActionInputProps {
 	apiKey: string;
@@ -98,7 +68,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 			setLastFateResult(null); // Clear fate result when new options load
 
 			// Check cache first - especially useful on page reload
-			const cached = getCachedOptions(activeStory.id);
+			const cached = getCachedActionOptions(activeStory.id);
 			if (cached && cached.lastMessageId === lastMessageId && cached.options.length > 0) {
 				// Cache hit! Use cached options instead of regenerating
 				setOptions(cached.options);
@@ -129,7 +99,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 			// Save to cache for reload persistence
 			const lastMessage = activeStory.messages[activeStory.messages.length - 1];
 			if (lastMessage && newOptions.length > 0) {
-				saveCachedOptions(activeStory.id, lastMessage.id, newOptions);
+				saveCachedActionOptions(activeStory.id, lastMessage.id, newOptions);
 			}
 		} catch (e) {
 			console.error('Failed to load options:', e);
@@ -289,36 +259,30 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 								style={{
 									borderColor: `${colors.buttonPrimary}40`,
 									borderTopColor: 'transparent',
-									borderWidth: '3px'
+									borderWidth: '3px',
 								}}
 							/>
 						</div>
 
 						{/* Label */}
-						<div
-							className="text-sm md:text-base font-bold uppercase tracking-wide"
-							style={{ color: colors.text }}
-						>
+						<div className="text-sm md:text-base font-bold uppercase tracking-wide" style={{ color: colors.text }}>
 							{t.generatingOptions}
 						</div>
 
 						{/* Animated progress bar */}
 						<div className="w-48 md:w-64">
-							<div
-								className="h-1.5 rounded-full overflow-hidden"
-								style={{ backgroundColor: colors.border }}
-							>
+							<div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
 								<div
 									className="h-full rounded-full relative overflow-hidden animate-pulse"
 									style={{
 										width: '60%',
-										backgroundColor: colors.success
+										backgroundColor: colors.success,
 									}}
 								>
 									<div
 										className="absolute inset-0 animate-shimmer"
 										style={{
-											background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`
+											background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
 										}}
 									/>
 								</div>
@@ -470,16 +434,13 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 									style={{
 										borderColor: `${colors.warning}40`,
 										borderTopColor: 'transparent',
-										borderWidth: '3px'
+										borderWidth: '3px',
 									}}
 								/>
 							</div>
 
 							{/* Label */}
-							<div
-								className="text-sm md:text-base font-bold uppercase tracking-wide"
-								style={{ color: colors.text }}
-							>
+							<div className="text-sm md:text-base font-bold uppercase tracking-wide" style={{ color: colors.text }}>
 								{t.analyzingAction || 'Analyzing action...'}
 							</div>
 
@@ -493,21 +454,18 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 
 							{/* Animated progress bar */}
 							<div className="w-48 md:w-64">
-								<div
-									className="h-1.5 rounded-full overflow-hidden"
-									style={{ backgroundColor: colors.border }}
-								>
+								<div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
 									<div
 										className="h-full rounded-full relative overflow-hidden animate-pulse"
 										style={{
 											width: '40%',
-											backgroundColor: colors.warning
+											backgroundColor: colors.warning,
 										}}
 									>
 										<div
 											className="absolute inset-0 animate-shimmer"
 											style={{
-												background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`
+												background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
 											}}
 										/>
 									</div>

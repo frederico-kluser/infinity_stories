@@ -938,26 +938,6 @@ export const generateGameTurn = async (
 		const raw = JSON.parse(cleanJsonString(response.text));
 		const result = transformRawResponse(raw);
 
-		// Generate avatars for new characters (in parallel)
-		if (result.stateUpdates.newCharacters && result.stateUpdates.newCharacters.length > 0) {
-			const charPromises = result.stateUpdates.newCharacters.map(async (char) => {
-				try {
-					const avatarBase64 = await generateCharacterAvatar(
-						apiKey,
-						char.name,
-						char.description,
-						gameState.config.universeName,
-						gameState.config.visualStyle,
-					);
-					return { ...char, avatarBase64 };
-				} catch (e) {
-					console.warn('Could not generate avatar for', char.name);
-					return char;
-				}
-			});
-			result.stateUpdates.newCharacters = await Promise.all(charPromises);
-		}
-
 		return result;
 	} catch (error) {
 		console.error('OpenAI Error:', error);
@@ -1219,7 +1199,6 @@ export const initializeStory = async (
 		const cleanedText = cleanJsonString(storyResponse.text!);
 		const raw = JSON.parse(cleanedText);
 		const result = transformRawResponse(raw);
-
 		// Generate Player Avatar
 		if (result.stateUpdates.newCharacters && result.stateUpdates.newCharacters.length > 0) {
 			// Try to match player by name, otherwise assume it's the first character generated
