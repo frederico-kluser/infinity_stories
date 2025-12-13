@@ -487,29 +487,27 @@ export const useGameEngine = (): UseGameEngineReturn => {
 
 	const updateNarrativeStyle = async (mode: NarrativeStyleMode, customStyle?: string) => {
 		if (!currentStoryId) return;
-		let formattedStyle: string | undefined;
 		const trimmedStyle = customStyle?.trim();
-		if (mode === 'custom') {
-			if (!trimmedStyle) {
-				throw new Error('Narrative style text is required for custom mode.');
-			}
-			formattedStyle = await normalizeNarrativeStyleBrief(apiKey, trimmedStyle);
+		if (mode === 'custom' && !trimmedStyle) {
+			throw new Error('Narrative style text is required for custom mode.');
 		}
 
+		// The customStyle now comes already refined from NarrativeStyleModal
+		// No need to call normalizeNarrativeStyleBrief again
 		safeUpdateStory((story) => {
 			const previousNarrative: NarrativeConfig = story.narrativeConfig || {};
 			const nextNarrativeConfig: NarrativeConfig = {
 				...previousNarrative,
 				genre: previousNarrative.genre ?? story.config?.genre,
 				narrativeStyleMode: mode,
-				customNarrativeStyle: mode === 'custom' ? formattedStyle : undefined,
+				customNarrativeStyle: mode === 'custom' ? trimmedStyle : undefined,
 				customNarrativeStyleRaw: mode === 'custom' ? trimmedStyle : undefined,
 			};
 
 			const nextConfig = {
 				...story.config,
 				narrativeStyleMode: mode,
-				customNarrativeStyle: mode === 'custom' ? formattedStyle : undefined,
+				customNarrativeStyle: mode === 'custom' ? trimmedStyle : undefined,
 				customNarrativeStyleRaw: mode === 'custom' ? trimmedStyle : undefined,
 			};
 

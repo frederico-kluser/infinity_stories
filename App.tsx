@@ -1023,6 +1023,7 @@ const App: React.FC = () => {
 				currentMode={narrativeModeForModal}
 				currentStyle={narrativeStylePreset}
 				genre={narrativeGenre}
+				universeName={activeStory?.config?.universeName}
 				onSave={updateNarrativeStyle}
 				t={t}
 				apiKey={apiKey}

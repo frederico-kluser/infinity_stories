@@ -295,3 +295,15 @@ export {
   type GridUpdatePromptParams,
   type GridUpdateResponse,
 } from './gridUpdate.prompt';
+
+// =============================================================================
+// NARRATIVE STYLE REFINEMENT PROMPT
+// =============================================================================
+
+export {
+  buildNarrativeStyleRefinementPrompt,
+  narrativeStyleRefinementSchema,
+  type NarrativeStyleRefinementParams,
+  type NarrativeStyleRefinementResponse,
+  type NarrativeStyleHistoryItem,
+} from './narrativeStyleRefinement.prompt';

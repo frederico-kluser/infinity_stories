@@ -8,29 +8,48 @@ jest.mock('../../components/VoiceInput', () => ({
   VoiceInput: (props: any) => mockVoiceInput(props),
 }));
 
+// Mock openaiClient
+jest.mock('../../services/ai/openaiClient', () => ({
+  processNarrativeStyleStep: jest.fn(),
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   X: () => <span data-testid="x-icon">X</span>,
   Sparkles: () => <span data-testid="sparkles-icon">Sparkles</span>,
   Info: () => <span data-testid="info-icon">Info</span>,
-  BookText: () => <span data-testid="booktext-icon">BookText</span>,
+  Loader2: () => <span data-testid="loader-icon">Loading</span>,
+  Check: () => <span data-testid="check-icon">Check</span>,
+  Edit3: () => <span data-testid="edit-icon">Edit</span>,
+  ArrowLeft: () => <span data-testid="arrow-left-icon">Back</span>,
+  ArrowRight: () => <span data-testid="arrow-right-icon">Forward</span>,
+  MessageSquare: () => <span data-testid="message-icon">Message</span>,
+  RotateCcw: () => <span data-testid="reset-icon">Reset</span>,
 }));
 
 const mockTranslations = {
   narrativeStyleEditorTitle: 'Narrative Style Editor',
-  narrativeStyleCurrentLabel: 'Active Narrative Context',
-  narrativeStyleModeLabel: 'Mode',
-  narrativeStyleGenreLabel: 'Genre',
-  narrativeStyleGenreFallback: 'Not defined',
-  narrativeStyleLastCustom: 'Last custom brief:',
-  narrativeStyleInfoTitle: 'How to describe it',
-  narrativeStyleInfoBody: 'Specify cadence, references, and rules such as "present tense, cinematic, focus on sensory details".',
+  narrativeStyleAutoTitle: 'Auto Mode',
+  narrativeStyleAutoDesc: 'AI adapts to each scene automatically',
+  narrativeStyleCustomTitle: 'Custom Style',
+  narrativeStyleCustomDesc: 'Define your preferred writing style',
+  narrativeStyleInfoTitle: 'How to describe your style',
+  narrativeStyleInfoBody: 'Describe how you want the story to be told.',
   narrativeStylePlaceholder: 'Describe your narrative style...',
   narrativeStyleRequired: 'Describe your narrative style before continuing.',
   narrativeStyleUpdateError: 'Unable to update narrative style. Try again.',
+  narrativeStyleRefineBtn: 'Refine Style',
+  narrativeStyleRefiningTitle: 'Refining Your Style',
+  narrativeStyleYourDescription: 'Your description',
+  narrativeStyleAnalyzing: 'Analyzing your style...',
+  narrativeStyleComplete: 'Style Defined',
+  narrativeStyleCompleteFirst: 'Complete the style refinement first.',
+  reset: 'Reset',
   cancel: 'Cancel',
-  save: 'Save Style',
-  saving: 'Saving...',
+  save: 'Save',
+  otherOption: 'Other...',
+  backToOptions: 'Back to options',
+  typeYourAnswer: 'Type your answer...',
 };
 
 const createDefaultProps = () => ({
@@ -39,6 +58,7 @@ const createDefaultProps = () => ({
   currentMode: 'auto' as const,
   currentStyle: '',
   genre: 'fantasy' as const,
+  universeName: 'Test Universe',
   onSave: jest.fn().mockResolvedValue(undefined),
   t: mockTranslations,
   apiKey: 'test-key',
@@ -92,27 +112,31 @@ describe('NarrativeStyleModal', () => {
       const props = createDefaultProps();
       render(<NarrativeStyleModal {...props} />);
 
-      // Use getAllByText since "Auto Genre Mode" appears multiple times (in info and as button)
-      const autoModeElements = screen.getAllByText('Auto Genre Mode');
-      expect(autoModeElements.length).toBeGreaterThan(0);
-      expect(screen.getByText('Custom Brief Mode')).toBeInTheDocument();
+      expect(screen.getByText('Auto Mode')).toBeInTheDocument();
+      expect(screen.getByText('Custom Style')).toBeInTheDocument();
     });
 
-    it('should highlight the current mode', () => {
+    it('should highlight auto mode when currentMode is auto', () => {
       const props = createDefaultProps();
-      const { container } = render(<NarrativeStyleModal {...props} />);
+      render(<NarrativeStyleModal {...props} />);
 
-      // Auto mode should have bg-stone-900 (selected) - find the button version
-      const autoButtons = screen.getAllByText('Auto Genre Mode');
-      const autoButton = autoButtons.find(el => el.closest('button'))?.closest('button');
+      const autoButton = screen.getByText('Auto Mode').closest('button');
       expect(autoButton).toHaveClass('bg-stone-900');
+    });
+
+    it('should highlight custom mode when currentMode is custom', () => {
+      const props = { ...createDefaultProps(), currentMode: 'custom' as const };
+      render(<NarrativeStyleModal {...props} />);
+
+      const customButton = screen.getByText('Custom Style').closest('button');
+      expect(customButton).toHaveClass('bg-amber-500');
     });
 
     it('should switch to custom mode when clicked', () => {
       const props = createDefaultProps();
       render(<NarrativeStyleModal {...props} />);
 
-      fireEvent.click(screen.getByText('Custom Brief Mode'));
+      fireEvent.click(screen.getByText('Custom Style'));
 
       // Should show the textarea for custom style
       expect(screen.getByPlaceholderText('Describe your narrative style...')).toBeInTheDocument();
@@ -126,55 +150,10 @@ describe('NarrativeStyleModal', () => {
       expect(screen.getByPlaceholderText('Describe your narrative style...')).toBeInTheDocument();
 
       // Click auto mode
-      fireEvent.click(screen.getByText('Auto Genre Mode'));
+      fireEvent.click(screen.getByText('Auto Mode'));
 
       // Textarea should be hidden
       expect(screen.queryByPlaceholderText('Describe your narrative style...')).not.toBeInTheDocument();
-    });
-  });
-
-  describe('current context display', () => {
-    it('should display current mode label', () => {
-      const props = createDefaultProps();
-      render(<NarrativeStyleModal {...props} />);
-
-      expect(screen.getByText('Mode:')).toBeInTheDocument();
-      // "Auto Genre Mode" appears in multiple places
-      const autoModeElements = screen.getAllByText('Auto Genre Mode');
-      expect(autoModeElements.length).toBeGreaterThan(0);
-    });
-
-    it('should display current genre', () => {
-      const props = createDefaultProps();
-      render(<NarrativeStyleModal {...props} />);
-
-      expect(screen.getByText('Genre:')).toBeInTheDocument();
-      expect(screen.getByText('fantasy')).toBeInTheDocument();
-    });
-
-    it('should display fallback when no genre', () => {
-      const props = { ...createDefaultProps(), genre: undefined };
-      render(<NarrativeStyleModal {...props} />);
-
-      expect(screen.getByText('Not defined')).toBeInTheDocument();
-    });
-
-    it('should display last custom brief when available', () => {
-      const props = {
-        ...createDefaultProps(),
-        currentStyle: 'My custom narrative style',
-      };
-      render(<NarrativeStyleModal {...props} />);
-
-      expect(screen.getByText('Last custom brief:')).toBeInTheDocument();
-      expect(screen.getByText('My custom narrative style')).toBeInTheDocument();
-    });
-
-    it('should NOT display last custom brief when empty', () => {
-      const props = createDefaultProps();
-      render(<NarrativeStyleModal {...props} />);
-
-      expect(screen.queryByText('Last custom brief:')).not.toBeInTheDocument();
     });
   });
 
@@ -183,8 +162,8 @@ describe('NarrativeStyleModal', () => {
       const props = { ...createDefaultProps(), currentMode: 'custom' as const };
       render(<NarrativeStyleModal {...props} />);
 
-      expect(screen.getByText('How to describe it')).toBeInTheDocument();
-      expect(screen.getByText(/Specify cadence, references/)).toBeInTheDocument();
+      expect(screen.getByText('How to describe your style')).toBeInTheDocument();
+      expect(screen.getByText(/Describe how you want/)).toBeInTheDocument();
     });
 
     it('should allow typing in textarea', () => {
@@ -209,25 +188,19 @@ describe('NarrativeStyleModal', () => {
       expect(textarea).toHaveValue('Existing style');
     });
 
-    it('should append transcription when voice input fires', () => {
-      const transcription = 'Voice dictated brief';
-      mockVoiceInput.mockImplementation(({ onTranscription }: any) => (
-        <button data-testid="voice-input" onClick={() => onTranscription(transcription)}>
-          Voice
-        </button>
-      ));
-
-      const props = {
-        ...createDefaultProps(),
-        currentMode: 'custom' as const,
-        currentStyle: 'Existing style',
-      };
+    it('should show refine button in custom mode', () => {
+      const props = { ...createDefaultProps(), currentMode: 'custom' as const };
       render(<NarrativeStyleModal {...props} />);
 
-      fireEvent.click(screen.getByTestId('voice-input'));
+      expect(screen.getByText('Refine Style')).toBeInTheDocument();
+    });
 
-      const textarea = screen.getByPlaceholderText('Describe your narrative style...');
-      expect(textarea).toHaveValue(`Existing style\n${transcription}`);
+    it('should disable refine button when textarea is empty', () => {
+      const props = { ...createDefaultProps(), currentMode: 'custom' as const };
+      render(<NarrativeStyleModal {...props} />);
+
+      const refineButton = screen.getByText('Refine Style').closest('button');
+      expect(refineButton).toBeDisabled();
     });
   });
 
@@ -236,54 +209,28 @@ describe('NarrativeStyleModal', () => {
       const props = createDefaultProps();
       render(<NarrativeStyleModal {...props} />);
 
-      fireEvent.click(screen.getByText('Save Style'));
+      fireEvent.click(screen.getByText('Save'));
 
       await waitFor(() => {
-        expect(props.onSave).toHaveBeenCalledWith('auto', '');
+        expect(props.onSave).toHaveBeenCalledWith('auto', undefined);
       });
     });
 
-    it('should call onSave with custom mode and style', async () => {
+    it('should disable save button when custom mode has no completed refinement', async () => {
       const props = { ...createDefaultProps(), currentMode: 'custom' as const };
       render(<NarrativeStyleModal {...props} />);
 
-      const textarea = screen.getByPlaceholderText('Describe your narrative style...');
-      fireEvent.change(textarea, { target: { value: 'My custom style' } });
-
-      fireEvent.click(screen.getByText('Save Style'));
-
-      await waitFor(() => {
-        expect(props.onSave).toHaveBeenCalledWith('custom', 'My custom style');
-      });
-    });
-
-    it('should show error when custom mode has empty style', async () => {
-      const props = { ...createDefaultProps(), currentMode: 'custom' as const };
-      render(<NarrativeStyleModal {...props} />);
-
-      fireEvent.click(screen.getByText('Save Style'));
-
-      expect(screen.getByText('Describe your narrative style before continuing.')).toBeInTheDocument();
+      // Save button should be disabled in custom mode without completed refinement
+      const saveButton = screen.getByText('Save').closest('button');
+      expect(saveButton).toBeDisabled();
       expect(props.onSave).not.toHaveBeenCalled();
     });
 
-    it('should show saving state during save', async () => {
-      const props = createDefaultProps();
-      props.onSave = jest.fn().mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
-      render(<NarrativeStyleModal {...props} />);
-
-      fireEvent.click(screen.getByText('Save Style'));
-
-      expect(screen.getByText('Saving...')).toBeInTheDocument();
-    });
-
-    it('should close modal after successful save', async () => {
+    it('should close modal after successful auto save', async () => {
       const props = createDefaultProps();
       render(<NarrativeStyleModal {...props} />);
 
-      fireEvent.click(screen.getByText('Save Style'));
+      fireEvent.click(screen.getByText('Save'));
 
       await waitFor(() => {
         expect(props.onClose).toHaveBeenCalled();
@@ -295,7 +242,7 @@ describe('NarrativeStyleModal', () => {
       props.onSave = jest.fn().mockRejectedValue(new Error('Save failed'));
       render(<NarrativeStyleModal {...props} />);
 
-      fireEvent.click(screen.getByText('Save Style'));
+      fireEvent.click(screen.getByText('Save'));
 
       await waitFor(() => {
         expect(screen.getByText('Unable to update narrative style. Try again.')).toBeInTheDocument();
@@ -335,7 +282,7 @@ describe('NarrativeStyleModal', () => {
       const { rerender } = render(<NarrativeStyleModal {...props} />);
 
       // Switch to custom mode
-      fireEvent.click(screen.getByText('Custom Brief Mode'));
+      fireEvent.click(screen.getByText('Custom Style'));
       expect(screen.getByPlaceholderText('Describe your narrative style...')).toBeInTheDocument();
 
       // Close and reopen
@@ -346,52 +293,62 @@ describe('NarrativeStyleModal', () => {
       expect(screen.queryByPlaceholderText('Describe your narrative style...')).not.toBeInTheDocument();
     });
 
-    it('should clear error when reopened', async () => {
+    it('should reset textarea content when reopened', () => {
       const props = { ...createDefaultProps(), currentMode: 'custom' as const };
       const { rerender } = render(<NarrativeStyleModal {...props} />);
 
-      // Trigger error
-      fireEvent.click(screen.getByText('Save Style'));
-      expect(screen.getByText('Describe your narrative style before continuing.')).toBeInTheDocument();
+      // Type something in the textarea
+      const textarea = screen.getByPlaceholderText('Describe your narrative style...');
+      fireEvent.change(textarea, { target: { value: 'Some custom text' } });
+      expect(textarea).toHaveValue('Some custom text');
 
       // Close and reopen
       rerender(<NarrativeStyleModal {...props} isOpen={false} />);
       rerender(<NarrativeStyleModal {...props} isOpen={true} />);
 
-      // Error should be cleared
-      expect(screen.queryByText('Describe your narrative style before continuing.')).not.toBeInTheDocument();
+      // Textarea should be reset to empty (currentStyle is empty)
+      const newTextarea = screen.getByPlaceholderText('Describe your narrative style...');
+      expect(newTextarea).toHaveValue('');
     });
   });
 
   describe('mode descriptions', () => {
-    it('should display Auto Genre Mode description', () => {
+    it('should display Auto Mode description', () => {
       const props = createDefaultProps();
       render(<NarrativeStyleModal {...props} />);
 
-      expect(screen.getByText(/Keeps the current literary genre/)).toBeInTheDocument();
+      expect(screen.getByText('AI adapts to each scene automatically')).toBeInTheDocument();
     });
 
-    it('should display Custom Brief Mode description', () => {
+    it('should display Custom Style description', () => {
       const props = createDefaultProps();
       render(<NarrativeStyleModal {...props} />);
 
-      expect(screen.getByText(/Supply a bespoke writing brief/)).toBeInTheDocument();
+      expect(screen.getByText('Define your preferred writing style')).toBeInTheDocument();
     });
   });
 
   describe('button states', () => {
-    it('should disable buttons while saving', async () => {
+    it('should disable cancel button while saving', async () => {
       const props = createDefaultProps();
       props.onSave = jest.fn().mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 100))
       );
       render(<NarrativeStyleModal {...props} />);
 
-      fireEvent.click(screen.getByText('Save Style'));
+      fireEvent.click(screen.getByText('Save'));
 
       // Cancel button should be disabled
       const cancelButton = screen.getByText('Cancel');
       expect(cancelButton).toBeDisabled();
+    });
+
+    it('should disable save button in custom mode without completed refinement', () => {
+      const props = { ...createDefaultProps(), currentMode: 'custom' as const };
+      render(<NarrativeStyleModal {...props} />);
+
+      const saveButton = screen.getByText('Save').closest('button');
+      expect(saveButton).toBeDisabled();
     });
   });
 });

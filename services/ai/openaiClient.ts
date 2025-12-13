@@ -38,6 +38,7 @@ import {
 	buildFontOnlyPrompt,
 	buildLocationBackgroundPrompt,
 	buildGridUpdatePrompt,
+	buildNarrativeStyleRefinementPrompt,
 	themeColorsSchema,
 	colorsOnlySchema,
 	fontOnlySchema,
@@ -45,7 +46,9 @@ import {
 	onboardingSchema,
 	heavyContextSchema,
 	gridUpdateSchema,
+	narrativeStyleRefinementSchema,
 } from './prompts';
+import type { NarrativeStyleHistoryItem, NarrativeStyleRefinementResponse } from './prompts';
 import { getRecentMessagesForPrompt } from './prompts/helpers';
 import type { TextClassificationResponse, CustomActionAnalysisResponse } from './prompts';
 import type { HeavyContextResponse, HeavyContextFieldChange, HeavyContextListChange } from './prompts';
@@ -221,6 +224,73 @@ export const normalizeNarrativeStyleBrief = async (apiKey: string, rawBrief: str
 	}
 
 	return response.text.trim();
+};
+
+/**
+ * Processes a step in the narrative style refinement flow.
+ * Analyzes the user's description and history, then either asks a clarifying
+ * question with options or returns the final consolidated style.
+ *
+ * @param apiKey - OpenAI API Key.
+ * @param initialDescription - The player's initial style description.
+ * @param history - Previous Q&A pairs from the refinement flow.
+ * @param language - Language for questions and options.
+ * @param genre - Optional genre for context.
+ * @param universeName - Optional universe name for context.
+ * @returns Refinement result with next question or final style.
+ */
+export const processNarrativeStyleStep = async (
+	apiKey: string,
+	initialDescription: string,
+	history: NarrativeStyleHistoryItem[],
+	language: Language,
+	genre?: string,
+	universeName?: string,
+): Promise<NarrativeStyleRefinementResponse> => {
+	const prompt = buildNarrativeStyleRefinementPrompt({
+		initialDescription,
+		history,
+		language,
+		genre,
+		universeName,
+	});
+
+	const schemaStr = JSON.stringify(narrativeStyleRefinementSchema, null, 2);
+
+	const messages: LLMMessage[] = [
+		{
+			role: 'system',
+			content: `You are a narrative style consultant. Always respond with valid JSON following this schema:\n${schemaStr}`,
+		},
+		{
+			role: 'user',
+			content: prompt,
+		},
+	];
+
+	try {
+		const response = await queryLLM(apiKey, messages, {
+			model: MODEL_CONFIG.onboarding, // gpt-4.1-mini - similar complexity to onboarding
+			responseFormat: 'json',
+			temperature: 0.3,
+		});
+
+		const result = JSON.parse(cleanJsonString(response.text!));
+
+		return {
+			isComplete: result.isComplete ?? false,
+			question: result.question,
+			options: result.options,
+			finalStyle: result.finalStyle,
+		};
+	} catch (error) {
+		console.error('[Narrative Style] Refinement step error:', error);
+		// On error, mark as complete with the raw description
+		return {
+			isComplete: true,
+			finalStyle: initialDescription,
+		};
+	}
 };
 
 /**

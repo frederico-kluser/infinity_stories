@@ -3,13 +3,13 @@
 exports[`NarrativeStyleModal rendering should match snapshot when open in auto mode 1`] = `
 <div>
   <div
-    class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+    class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
   >
     <div
-      class="bg-[#f5f5f4] border-2 border-stone-900 w-full max-w-2xl shadow-[12px_12px_0px_rgba(0,0,0,1)] relative"
+      class="bg-white border-4 border-stone-900 w-full max-w-2xl shadow-[8px_8px_0px_rgba(0,0,0,1)] max-h-[90vh] flex flex-col"
     >
       <div
-        class="p-5 border-b-2 border-stone-900 bg-stone-800 flex justify-between items-center"
+        class="p-4 border-b-4 border-stone-900 bg-stone-900 flex justify-between items-center flex-shrink-0"
       >
         <h2
           class="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tight"
@@ -22,7 +22,7 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in auto m
           Narrative Style Editor
         </h2>
         <button
-          class="text-white/70 hover:text-white transition-colors"
+          class="text-white/70 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
         >
           <span
             data-testid="x-icon"
@@ -32,87 +32,53 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in auto m
         </button>
       </div>
       <div
-        class="p-5 space-y-4"
+        class="p-5 space-y-5 overflow-y-auto flex-1"
       >
         <div
-          class="p-4 border-2 border-dashed border-stone-400 bg-white"
-        >
-          <div
-            class="flex items-center gap-2 text-stone-700 text-sm font-bold uppercase"
-          >
-            <span
-              data-testid="booktext-icon"
-            >
-              BookText
-            </span>
-            Active Narrative Context
-          </div>
-          <div
-            class="mt-2 text-sm text-stone-600"
-          >
-            <p>
-              <strong>
-                Mode
-                :
-              </strong>
-               
-              Auto Genre Mode
-            </p>
-            <p>
-              <strong>
-                Genre
-                :
-              </strong>
-               
-              fantasy
-            </p>
-          </div>
-        </div>
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-3"
+          class="grid grid-cols-2 gap-3"
         >
           <button
-            class="p-4 border-2 text-left transition-all bg-stone-900 text-white border-stone-900"
+            class="p-4 border-3 text-left transition-all bg-stone-900 text-white border-stone-900 shadow-[4px_4px_0px_rgba(0,0,0,0.3)]"
           >
             <h3
               class="font-black uppercase text-sm"
             >
-              Auto Genre Mode
+              Auto Mode
             </h3>
             <p
-              class="text-xs mt-2 text-stone-200 md:text-stone-500"
+              class="text-xs mt-1 text-stone-300"
             >
-              Keeps the current literary genre and lets the AI adapt tone dynamically for each scene.
+              AI adapts to each scene automatically
             </p>
           </button>
           <button
-            class="p-4 border-2 text-left transition-all bg-white text-stone-700 border-stone-300 hover:border-stone-900"
+            class="p-4 border-3 text-left transition-all bg-stone-100 text-stone-700 border-stone-300 hover:border-amber-500"
           >
             <h3
               class="font-black uppercase text-sm"
             >
-              Custom Brief Mode
+              Custom Style
             </h3>
             <p
-              class="text-xs mt-2 text-stone-200 md:text-stone-500"
+              class="text-xs mt-1 text-stone-500"
             >
-              Supply a bespoke writing brief describing rhythm, references, and mandatory techniques. The AI will obey it verbatim.
+              Define your preferred writing style
             </p>
           </button>
         </div>
       </div>
       <div
-        class="p-4 border-t-2 border-stone-300 bg-stone-50 flex gap-3"
+        class="p-4 border-t-4 border-stone-900 bg-stone-100 flex gap-3 flex-shrink-0"
       >
         <button
-          class="flex-1 py-3 px-4 bg-stone-200 text-stone-800 font-bold uppercase text-sm hover:bg-stone-300 transition-colors"
+          class="flex-1 py-3 px-4 bg-white text-stone-700 font-black uppercase text-sm border-2 border-stone-300 hover:border-stone-900 transition-colors"
         >
           Cancel
         </button>
         <button
-          class="flex-1 py-3 px-4 bg-stone-900 text-white font-bold uppercase text-sm tracking-wide hover:bg-stone-700 transition-colors"
+          class="flex-1 py-3 px-4 bg-stone-900 text-white font-black uppercase text-sm tracking-wide hover:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-2 border-stone-900"
         >
-          Save Style
+          Save
         </button>
       </div>
     </div>
@@ -123,13 +89,13 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in auto m
 exports[`NarrativeStyleModal rendering should match snapshot when open in custom mode 1`] = `
 <div>
   <div
-    class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+    class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
   >
     <div
-      class="bg-[#f5f5f4] border-2 border-stone-900 w-full max-w-2xl shadow-[12px_12px_0px_rgba(0,0,0,1)] relative"
+      class="bg-white border-4 border-stone-900 w-full max-w-2xl shadow-[8px_8px_0px_rgba(0,0,0,1)] max-h-[90vh] flex flex-col"
     >
       <div
-        class="p-5 border-b-2 border-stone-900 bg-stone-800 flex justify-between items-center"
+        class="p-4 border-b-4 border-stone-900 bg-stone-900 flex justify-between items-center flex-shrink-0"
       >
         <h2
           class="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tight"
@@ -142,7 +108,7 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in custom
           Narrative Style Editor
         </h2>
         <button
-          class="text-white/70 hover:text-white transition-colors"
+          class="text-white/70 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
         >
           <span
             data-testid="x-icon"
@@ -152,79 +118,45 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in custom
         </button>
       </div>
       <div
-        class="p-5 space-y-4"
+        class="p-5 space-y-5 overflow-y-auto flex-1"
       >
         <div
-          class="p-4 border-2 border-dashed border-stone-400 bg-white"
-        >
-          <div
-            class="flex items-center gap-2 text-stone-700 text-sm font-bold uppercase"
-          >
-            <span
-              data-testid="booktext-icon"
-            >
-              BookText
-            </span>
-            Active Narrative Context
-          </div>
-          <div
-            class="mt-2 text-sm text-stone-600"
-          >
-            <p>
-              <strong>
-                Mode
-                :
-              </strong>
-               
-              Custom Brief Mode
-            </p>
-            <p>
-              <strong>
-                Genre
-                :
-              </strong>
-               
-              fantasy
-            </p>
-          </div>
-        </div>
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-3"
+          class="grid grid-cols-2 gap-3"
         >
           <button
-            class="p-4 border-2 text-left transition-all bg-white text-stone-700 border-stone-300 hover:border-stone-900"
+            class="p-4 border-3 text-left transition-all bg-stone-100 text-stone-700 border-stone-300 hover:border-stone-900"
           >
             <h3
               class="font-black uppercase text-sm"
             >
-              Auto Genre Mode
+              Auto Mode
             </h3>
             <p
-              class="text-xs mt-2 text-stone-200 md:text-stone-500"
+              class="text-xs mt-1 text-stone-500"
             >
-              Keeps the current literary genre and lets the AI adapt tone dynamically for each scene.
+              AI adapts to each scene automatically
             </p>
           </button>
           <button
-            class="p-4 border-2 text-left transition-all bg-stone-900 text-white border-stone-900"
+            class="p-4 border-3 text-left transition-all bg-amber-500 text-white border-amber-600 shadow-[4px_4px_0px_rgba(0,0,0,0.3)]"
           >
             <h3
               class="font-black uppercase text-sm"
             >
-              Custom Brief Mode
+              Custom Style
             </h3>
             <p
-              class="text-xs mt-2 text-stone-200 md:text-stone-500"
+              class="text-xs mt-1 text-amber-100"
             >
-              Supply a bespoke writing brief describing rhythm, references, and mandatory techniques. The AI will obey it verbatim.
+              Define your preferred writing style
             </p>
           </button>
         </div>
         <div
-          class="space-y-3"
+          class="space-y-4"
         >
           <div
-            class="flex gap-3 border border-dashed border-stone-300 bg-stone-50 p-3"
+            class="flex gap-3 bg-amber-50 border-2 border-amber-200 p-3"
           >
             <span
               data-testid="info-icon"
@@ -233,14 +165,14 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in custom
             </span>
             <div>
               <p
-                class="text-[11px] font-bold uppercase tracking-wide text-stone-500"
+                class="text-xs font-bold uppercase tracking-wide text-amber-700"
               >
-                How to describe it
+                How to describe your style
               </p>
               <p
-                class="text-[11px] text-stone-600 leading-snug"
+                class="text-xs text-amber-800 mt-1 leading-relaxed"
               >
-                Specify cadence, references, and rules such as "present tense, cinematic, focus on sensory details".
+                Describe how you want the story to be told.
               </p>
             </div>
           </div>
@@ -248,27 +180,39 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in custom
             class="relative"
           >
             <textarea
-              class="w-full bg-white border-2 border-stone-400 p-3 pr-12 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
+              class="w-full bg-stone-50 border-3 border-stone-300 p-4 pr-12 text-sm text-stone-900 focus:border-amber-500 outline-none min-h-[120px] font-medium"
               placeholder="Describe your narrative style..."
             />
             <div
               class="absolute top-3 right-3"
             />
           </div>
+          <button
+            class="w-full py-3 bg-amber-500 text-white font-black uppercase tracking-wide hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-2 border-amber-600 shadow-[4px_4px_0px_rgba(0,0,0,0.2)]"
+            disabled=""
+          >
+            <span
+              data-testid="sparkles-icon"
+            >
+              Sparkles
+            </span>
+            Refine Style
+          </button>
         </div>
       </div>
       <div
-        class="p-4 border-t-2 border-stone-300 bg-stone-50 flex gap-3"
+        class="p-4 border-t-4 border-stone-900 bg-stone-100 flex gap-3 flex-shrink-0"
       >
         <button
-          class="flex-1 py-3 px-4 bg-stone-200 text-stone-800 font-bold uppercase text-sm hover:bg-stone-300 transition-colors"
+          class="flex-1 py-3 px-4 bg-white text-stone-700 font-black uppercase text-sm border-2 border-stone-300 hover:border-stone-900 transition-colors"
         >
           Cancel
         </button>
         <button
-          class="flex-1 py-3 px-4 bg-stone-900 text-white font-bold uppercase text-sm tracking-wide hover:bg-stone-700 transition-colors"
+          class="flex-1 py-3 px-4 bg-stone-900 text-white font-black uppercase text-sm tracking-wide hover:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-2 border-stone-900"
+          disabled=""
         >
-          Save Style
+          Save
         </button>
       </div>
     </div>
@@ -279,13 +223,13 @@ exports[`NarrativeStyleModal rendering should match snapshot when open in custom
 exports[`NarrativeStyleModal rendering should match snapshot with custom style text 1`] = `
 <div>
   <div
-    class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+    class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
   >
     <div
-      class="bg-[#f5f5f4] border-2 border-stone-900 w-full max-w-2xl shadow-[12px_12px_0px_rgba(0,0,0,1)] relative"
+      class="bg-white border-4 border-stone-900 w-full max-w-2xl shadow-[8px_8px_0px_rgba(0,0,0,1)] max-h-[90vh] flex flex-col"
     >
       <div
-        class="p-5 border-b-2 border-stone-900 bg-stone-800 flex justify-between items-center"
+        class="p-4 border-b-4 border-stone-900 bg-stone-900 flex justify-between items-center flex-shrink-0"
       >
         <h2
           class="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tight"
@@ -298,7 +242,7 @@ exports[`NarrativeStyleModal rendering should match snapshot with custom style t
           Narrative Style Editor
         </h2>
         <button
-          class="text-white/70 hover:text-white transition-colors"
+          class="text-white/70 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
         >
           <span
             data-testid="x-icon"
@@ -308,89 +252,45 @@ exports[`NarrativeStyleModal rendering should match snapshot with custom style t
         </button>
       </div>
       <div
-        class="p-5 space-y-4"
+        class="p-5 space-y-5 overflow-y-auto flex-1"
       >
         <div
-          class="p-4 border-2 border-dashed border-stone-400 bg-white"
-        >
-          <div
-            class="flex items-center gap-2 text-stone-700 text-sm font-bold uppercase"
-          >
-            <span
-              data-testid="booktext-icon"
-            >
-              BookText
-            </span>
-            Active Narrative Context
-          </div>
-          <div
-            class="mt-2 text-sm text-stone-600"
-          >
-            <p>
-              <strong>
-                Mode
-                :
-              </strong>
-               
-              Custom Brief Mode
-            </p>
-            <p>
-              <strong>
-                Genre
-                :
-              </strong>
-               
-              fantasy
-            </p>
-            <p
-              class="mt-2 text-xs text-stone-500"
-            >
-              Last custom brief:
-              <span
-                class="block mt-1 font-mono text-[11px] bg-stone-100 border border-stone-200 p-2"
-              >
-                Present tense, cinematic style, focus on dialogue.
-              </span>
-            </p>
-          </div>
-        </div>
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-3"
+          class="grid grid-cols-2 gap-3"
         >
           <button
-            class="p-4 border-2 text-left transition-all bg-white text-stone-700 border-stone-300 hover:border-stone-900"
+            class="p-4 border-3 text-left transition-all bg-stone-100 text-stone-700 border-stone-300 hover:border-stone-900"
           >
             <h3
               class="font-black uppercase text-sm"
             >
-              Auto Genre Mode
+              Auto Mode
             </h3>
             <p
-              class="text-xs mt-2 text-stone-200 md:text-stone-500"
+              class="text-xs mt-1 text-stone-500"
             >
-              Keeps the current literary genre and lets the AI adapt tone dynamically for each scene.
+              AI adapts to each scene automatically
             </p>
           </button>
           <button
-            class="p-4 border-2 text-left transition-all bg-stone-900 text-white border-stone-900"
+            class="p-4 border-3 text-left transition-all bg-amber-500 text-white border-amber-600 shadow-[4px_4px_0px_rgba(0,0,0,0.3)]"
           >
             <h3
               class="font-black uppercase text-sm"
             >
-              Custom Brief Mode
+              Custom Style
             </h3>
             <p
-              class="text-xs mt-2 text-stone-200 md:text-stone-500"
+              class="text-xs mt-1 text-amber-100"
             >
-              Supply a bespoke writing brief describing rhythm, references, and mandatory techniques. The AI will obey it verbatim.
+              Define your preferred writing style
             </p>
           </button>
         </div>
         <div
-          class="space-y-3"
+          class="space-y-4"
         >
           <div
-            class="flex gap-3 border border-dashed border-stone-300 bg-stone-50 p-3"
+            class="flex gap-3 bg-amber-50 border-2 border-amber-200 p-3"
           >
             <span
               data-testid="info-icon"
@@ -399,14 +299,14 @@ exports[`NarrativeStyleModal rendering should match snapshot with custom style t
             </span>
             <div>
               <p
-                class="text-[11px] font-bold uppercase tracking-wide text-stone-500"
+                class="text-xs font-bold uppercase tracking-wide text-amber-700"
               >
-                How to describe it
+                How to describe your style
               </p>
               <p
-                class="text-[11px] text-stone-600 leading-snug"
+                class="text-xs text-amber-800 mt-1 leading-relaxed"
               >
-                Specify cadence, references, and rules such as "present tense, cinematic, focus on sensory details".
+                Describe how you want the story to be told.
               </p>
             </div>
           </div>
@@ -414,7 +314,7 @@ exports[`NarrativeStyleModal rendering should match snapshot with custom style t
             class="relative"
           >
             <textarea
-              class="w-full bg-white border-2 border-stone-400 p-3 pr-12 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[140px]"
+              class="w-full bg-stone-50 border-3 border-stone-300 p-4 pr-12 text-sm text-stone-900 focus:border-amber-500 outline-none min-h-[120px] font-medium"
               placeholder="Describe your narrative style..."
             >
               Present tense, cinematic style, focus on dialogue.
@@ -423,20 +323,31 @@ exports[`NarrativeStyleModal rendering should match snapshot with custom style t
               class="absolute top-3 right-3"
             />
           </div>
+          <button
+            class="w-full py-3 bg-amber-500 text-white font-black uppercase tracking-wide hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-2 border-amber-600 shadow-[4px_4px_0px_rgba(0,0,0,0.2)]"
+          >
+            <span
+              data-testid="sparkles-icon"
+            >
+              Sparkles
+            </span>
+            Refine Style
+          </button>
         </div>
       </div>
       <div
-        class="p-4 border-t-2 border-stone-300 bg-stone-50 flex gap-3"
+        class="p-4 border-t-4 border-stone-900 bg-stone-100 flex gap-3 flex-shrink-0"
       >
         <button
-          class="flex-1 py-3 px-4 bg-stone-200 text-stone-800 font-bold uppercase text-sm hover:bg-stone-300 transition-colors"
+          class="flex-1 py-3 px-4 bg-white text-stone-700 font-black uppercase text-sm border-2 border-stone-300 hover:border-stone-900 transition-colors"
         >
           Cancel
         </button>
         <button
-          class="flex-1 py-3 px-4 bg-stone-900 text-white font-bold uppercase text-sm tracking-wide hover:bg-stone-700 transition-colors"
+          class="flex-1 py-3 px-4 bg-stone-900 text-white font-black uppercase text-sm tracking-wide hover:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-2 border-stone-900"
+          disabled=""
         >
-          Save Style
+          Save
         </button>
       </div>
     </div>

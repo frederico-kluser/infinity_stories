@@ -2,7 +2,7 @@
 
 > Motor de RPG narrativo em tempo real que combina GPT-4.1, mapas táticos, áudio 3D e prompts versionados para criar campanhas single-player no navegador.
 
-**Versão narrativa:** 2.0.35 · **Stack:** React 19 + Vite 6 · **Engine de IA:** OpenAI GPT-4.1 / gpt-4.1-mini / gpt-image-1-mini / Whisper / gpt-4o-mini-tts
+**Versão narrativa:** 2.0.36 · **Stack:** React 19 + Vite 6 · **Engine de IA:** OpenAI GPT-4.1 / gpt-4.1-mini / gpt-image-1-mini / Whisper / gpt-4o-mini-tts
 
 ---
 
@@ -101,6 +101,31 @@ Diferenciais:
 ### Narrativa guiada por gênero
 - `narrativeStyles.ts` gera instruções baseadas em 15 gêneros, controle de pacing, vozes de NPC e threads.
 - Opcionalmente, `narrativeQualityAnalysis.prompt.ts` audita o texto para mostrar/dizer.
+
+### Sistema de Refinamento Colaborativo de Estilo Narrativo
+O sistema de estilo narrativo permite ao jogador controlar como a IA narra a história. Dois modos disponíveis:
+
+| Modo | Comportamento |
+| --- | --- |
+| **Auto** | A IA adapta tom e pacing automaticamente baseado no gênero do universo |
+| **Custom** | Fluxo colaborativo onde a IA pergunta preferências do jogador |
+
+**Fluxo colaborativo (Custom):**
+1. Jogador descreve seu estilo preferido em texto livre (ex: "frases curtas, ritmo rápido")
+2. IA analisa a descrição e faz perguntas clarificadoras sobre CADÊNCIA, TOM, POV e TÉCNICAS
+3. Jogador responde via opções pré-definidas ou texto livre
+4. Após coletar informações suficientes (máximo 3 perguntas), a IA gera um briefing final
+5. Briefing é salvo e usado em todos os prompts de narração
+
+**Onde configurar:**
+- Durante onboarding (StoryCreator): aparece após configurar o mundo quando modo Custom está selecionado
+- Settings (NarrativeStyleModal): permite ajustar a qualquer momento durante o jogo
+
+**Arquivos relacionados:**
+- `services/ai/prompts/narrativeStyleRefinement.prompt.ts` — prompt de avaliação e refinamento
+- `services/ai/openaiClient.ts` → `processNarrativeStyleStep()` — função que processa cada etapa
+- `components/NarrativeStyleModal/` — modal de configuração no settings
+- `components/StoryCreator.tsx` — integração no onboarding
 
 ## Audiovisual dinâmico
 

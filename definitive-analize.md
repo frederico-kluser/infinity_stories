@@ -1,8 +1,8 @@
 # storywell.games - Análise Definitiva de Problemas e Soluções
 
 > **Documento Consolidado de Análise Técnica**
-> Versão: 1.1 | Data: 2025-12-11
-> Commit base: 4bb23c7
+> Versão: 1.2 | Data: 2025-12-13
+> Commit base: 4b852e2
 
 ---
 
@@ -129,6 +129,64 @@ const filteredMessages = (response.messages || []).filter(m => {
 ### Recomendações finais
 - Manter telemetria nos `console.warn('[Player Agency] Blocked...')` para medir se o LLM volta a infringir as regras.
 - Avaliar remoção do import morto `processPlayerMessage` para evitar regressão futura.
+
+---
+
+## Feature Nova: Sistema de Refinamento Colaborativo de Estilo Narrativo
+
+**Status (13/12):** Implementado.
+
+### Problema Anterior
+O sistema anterior de estilo narrativo (`normalizeNarrativeStyleBrief`) apenas reformatava o texto bruto do usuário em formato de briefing. Isso resultava em descrições vagas ou incompletas porque o usuário não sabia quais aspectos especificar (cadência, tom, POV, técnicas narrativas).
+
+### Solução Implementada
+Novo fluxo colaborativo onde a IA analisa a descrição inicial do usuário e faz perguntas clarificadoras até ter informações suficientes para gerar um briefing completo.
+
+#### Arquivos criados/modificados:
+| Arquivo | Mudança |
+|---------|---------|
+| `services/ai/prompts/narrativeStyleRefinement.prompt.ts` | **Novo** - Prompt de avaliação e refinamento com JSON Schema |
+| `services/ai/openaiClient.ts` | Adicionada função `processNarrativeStyleStep()` |
+| `components/NarrativeStyleModal/NarrativeStyleModal.tsx` | **Reescrito** - Fluxo colaborativo com histórico de Q&A |
+| `components/StoryCreator.tsx` | Integração do fluxo no onboarding |
+| `hooks/useGameEngine.ts` | Simplificado `updateNarrativeStyle()` para aceitar estilo já refinado |
+| `i18n/locales.ts` | 15 novas chaves de tradução em 6 idiomas |
+
+#### Fluxo técnico:
+```
+1. Usuário escreve descrição inicial
+   └─ "Frases curtas, pouca descrição"
+
+2. processNarrativeStyleStep() avalia
+   ├─ Verifica elementos: CADENCE, TONE, POV, TECHNIQUES
+   ├─ Se falta info → retorna pergunta com opções
+   └─ Se completo → retorna finalStyle
+
+3. Loop de refinamento (máx 3 perguntas)
+   ├─ UI mostra pergunta + opções
+   ├─ Usuário responde
+   └─ Volta ao passo 2 com histórico
+
+4. Briefing final salvo
+   └─ Usado em buildGameMasterPrompt()
+```
+
+#### Interface de resposta:
+```typescript
+interface NarrativeStyleRefinementResponse {
+  isComplete: boolean;
+  question?: string;      // Pergunta se !isComplete
+  options?: string[];     // Opções pré-definidas
+  finalStyle?: string;    // Briefing final se isComplete
+}
+```
+
+#### Onde aparece:
+- **Onboarding (StoryCreator):** Após configurar mundo, se modo Custom selecionado
+- **Settings (NarrativeStyleModal):** Acessível a qualquer momento via menu
+
+#### Anti-loop:
+O prompt contém instrução para completar após 3 perguntas mesmo se faltar informações, usando defaults sensatos para evitar loops infinitos.
 
 ---
 
