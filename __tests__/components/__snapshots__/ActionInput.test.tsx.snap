@@ -58,7 +58,7 @@ exports[`ActionInput snapshots should match snapshot for loading state 1`] = `
     style="background-color: rgb(255, 255, 255); border-top-color: #d6d3d1;"
   >
     <button
-      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors"
+      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors animate-pulse-glow"
       style="background-color: rgb(231, 229, 228); border-bottom: 1px solid #d6d3d1;"
     >
       <span
@@ -77,16 +77,16 @@ exports[`ActionInput snapshots should match snapshot for loading state 1`] = `
         class="flex items-center gap-1 text-[10px]"
         style="color: rgb(120, 113, 108);"
       >
-        Hide
+        Show
         <span
-          data-testid="chevron-down"
+          data-testid="chevron-up"
         >
-          Down
+          Up
         </span>
       </span>
     </button>
     <div
-      class="p-1.5 md:p-6 max-h-[50vh] md:max-h-none overflow-y-auto block"
+      class="p-1.5 md:p-6 max-h-[50vh] md:max-h-none overflow-y-auto hidden md:block"
     >
       <div
         class="max-w-full md:max-w-5xl mx-auto"
@@ -415,7 +415,7 @@ exports[`ActionInput snapshots should match snapshot in processing state 1`] = `
     style="background-color: rgb(255, 255, 255); border-top-color: #d6d3d1;"
   >
     <button
-      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors"
+      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors "
       style="background-color: rgb(231, 229, 228); border-bottom: 1px solid #d6d3d1;"
     >
       <span
@@ -434,16 +434,16 @@ exports[`ActionInput snapshots should match snapshot in processing state 1`] = `
         class="flex items-center gap-1 text-[10px]"
         style="color: rgb(120, 113, 108);"
       >
-        Hide
+        Show
         <span
-          data-testid="chevron-down"
+          data-testid="chevron-up"
         >
-          Down
+          Up
         </span>
       </span>
     </button>
     <div
-      class="p-1.5 md:p-6 max-h-[50vh] md:max-h-none overflow-y-auto block"
+      class="p-1.5 md:p-6 max-h-[50vh] md:max-h-none overflow-y-auto hidden md:block"
     >
       <div
         class="max-w-full md:max-w-5xl mx-auto"
@@ -481,7 +481,7 @@ exports[`ActionInput snapshots should match snapshot with options loaded 1`] = `
     style="background-color: rgb(255, 255, 255); border-top-color: #d6d3d1;"
   >
     <button
-      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors"
+      class="md:hidden w-full p-2.5 flex items-center justify-between transition-colors animate-pulse-glow"
       style="background-color: rgb(231, 229, 228); border-bottom: 1px solid #d6d3d1;"
     >
       <span
@@ -500,16 +500,16 @@ exports[`ActionInput snapshots should match snapshot with options loaded 1`] = `
         class="flex items-center gap-1 text-[10px]"
         style="color: rgb(120, 113, 108);"
       >
-        Hide
+        Show
         <span
-          data-testid="chevron-down"
+          data-testid="chevron-up"
         >
-          Down
+          Up
         </span>
       </span>
     </button>
     <div
-      class="p-1.5 md:p-6 max-h-[50vh] md:max-h-none overflow-y-auto block"
+      class="p-1.5 md:p-6 max-h-[50vh] md:max-h-none overflow-y-auto hidden md:block"
     >
       <div
         class="max-w-full md:max-w-5xl mx-auto"

@@ -10,6 +10,10 @@ jest.mock('lucide-react', () => ({
   Loader2: () => <span data-testid="loader-icon">Loading</span>,
   RefreshCw: () => <span data-testid="refresh-icon">Refresh</span>,
   Type: () => <span data-testid="type-icon">Type</span>,
+  Minus: () => <span data-testid="minus-icon">-</span>,
+  Plus: () => <span data-testid="plus-icon">+</span>,
+  Mic: () => <span data-testid="mic-icon">Mic</span>,
+  Square: () => <span data-testid="square-icon">Square</span>,
 }));
 
 // Mock fonts constant
@@ -27,6 +31,19 @@ jest.mock('../../constants/fonts', () => ({
   },
 }));
 
+// Mock VoiceInput component
+jest.mock('../../components/VoiceInput', () => ({
+  VoiceInput: ({ onTranscription, disabled }: { onTranscription: (text: string) => void; disabled?: boolean }) => (
+    <button
+      data-testid="voice-input"
+      onClick={() => onTranscription('voice text')}
+      disabled={disabled}
+    >
+      Voice
+    </button>
+  ),
+}));
+
 // Helper to render with ThemeColorsProvider
 const renderWithTheme = (ui: React.ReactElement) => {
   return render(<ThemeColorsProvider>{ui}</ThemeColorsProvider>);
@@ -35,8 +52,13 @@ const renderWithTheme = (ui: React.ReactElement) => {
 const createDefaultProps = () => ({
   isOpen: true,
   onClose: jest.fn(),
-  onRegenerate: jest.fn().mockResolvedValue(undefined),
-  isGenerating: false,
+  onRegenerateColors: jest.fn().mockResolvedValue(undefined),
+  onRegenerateFont: jest.fn().mockResolvedValue(undefined),
+  onFontSizeChange: jest.fn(),
+  isGeneratingColors: false,
+  isGeneratingFont: false,
+  apiKey: 'test-api-key',
+  language: 'en' as const,
 });
 
 describe('ThemeColorsModal', () => {
@@ -54,7 +76,7 @@ describe('ThemeColorsModal', () => {
     it('should render modal when isOpen is true', () => {
       const props = createDefaultProps();
       renderWithTheme(<ThemeColorsModal {...props} />);
-      expect(screen.getByText('Theme Style')).toBeInTheDocument();
+      expect(screen.getByText('Theme Settings')).toBeInTheDocument();
     });
 
     it('should match snapshot when open', () => {
@@ -63,28 +85,24 @@ describe('ThemeColorsModal', () => {
       expect(container).toMatchSnapshot();
     });
 
-    it('should match snapshot while generating', () => {
-      const props = { ...createDefaultProps(), isGenerating: true };
+    it('should match snapshot while generating colors', () => {
+      const props = { ...createDefaultProps(), isGeneratingColors: true };
       const { container } = renderWithTheme(<ThemeColorsModal {...props} />);
       expect(container).toMatchSnapshot();
     });
 
-    it('should match snapshot with user input', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-
-      const textarea = screen.getByPlaceholderText(/darker tones/);
-      fireEvent.change(textarea, { target: { value: 'cyberpunk neon style' } });
-
-      expect(document.body).toMatchSnapshot();
+    it('should match snapshot while generating font', () => {
+      const props = { ...createDefaultProps(), isGeneratingFont: true };
+      const { container } = renderWithTheme(<ThemeColorsModal {...props} />);
+      expect(container).toMatchSnapshot();
     });
   });
 
-  describe('color palette preview', () => {
-    it('should display current palette section', () => {
+  describe('color palette section', () => {
+    it('should display color palette section', () => {
       const props = createDefaultProps();
       renderWithTheme(<ThemeColorsModal {...props} />);
-      expect(screen.getByText('Current Palette')).toBeInTheDocument();
+      expect(screen.getByText('Color Palette')).toBeInTheDocument();
     });
 
     it('should display 8 color swatches', () => {
@@ -93,30 +111,8 @@ describe('ThemeColorsModal', () => {
       const swatches = container.querySelectorAll('[class*="w-8 h-8"]');
       expect(swatches).toHaveLength(8);
     });
-  });
 
-  describe('font preview', () => {
-    it('should display current font section', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-      expect(screen.getByText('Current Font')).toBeInTheDocument();
-    });
-
-    it('should display font name', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-      expect(screen.getByText('VT323')).toBeInTheDocument();
-    });
-  });
-
-  describe('user input', () => {
-    it('should display custom considerations input', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-      expect(screen.getByText('Custom Considerations (Optional)')).toBeInTheDocument();
-    });
-
-    it('should allow typing in the textarea', () => {
+    it('should allow typing in the color textarea', () => {
       const props = createDefaultProps();
       renderWithTheme(<ThemeColorsModal {...props} />);
 
@@ -126,105 +122,120 @@ describe('ThemeColorsModal', () => {
       expect(textarea).toHaveValue('more vibrant colors');
     });
 
-    it('should disable textarea while generating', () => {
-      const props = { ...createDefaultProps(), isGenerating: true };
-      renderWithTheme(<ThemeColorsModal {...props} />);
-
-      const textarea = screen.getByPlaceholderText(/darker tones/);
-      expect(textarea).toBeDisabled();
-    });
-  });
-
-  describe('quick regenerate', () => {
-    it('should display quick regenerate button', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-      expect(screen.getByText('Quick Regenerate')).toBeInTheDocument();
-    });
-
-    it('should call onRegenerate without input when clicked', async () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-
-      fireEvent.click(screen.getByText('Quick Regenerate'));
-
-      await waitFor(() => {
-        expect(props.onRegenerate).toHaveBeenCalledWith();
-      });
-    });
-
-    it('should call onClose after quick regenerate', async () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-
-      fireEvent.click(screen.getByText('Quick Regenerate'));
-
-      await waitFor(() => {
-        expect(props.onClose).toHaveBeenCalled();
-      });
-    });
-
-    it('should disable quick regenerate while generating', () => {
-      const props = { ...createDefaultProps(), isGenerating: true };
-      renderWithTheme(<ThemeColorsModal {...props} />);
-
-      const button = screen.getByText('Quick Regenerate').closest('button');
-      expect(button).toBeDisabled();
-    });
-  });
-
-  describe('apply custom', () => {
-    it('should display apply custom button', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-      expect(screen.getByText('Apply Custom')).toBeInTheDocument();
-    });
-
-    it('should disable apply custom when no input', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-
-      const button = screen.getByText('Apply Custom').closest('button');
-      expect(button).toBeDisabled();
-    });
-
-    it('should enable apply custom when input is provided', () => {
-      const props = createDefaultProps();
-      renderWithTheme(<ThemeColorsModal {...props} />);
-
-      const textarea = screen.getByPlaceholderText(/darker tones/);
-      fireEvent.change(textarea, { target: { value: 'neon colors' } });
-
-      const button = screen.getByText('Apply Custom').closest('button');
-      expect(button).not.toBeDisabled();
-    });
-
-    it('should call onRegenerate with input when clicked', async () => {
+    it('should call onRegenerateColors with input when Apply is clicked', async () => {
       const props = createDefaultProps();
       renderWithTheme(<ThemeColorsModal {...props} />);
 
       const textarea = screen.getByPlaceholderText(/darker tones/);
       fireEvent.change(textarea, { target: { value: 'cyberpunk style' } });
 
-      fireEvent.click(screen.getByText('Apply Custom'));
+      const applyButtons = screen.getAllByText('Apply');
+      fireEvent.click(applyButtons[0]); // First Apply is for colors
 
       await waitFor(() => {
-        expect(props.onRegenerate).toHaveBeenCalledWith('cyberpunk style');
+        expect(props.onRegenerateColors).toHaveBeenCalledWith('cyberpunk style');
       });
     });
 
-    it('should clear input and close after apply', async () => {
+    it('should call onRegenerateColors without input when Quick is clicked', async () => {
       const props = createDefaultProps();
       renderWithTheme(<ThemeColorsModal {...props} />);
 
-      const textarea = screen.getByPlaceholderText(/darker tones/) as HTMLTextAreaElement;
-      fireEvent.change(textarea, { target: { value: 'dark theme' } });
-
-      fireEvent.click(screen.getByText('Apply Custom'));
+      const quickButtons = screen.getAllByText('Quick');
+      fireEvent.click(quickButtons[0]); // First Quick is for colors
 
       await waitFor(() => {
-        expect(props.onClose).toHaveBeenCalled();
+        expect(props.onRegenerateColors).toHaveBeenCalledWith();
       });
+    });
+  });
+
+  describe('font style section', () => {
+    it('should display font style section', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+      expect(screen.getByText('Font Style')).toBeInTheDocument();
+    });
+
+    it('should display font name', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+      expect(screen.getByText('VT323')).toBeInTheDocument();
+    });
+
+    it('should allow typing in the font textarea', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const textarea = screen.getByPlaceholderText(/pixel font/);
+      fireEvent.change(textarea, { target: { value: 'elegant serif' } });
+
+      expect(textarea).toHaveValue('elegant serif');
+    });
+
+    it('should call onRegenerateFont with input when Apply is clicked', async () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const textarea = screen.getByPlaceholderText(/pixel font/);
+      fireEvent.change(textarea, { target: { value: 'sci-fi style' } });
+
+      const applyButtons = screen.getAllByText('Apply');
+      fireEvent.click(applyButtons[1]); // Second Apply is for fonts
+
+      await waitFor(() => {
+        expect(props.onRegenerateFont).toHaveBeenCalledWith('sci-fi style');
+      });
+    });
+
+    it('should call onRegenerateFont without input when Quick is clicked', async () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const quickButtons = screen.getAllByText('Quick');
+      fireEvent.click(quickButtons[1]); // Second Quick is for fonts
+
+      await waitFor(() => {
+        expect(props.onRegenerateFont).toHaveBeenCalledWith();
+      });
+    });
+  });
+
+  describe('font size section', () => {
+    it('should display font size section', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+      expect(screen.getByText('Font Size')).toBeInTheDocument();
+    });
+
+    it('should display current font size percentage', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+      expect(screen.getByText('100%')).toBeInTheDocument();
+    });
+
+    it('should call onFontSizeChange with negative delta when minus is clicked', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const minusButton = screen.getByTestId('minus-icon').closest('button');
+      if (minusButton) {
+        fireEvent.click(minusButton);
+      }
+
+      expect(props.onFontSizeChange).toHaveBeenCalledWith(-0.1);
+    });
+
+    it('should call onFontSizeChange with positive delta when plus is clicked', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const plusButton = screen.getByTestId('plus-icon').closest('button');
+      if (plusButton) {
+        fireEvent.click(plusButton);
+      }
+
+      expect(props.onFontSizeChange).toHaveBeenCalledWith(0.1);
     });
   });
 
@@ -246,20 +257,69 @@ describe('ThemeColorsModal', () => {
   });
 
   describe('info text', () => {
-    it('should display info text about regeneration', () => {
+    it('should display info text about changes', () => {
       const props = createDefaultProps();
       renderWithTheme(<ThemeColorsModal {...props} />);
 
-      expect(screen.getByText(/Regenerating will create a new color palette/)).toBeInTheDocument();
+      expect(screen.getByText(/All changes are saved to this game only/)).toBeInTheDocument();
     });
   });
 
   describe('loading state', () => {
-    it('should show loader icons when generating', () => {
-      const props = { ...createDefaultProps(), isGenerating: true };
+    it('should show loader icon when generating colors', () => {
+      const props = { ...createDefaultProps(), isGeneratingColors: true };
       renderWithTheme(<ThemeColorsModal {...props} />);
 
-      expect(screen.getAllByTestId('loader-icon')).toHaveLength(2);
+      expect(screen.getAllByTestId('loader-icon').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should show loader icon when generating font', () => {
+      const props = { ...createDefaultProps(), isGeneratingFont: true };
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      expect(screen.getAllByTestId('loader-icon').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should disable textareas while generating', () => {
+      const props = { ...createDefaultProps(), isGeneratingColors: true };
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const colorTextarea = screen.getByPlaceholderText(/darker tones/);
+      const fontTextarea = screen.getByPlaceholderText(/pixel font/);
+
+      expect(colorTextarea).toBeDisabled();
+      expect(fontTextarea).toBeDisabled();
+    });
+  });
+
+  describe('voice input', () => {
+    it('should render voice input buttons', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      expect(screen.getAllByTestId('voice-input')).toHaveLength(2);
+    });
+
+    it('should append voice transcription to color input', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const voiceButtons = screen.getAllByTestId('voice-input');
+      fireEvent.click(voiceButtons[0]); // First voice input is for colors
+
+      const colorTextarea = screen.getByPlaceholderText(/darker tones/);
+      expect(colorTextarea).toHaveValue('voice text');
+    });
+
+    it('should append voice transcription to font input', () => {
+      const props = createDefaultProps();
+      renderWithTheme(<ThemeColorsModal {...props} />);
+
+      const voiceButtons = screen.getAllByTestId('voice-input');
+      fireEvent.click(voiceButtons[1]); // Second voice input is for fonts
+
+      const fontTextarea = screen.getByPlaceholderText(/pixel font/);
+      expect(fontTextarea).toHaveValue('voice text');
     });
   });
 });

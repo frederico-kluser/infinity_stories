@@ -7,11 +7,11 @@ exports[`ThemeColorsModal rendering should match snapshot when open 1`] = `
     style="background-color: rgba(0, 0, 0, 0.5);"
   >
     <div
-      class="w-full max-w-md relative animate-fade-in"
+      class="w-full max-w-lg relative animate-fade-in max-h-[90vh] overflow-y-auto"
       style="background-color: rgb(255, 255, 255); border: 2px solid #1c1917; box-shadow: 8px 8px 0px #1c1917;"
     >
       <div
-        class="p-4 flex justify-between items-center"
+        class="p-4 flex justify-between items-center sticky top-0 z-10"
         style="border-bottom: 2px solid #d6d3d1; background-color: rgb(231, 229, 228);"
       >
         <h2
@@ -23,7 +23,7 @@ exports[`ThemeColorsModal rendering should match snapshot when open 1`] = `
           >
             Palette
           </span>
-          Theme Style
+          Theme Settings
         </h2>
         <button
           class="p-1 transition-colors hover:opacity-70"
@@ -37,372 +37,27 @@ exports[`ThemeColorsModal rendering should match snapshot when open 1`] = `
         </button>
       </div>
       <div
-        class="p-6 space-y-4"
+        class="p-6 space-y-6"
       >
-        <div>
-          <label
-            class="text-sm font-bold uppercase mb-2 block"
-            style="color: rgb(120, 113, 108);"
-          >
-            Current Palette
-          </label>
+        <section>
           <div
-            class="flex gap-1 flex-wrap"
-          >
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(245, 245, 244); border: 1px solid #d6d3d1;"
-              title="#f5f5f4"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(255, 255, 255); border: 1px solid #d6d3d1;"
-              title="#ffffff"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(231, 229, 228); border: 1px solid #d6d3d1;"
-              title="#e7e5e4"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
-              title="#1c1917"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
-              title="#1c1917"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(22, 101, 52); border: 1px solid #d6d3d1;"
-              title="#166534"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(217, 119, 6); border: 1px solid #d6d3d1;"
-              title="#d97706"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(220, 38, 38); border: 1px solid #d6d3d1;"
-              title="#dc2626"
-            />
-          </div>
-        </div>
-        <div>
-          <label
-            class="text-sm font-bold uppercase mb-2 block flex items-center gap-2"
-            style="color: rgb(120, 113, 108);"
-          >
-            <span
-              data-testid="type-icon"
-            >
-              Type
-            </span>
-            Current Font
-          </label>
-          <div
-            class="p-3 rounded-sm"
-            style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1;"
-          >
-            <p
-              class="text-lg mb-1"
-              style="font-family: 'VT323', monospace; color: rgb(28, 25, 23);"
-            >
-              VT323
-            </p>
-            <p
-              class="text-xs"
-              style="color: rgb(120, 113, 108);"
-            >
-              RETRO
-               — 
-              Retro terminal style font
-            </p>
-          </div>
-        </div>
-        <div>
-          <label
-            class="text-sm font-bold uppercase mb-2 block"
-            style="color: rgb(120, 113, 108);"
-          >
-            Custom Considerations (Optional)
-          </label>
-          <textarea
-            class="w-full p-3 text-sm resize-none outline-none transition-all"
-            placeholder="e.g., 'darker tones', 'more vibrant colors', 'cyberpunk neon style', 'use a pixel font'..."
-            rows="3"
-            style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 1;"
-          />
-        </div>
-        <div
-          class="flex gap-3"
-        >
-          <button
-            class="flex-1 py-3 font-bold uppercase text-sm flex items-center justify-center gap-2 transition-all"
-            style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 3px 3px 0px #1c1917; opacity: 1;"
-          >
-            <span
-              data-testid="refresh-icon"
-            >
-              Refresh
-            </span>
-            Quick Regenerate
-          </button>
-          <button
-            class="flex-1 py-3 font-bold uppercase text-sm flex items-center justify-center gap-2 transition-all"
-            disabled=""
-            style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 3px 3px 0px #1c1917; opacity: 0.5;"
+            class="flex items-center gap-2 mb-3"
           >
             <span
               data-testid="palette-icon"
             >
               Palette
             </span>
-            Apply Custom
-          </button>
-        </div>
-        <p
-          class="text-xs text-center"
-          style="color: rgb(120, 113, 108);"
-        >
-          Regenerating will create a new color palette and select a matching font based on the universe theme.
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`ThemeColorsModal rendering should match snapshot while generating 1`] = `
-<div>
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-    style="background-color: rgba(0, 0, 0, 0.5);"
-  >
-    <div
-      class="w-full max-w-md relative animate-fade-in"
-      style="background-color: rgb(255, 255, 255); border: 2px solid #1c1917; box-shadow: 8px 8px 0px #1c1917;"
-    >
-      <div
-        class="p-4 flex justify-between items-center"
-        style="border-bottom: 2px solid #d6d3d1; background-color: rgb(231, 229, 228);"
-      >
-        <h2
-          class="text-xl font-bold uppercase flex items-center gap-2"
-          style="color: rgb(28, 25, 23);"
-        >
-          <span
-            data-testid="palette-icon"
-          >
-            Palette
-          </span>
-          Theme Style
-        </h2>
-        <button
-          class="p-1 transition-colors hover:opacity-70"
-          style="color: rgb(120, 113, 108);"
-        >
-          <span
-            data-testid="x-icon"
-          >
-            X
-          </span>
-        </button>
-      </div>
-      <div
-        class="p-6 space-y-4"
-      >
-        <div>
-          <label
-            class="text-sm font-bold uppercase mb-2 block"
-            style="color: rgb(120, 113, 108);"
-          >
-            Current Palette
-          </label>
-          <div
-            class="flex gap-1 flex-wrap"
-          >
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(245, 245, 244); border: 1px solid #d6d3d1;"
-              title="#f5f5f4"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(255, 255, 255); border: 1px solid #d6d3d1;"
-              title="#ffffff"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(231, 229, 228); border: 1px solid #d6d3d1;"
-              title="#e7e5e4"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
-              title="#1c1917"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
-              title="#1c1917"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(22, 101, 52); border: 1px solid #d6d3d1;"
-              title="#166534"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(217, 119, 6); border: 1px solid #d6d3d1;"
-              title="#d97706"
-            />
-            <div
-              class="w-8 h-8 rounded-sm"
-              style="background-color: rgb(220, 38, 38); border: 1px solid #d6d3d1;"
-              title="#dc2626"
-            />
-          </div>
-        </div>
-        <div>
-          <label
-            class="text-sm font-bold uppercase mb-2 block flex items-center gap-2"
-            style="color: rgb(120, 113, 108);"
-          >
-            <span
-              data-testid="type-icon"
-            >
-              Type
-            </span>
-            Current Font
-          </label>
-          <div
-            class="p-3 rounded-sm"
-            style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1;"
-          >
-            <p
-              class="text-lg mb-1"
-              style="font-family: 'VT323', monospace; color: rgb(28, 25, 23);"
-            >
-              VT323
-            </p>
-            <p
-              class="text-xs"
+            <h3
+              class="text-sm font-bold uppercase"
               style="color: rgb(120, 113, 108);"
             >
-              RETRO
-               — 
-              Retro terminal style font
-            </p>
+              Color Palette
+            </h3>
           </div>
-        </div>
-        <div>
-          <label
-            class="text-sm font-bold uppercase mb-2 block"
-            style="color: rgb(120, 113, 108);"
+          <div
+            class="mb-3"
           >
-            Custom Considerations (Optional)
-          </label>
-          <textarea
-            class="w-full p-3 text-sm resize-none outline-none transition-all"
-            disabled=""
-            placeholder="e.g., 'darker tones', 'more vibrant colors', 'cyberpunk neon style', 'use a pixel font'..."
-            rows="3"
-            style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 0.5;"
-          />
-        </div>
-        <div
-          class="flex gap-3"
-        >
-          <button
-            class="flex-1 py-3 font-bold uppercase text-sm flex items-center justify-center gap-2 transition-all"
-            disabled=""
-            style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 3px 3px 0px #1c1917; opacity: 0.5;"
-          >
-            <span
-              data-testid="loader-icon"
-            >
-              Loading
-            </span>
-            Quick Regenerate
-          </button>
-          <button
-            class="flex-1 py-3 font-bold uppercase text-sm flex items-center justify-center gap-2 transition-all"
-            disabled=""
-            style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 3px 3px 0px #1c1917; opacity: 0.5;"
-          >
-            <span
-              data-testid="loader-icon"
-            >
-              Loading
-            </span>
-            Apply Custom
-          </button>
-        </div>
-        <p
-          class="text-xs text-center"
-          style="color: rgb(120, 113, 108);"
-        >
-          Regenerating will create a new color palette and select a matching font based on the universe theme.
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`ThemeColorsModal rendering should match snapshot with user input 1`] = `
-<body
-  style="background-color: rgb(245, 245, 244); color: rgb(28, 25, 23);"
->
-  <div>
-    <div
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      style="background-color: rgba(0, 0, 0, 0.5);"
-    >
-      <div
-        class="w-full max-w-md relative animate-fade-in"
-        style="background-color: rgb(255, 255, 255); border: 2px solid #1c1917; box-shadow: 8px 8px 0px #1c1917;"
-      >
-        <div
-          class="p-4 flex justify-between items-center"
-          style="border-bottom: 2px solid #d6d3d1; background-color: rgb(231, 229, 228);"
-        >
-          <h2
-            class="text-xl font-bold uppercase flex items-center gap-2"
-            style="color: rgb(28, 25, 23);"
-          >
-            <span
-              data-testid="palette-icon"
-            >
-              Palette
-            </span>
-            Theme Style
-          </h2>
-          <button
-            class="p-1 transition-colors hover:opacity-70"
-            style="color: rgb(120, 113, 108);"
-          >
-            <span
-              data-testid="x-icon"
-            >
-              X
-            </span>
-          </button>
-        </div>
-        <div
-          class="p-6 space-y-4"
-        >
-          <div>
-            <label
-              class="text-sm font-bold uppercase mb-2 block"
-              style="color: rgb(120, 113, 108);"
-            >
-              Current Palette
-            </label>
             <div
               class="flex gap-1 flex-wrap"
             >
@@ -448,89 +103,815 @@ exports[`ThemeColorsModal rendering should match snapshot with user input 1`] = 
               />
             </div>
           </div>
-          <div>
-            <label
-              class="text-sm font-bold uppercase mb-2 block flex items-center gap-2"
-              style="color: rgb(120, 113, 108);"
-            >
-              <span
-                data-testid="type-icon"
-              >
-                Type
-              </span>
-              Current Font
-            </label>
-            <div
-              class="p-3 rounded-sm"
-              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1;"
-            >
-              <p
-                class="text-lg mb-1"
-                style="font-family: 'VT323', monospace; color: rgb(28, 25, 23);"
-              >
-                VT323
-              </p>
-              <p
-                class="text-xs"
-                style="color: rgb(120, 113, 108);"
-              >
-                RETRO
-                 — 
-                Retro terminal style font
-              </p>
-            </div>
-          </div>
-          <div>
-            <label
-              class="text-sm font-bold uppercase mb-2 block"
-              style="color: rgb(120, 113, 108);"
-            >
-              Custom Considerations (Optional)
-            </label>
+          <div
+            class="flex gap-2 mb-3"
+          >
             <textarea
-              class="w-full p-3 text-sm resize-none outline-none transition-all"
-              placeholder="e.g., 'darker tones', 'more vibrant colors', 'cyberpunk neon style', 'use a pixel font'..."
-              rows="3"
+              class="flex-1 p-3 text-sm resize-none outline-none transition-all"
+              placeholder="e.g., 'darker tones', 'more vibrant', 'cyberpunk neon'..."
+              rows="2"
               style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 1;"
+            />
+            <button
+              data-testid="voice-input"
             >
-              cyberpunk neon style
-            </textarea>
+              Voice
+            </button>
           </div>
           <div
-            class="flex gap-3"
+            class="flex gap-2"
           >
             <button
-              class="flex-1 py-3 font-bold uppercase text-sm flex items-center justify-center gap-2 transition-all"
-              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 3px 3px 0px #1c1917; opacity: 1;"
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 1;"
             >
               <span
                 data-testid="refresh-icon"
               >
                 Refresh
               </span>
-              Quick Regenerate
+              Quick
             </button>
             <button
-              class="flex-1 py-3 font-bold uppercase text-sm flex items-center justify-center gap-2 transition-all"
-              style="background-color: rgb(28, 25, 23); color: rgb(255, 255, 255); border: 2px solid #1c1917; box-shadow: 3px 3px 0px #1c1917; opacity: 1;"
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
             >
               <span
                 data-testid="palette-icon"
               >
                 Palette
               </span>
-              Apply Custom
+              Apply
+            </button>
+          </div>
+        </section>
+        <div
+          style="border-top: 1px solid #d6d3d1;"
+        />
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="type-icon"
+            >
+              Type
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Font Style
+            </h3>
+          </div>
+          <div
+            class="p-3 rounded-sm mb-3"
+            style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1;"
+          >
+            <p
+              class="text-lg mb-1"
+              style="font-family: 'VT323', monospace; color: rgb(28, 25, 23);"
+            >
+              VT323
+            </p>
+            <p
+              class="text-xs"
+              style="color: rgb(120, 113, 108);"
+            >
+              RETRO
+               — 
+              Retro terminal style font
+            </p>
+          </div>
+          <div
+            class="flex gap-2 mb-3"
+          >
+            <textarea
+              class="flex-1 p-3 text-sm resize-none outline-none transition-all"
+              placeholder="e.g., 'pixel font', 'elegant serif', 'sci-fi style'..."
+              rows="2"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 1;"
+            />
+            <button
+              data-testid="voice-input"
+            >
+              Voice
+            </button>
+          </div>
+          <div
+            class="flex gap-2"
+          >
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 1;"
+            >
+              <span
+                data-testid="refresh-icon"
+              >
+                Refresh
+              </span>
+              Quick
+            </button>
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="type-icon"
+              >
+                Type
+              </span>
+              Apply
+            </button>
+          </div>
+        </section>
+        <div
+          style="border-top: 1px solid #d6d3d1;"
+        />
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="type-icon"
+            >
+              Type
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Font Size
+            </h3>
+          </div>
+          <div
+            class="flex items-center justify-center gap-4"
+          >
+            <button
+              class="p-3 font-bold transition-all"
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 1;"
+            >
+              <span
+                data-testid="minus-icon"
+              >
+                -
+              </span>
+            </button>
+            <div
+              class="px-6 py-3 min-w-[100px] text-center font-bold text-lg"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23);"
+            >
+              100
+              %
+            </div>
+            <button
+              class="p-3 font-bold transition-all"
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 1;"
+            >
+              <span
+                data-testid="plus-icon"
+              >
+                +
+              </span>
             </button>
           </div>
           <p
-            class="text-xs text-center"
+            class="text-xs text-center mt-2"
             style="color: rgb(120, 113, 108);"
           >
-            Regenerating will create a new color palette and select a matching font based on the universe theme.
+            Adjust the overall text size (
+            70
+            % - 
+            150
+            %)
           </p>
-        </div>
+        </section>
+        <p
+          class="text-xs text-center pt-2"
+          style="color: rgb(120, 113, 108); border-top: 1px solid #d6d3d1;"
+        >
+          All changes are saved to this game only. Colors and fonts are generated based on your universe.
+        </p>
       </div>
     </div>
   </div>
-</body>
+</div>
+`;
+
+exports[`ThemeColorsModal rendering should match snapshot while generating colors 1`] = `
+<div>
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+    style="background-color: rgba(0, 0, 0, 0.5);"
+  >
+    <div
+      class="w-full max-w-lg relative animate-fade-in max-h-[90vh] overflow-y-auto"
+      style="background-color: rgb(255, 255, 255); border: 2px solid #1c1917; box-shadow: 8px 8px 0px #1c1917;"
+    >
+      <div
+        class="p-4 flex justify-between items-center sticky top-0 z-10"
+        style="border-bottom: 2px solid #d6d3d1; background-color: rgb(231, 229, 228);"
+      >
+        <h2
+          class="text-xl font-bold uppercase flex items-center gap-2"
+          style="color: rgb(28, 25, 23);"
+        >
+          <span
+            data-testid="palette-icon"
+          >
+            Palette
+          </span>
+          Theme Settings
+        </h2>
+        <button
+          class="p-1 transition-colors hover:opacity-70"
+          style="color: rgb(120, 113, 108);"
+        >
+          <span
+            data-testid="x-icon"
+          >
+            X
+          </span>
+        </button>
+      </div>
+      <div
+        class="p-6 space-y-6"
+      >
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="palette-icon"
+            >
+              Palette
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Color Palette
+            </h3>
+          </div>
+          <div
+            class="mb-3"
+          >
+            <div
+              class="flex gap-1 flex-wrap"
+            >
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(245, 245, 244); border: 1px solid #d6d3d1;"
+                title="#f5f5f4"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(255, 255, 255); border: 1px solid #d6d3d1;"
+                title="#ffffff"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(231, 229, 228); border: 1px solid #d6d3d1;"
+                title="#e7e5e4"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
+                title="#1c1917"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
+                title="#1c1917"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(22, 101, 52); border: 1px solid #d6d3d1;"
+                title="#166534"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(217, 119, 6); border: 1px solid #d6d3d1;"
+                title="#d97706"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(220, 38, 38); border: 1px solid #d6d3d1;"
+                title="#dc2626"
+              />
+            </div>
+          </div>
+          <div
+            class="flex gap-2 mb-3"
+          >
+            <textarea
+              class="flex-1 p-3 text-sm resize-none outline-none transition-all"
+              disabled=""
+              placeholder="e.g., 'darker tones', 'more vibrant', 'cyberpunk neon'..."
+              rows="2"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 0.5;"
+            />
+            <button
+              data-testid="voice-input"
+              disabled=""
+            >
+              Voice
+            </button>
+          </div>
+          <div
+            class="flex gap-2"
+          >
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="loader-icon"
+              >
+                Loading
+              </span>
+              Quick
+            </button>
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="loader-icon"
+              >
+                Loading
+              </span>
+              Apply
+            </button>
+          </div>
+        </section>
+        <div
+          style="border-top: 1px solid #d6d3d1;"
+        />
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="type-icon"
+            >
+              Type
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Font Style
+            </h3>
+          </div>
+          <div
+            class="p-3 rounded-sm mb-3"
+            style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1;"
+          >
+            <p
+              class="text-lg mb-1"
+              style="font-family: 'VT323', monospace; color: rgb(28, 25, 23);"
+            >
+              VT323
+            </p>
+            <p
+              class="text-xs"
+              style="color: rgb(120, 113, 108);"
+            >
+              RETRO
+               — 
+              Retro terminal style font
+            </p>
+          </div>
+          <div
+            class="flex gap-2 mb-3"
+          >
+            <textarea
+              class="flex-1 p-3 text-sm resize-none outline-none transition-all"
+              disabled=""
+              placeholder="e.g., 'pixel font', 'elegant serif', 'sci-fi style'..."
+              rows="2"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 0.5;"
+            />
+            <button
+              data-testid="voice-input"
+              disabled=""
+            >
+              Voice
+            </button>
+          </div>
+          <div
+            class="flex gap-2"
+          >
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="refresh-icon"
+              >
+                Refresh
+              </span>
+              Quick
+            </button>
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="type-icon"
+              >
+                Type
+              </span>
+              Apply
+            </button>
+          </div>
+        </section>
+        <div
+          style="border-top: 1px solid #d6d3d1;"
+        />
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="type-icon"
+            >
+              Type
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Font Size
+            </h3>
+          </div>
+          <div
+            class="flex items-center justify-center gap-4"
+          >
+            <button
+              class="p-3 font-bold transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="minus-icon"
+              >
+                -
+              </span>
+            </button>
+            <div
+              class="px-6 py-3 min-w-[100px] text-center font-bold text-lg"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23);"
+            >
+              100
+              %
+            </div>
+            <button
+              class="p-3 font-bold transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="plus-icon"
+              >
+                +
+              </span>
+            </button>
+          </div>
+          <p
+            class="text-xs text-center mt-2"
+            style="color: rgb(120, 113, 108);"
+          >
+            Adjust the overall text size (
+            70
+            % - 
+            150
+            %)
+          </p>
+        </section>
+        <p
+          class="text-xs text-center pt-2"
+          style="color: rgb(120, 113, 108); border-top: 1px solid #d6d3d1;"
+        >
+          All changes are saved to this game only. Colors and fonts are generated based on your universe.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ThemeColorsModal rendering should match snapshot while generating font 1`] = `
+<div>
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+    style="background-color: rgba(0, 0, 0, 0.5);"
+  >
+    <div
+      class="w-full max-w-lg relative animate-fade-in max-h-[90vh] overflow-y-auto"
+      style="background-color: rgb(255, 255, 255); border: 2px solid #1c1917; box-shadow: 8px 8px 0px #1c1917;"
+    >
+      <div
+        class="p-4 flex justify-between items-center sticky top-0 z-10"
+        style="border-bottom: 2px solid #d6d3d1; background-color: rgb(231, 229, 228);"
+      >
+        <h2
+          class="text-xl font-bold uppercase flex items-center gap-2"
+          style="color: rgb(28, 25, 23);"
+        >
+          <span
+            data-testid="palette-icon"
+          >
+            Palette
+          </span>
+          Theme Settings
+        </h2>
+        <button
+          class="p-1 transition-colors hover:opacity-70"
+          style="color: rgb(120, 113, 108);"
+        >
+          <span
+            data-testid="x-icon"
+          >
+            X
+          </span>
+        </button>
+      </div>
+      <div
+        class="p-6 space-y-6"
+      >
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="palette-icon"
+            >
+              Palette
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Color Palette
+            </h3>
+          </div>
+          <div
+            class="mb-3"
+          >
+            <div
+              class="flex gap-1 flex-wrap"
+            >
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(245, 245, 244); border: 1px solid #d6d3d1;"
+                title="#f5f5f4"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(255, 255, 255); border: 1px solid #d6d3d1;"
+                title="#ffffff"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(231, 229, 228); border: 1px solid #d6d3d1;"
+                title="#e7e5e4"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
+                title="#1c1917"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(28, 25, 23); border: 1px solid #d6d3d1;"
+                title="#1c1917"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(22, 101, 52); border: 1px solid #d6d3d1;"
+                title="#166534"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(217, 119, 6); border: 1px solid #d6d3d1;"
+                title="#d97706"
+              />
+              <div
+                class="w-8 h-8 rounded-sm"
+                style="background-color: rgb(220, 38, 38); border: 1px solid #d6d3d1;"
+                title="#dc2626"
+              />
+            </div>
+          </div>
+          <div
+            class="flex gap-2 mb-3"
+          >
+            <textarea
+              class="flex-1 p-3 text-sm resize-none outline-none transition-all"
+              disabled=""
+              placeholder="e.g., 'darker tones', 'more vibrant', 'cyberpunk neon'..."
+              rows="2"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 0.5;"
+            />
+            <button
+              data-testid="voice-input"
+              disabled=""
+            >
+              Voice
+            </button>
+          </div>
+          <div
+            class="flex gap-2"
+          >
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="refresh-icon"
+              >
+                Refresh
+              </span>
+              Quick
+            </button>
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="palette-icon"
+              >
+                Palette
+              </span>
+              Apply
+            </button>
+          </div>
+        </section>
+        <div
+          style="border-top: 1px solid #d6d3d1;"
+        />
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="type-icon"
+            >
+              Type
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Font Style
+            </h3>
+          </div>
+          <div
+            class="p-3 rounded-sm mb-3"
+            style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1;"
+          >
+            <p
+              class="text-lg mb-1"
+              style="font-family: 'VT323', monospace; color: rgb(28, 25, 23);"
+            >
+              VT323
+            </p>
+            <p
+              class="text-xs"
+              style="color: rgb(120, 113, 108);"
+            >
+              RETRO
+               — 
+              Retro terminal style font
+            </p>
+          </div>
+          <div
+            class="flex gap-2 mb-3"
+          >
+            <textarea
+              class="flex-1 p-3 text-sm resize-none outline-none transition-all"
+              disabled=""
+              placeholder="e.g., 'pixel font', 'elegant serif', 'sci-fi style'..."
+              rows="2"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23); opacity: 0.5;"
+            />
+            <button
+              data-testid="voice-input"
+              disabled=""
+            >
+              Voice
+            </button>
+          </div>
+          <div
+            class="flex gap-2"
+          >
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="loader-icon"
+              >
+                Loading
+              </span>
+              Quick
+            </button>
+            <button
+              class="flex-1 py-2 font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="loader-icon"
+              >
+                Loading
+              </span>
+              Apply
+            </button>
+          </div>
+        </section>
+        <div
+          style="border-top: 1px solid #d6d3d1;"
+        />
+        <section>
+          <div
+            class="flex items-center gap-2 mb-3"
+          >
+            <span
+              data-testid="type-icon"
+            >
+              Type
+            </span>
+            <h3
+              class="text-sm font-bold uppercase"
+              style="color: rgb(120, 113, 108);"
+            >
+              Font Size
+            </h3>
+          </div>
+          <div
+            class="flex items-center justify-center gap-4"
+          >
+            <button
+              class="p-3 font-bold transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="minus-icon"
+              >
+                -
+              </span>
+            </button>
+            <div
+              class="px-6 py-3 min-w-[100px] text-center font-bold text-lg"
+              style="background-color: rgb(245, 245, 244); border: 2px solid #d6d3d1; color: rgb(28, 25, 23);"
+            >
+              100
+              %
+            </div>
+            <button
+              class="p-3 font-bold transition-all"
+              disabled=""
+              style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #1c1917; box-shadow: 2px 2px 0px #1c1917; opacity: 0.5;"
+            >
+              <span
+                data-testid="plus-icon"
+              >
+                +
+              </span>
+            </button>
+          </div>
+          <p
+            class="text-xs text-center mt-2"
+            style="color: rgb(120, 113, 108);"
+          >
+            Adjust the overall text size (
+            70
+            % - 
+            150
+            %)
+          </p>
+        </section>
+        <p
+          class="text-xs text-center pt-2"
+          style="color: rgb(120, 113, 108); border-top: 1px solid #d6d3d1;"
+        >
+          All changes are saved to this game only. Colors and fonts are generated based on your universe.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 `;
