@@ -1,7 +1,7 @@
 {
 	"name": "infinitum-rpg",
 	"private": true,
-	"version": "2.0.6",
+	"version": "2.0.8",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
@@ -10,6 +10,7 @@
 		"test": "jest",
 		"test:watch": "jest --watch",
 		"test:coverage": "jest --coverage",
+		"test:update-snapshots": "jest --updateSnapshot",
 		"validate:translations": "tsx scripts/validate-translations.ts",
 		"prepare": "husky"
 	},
