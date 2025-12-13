@@ -325,7 +325,7 @@ const App: React.FC = () => {
 	// --- Main Layout ---
 	return (
 		<div
-			className="flex h-screen overflow-hidden font-mono"
+			className="flex h-screen w-screen max-w-full overflow-x-hidden overflow-y-hidden font-mono"
 			style={{ backgroundColor: colors.background, color: colors.text }}
 		>
 			{/* Sidebar */}
@@ -476,9 +476,9 @@ const App: React.FC = () => {
 
 			{/* Main Game Area */}
 			{currentStoryId && activeStory ? (
-				<div className="flex-1 flex flex-col h-full relative" style={{ backgroundColor: colors.background }}>
+				<div className="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden" style={{ backgroundColor: colors.background }}>
 					<div
-						className="h-auto min-h-14 md:h-16 flex items-center justify-between px-3 md:px-6 py-2 md:py-0 z-10 shadow-sm sticky top-0 flex-shrink-0"
+						className="h-auto min-h-14 md:h-16 flex items-center justify-between px-2 md:px-6 py-2 md:py-0 z-10 shadow-sm sticky top-0 flex-shrink-0 w-full max-w-full overflow-hidden"
 						style={{ backgroundColor: colors.backgroundSecondary, borderBottom: `2px solid ${colors.border}` }}
 					>
 						<div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
@@ -516,7 +516,7 @@ const App: React.FC = () => {
 							</div>
 						</div>
 
-						<div className="flex items-center gap-1 md:gap-3 flex-shrink-0">
+						<div className="flex items-center gap-1 md:gap-3 flex-shrink-0 ml-1">
 							<button
 								onClick={handleExportJourney}
 								className="p-1.5 md:p-2 border-2 transition-colors hover:opacity-80"
@@ -568,7 +568,7 @@ const App: React.FC = () => {
 
 					{/* Card-based Story View */}
 					<div
-						className="flex-1 relative flex flex-col overflow-hidden select-none"
+						className="flex-1 relative flex flex-col overflow-hidden select-none w-full max-w-full"
 						style={{ backgroundColor: colors.backgroundAccent }}
 						{...touchHandlers}
 					>
@@ -620,7 +620,7 @@ const App: React.FC = () => {
 						)}
 
 						{/* Story Cards Container */}
-						<div className="relative z-10 flex-1 flex flex-col p-2 md:p-4">
+						<div className="relative z-10 flex-1 flex flex-col p-1 md:p-4 w-full max-w-full overflow-hidden">
 							{totalCards > 0 ? (
 								(() => {
 									const msg = visibleMessages[currentCardIndex];
@@ -715,12 +715,12 @@ const App: React.FC = () => {
 							{/* New Cards Indicator - Visual only, not clickable */}
 							{newCardsCount > 0 && !isProcessing && (
 								<div
-									className="absolute bottom-4 right-4 z-30 px-4 py-3 font-bold uppercase tracking-wider text-sm animate-pulse border-2 pointer-events-none"
+									className="absolute bottom-2 right-2 md:bottom-4 md:right-4 z-30 px-2 py-1.5 md:px-4 md:py-3 font-bold uppercase tracking-wider text-[10px] md:text-sm animate-pulse border-2 pointer-events-none"
 									style={{
 										backgroundColor: colors.buttonPrimary,
 										color: colors.buttonPrimaryText,
 										borderColor: colors.borderStrong,
-										boxShadow: `4px 4px 0px ${colors.shadow}`,
+										boxShadow: `2px 2px 0px ${colors.shadow}`,
 									}}
 								>
 									<span>{newCardsCount} {t.newCards || 'new'}</span>
@@ -744,15 +744,15 @@ const App: React.FC = () => {
 						/>
 					) : (
 						<div
-							className="border-t-2"
+							className="border-t-2 w-full max-w-full"
 							style={{ backgroundColor: colors.backgroundSecondary, borderTopColor: colors.border }}
 						>
 							<div
-								className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3 text-xs md:text-sm font-mono uppercase tracking-widest"
+								className="max-w-full md:max-w-5xl mx-auto px-2 md:px-4 py-3 md:py-4 flex items-center gap-2 md:gap-3 text-[10px] md:text-sm font-mono uppercase tracking-wider md:tracking-widest"
 								style={{ color: colors.textSecondary }}
 							>
-								<Terminal className="w-4 h-4" />
-								<span>{t.lastCardReminder || 'Navigate to the latest card to unlock your next move.'}</span>
+								<Terminal className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+								<span className="line-clamp-2">{t.lastCardReminder || 'Navigate to the latest card to unlock your next move.'}</span>
 							</div>
 						</div>
 					)}

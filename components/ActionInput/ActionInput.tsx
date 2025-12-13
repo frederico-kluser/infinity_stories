@@ -270,10 +270,10 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 	if (isLoadingOptions) {
 		return (
 			<div
-				className="p-3 md:p-6 border-t-2"
+				className="p-2 md:p-6 border-t-2 w-full max-w-full overflow-hidden"
 				style={{ backgroundColor: colors.backgroundSecondary, borderTopColor: colors.border }}
 			>
-				<div className="max-w-5xl mx-auto">
+				<div className="max-w-full md:max-w-5xl mx-auto">
 					<div className="flex flex-col items-center gap-3 py-4 md:py-6">
 						{/* Animated loader icon */}
 						<div className="relative">
@@ -336,10 +336,10 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 		if (customActionAnalysis) {
 			return (
 				<div
-					className="p-2 md:p-6 border-t-2"
+					className="p-2 md:p-6 border-t-2 w-full max-w-full overflow-hidden"
 					style={{ backgroundColor: colors.backgroundSecondary, borderTopColor: colors.border }}
 				>
-					<div className="max-w-5xl mx-auto space-y-3 md:space-y-4">
+					<div className="max-w-full md:max-w-5xl mx-auto space-y-3 md:space-y-4">
 						{/* Header */}
 						<div className="text-xs md:text-sm font-bold uppercase" style={{ color: colors.textSecondary }}>
 							{t.customActionRisk || 'Risk Analysis'}
@@ -451,10 +451,10 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 		if (isAnalyzingAction) {
 			return (
 				<div
-					className="p-3 md:p-6 border-t-2"
+					className="p-2 md:p-6 border-t-2 w-full max-w-full overflow-hidden"
 					style={{ backgroundColor: colors.backgroundSecondary, borderTopColor: colors.border }}
 				>
-					<div className="max-w-5xl mx-auto">
+					<div className="max-w-full md:max-w-5xl mx-auto">
 						<div className="flex flex-col items-center gap-3 py-4 md:py-6">
 							{/* Animated loader icon */}
 							<div className="relative">
@@ -522,10 +522,10 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 		// Regular custom input mode
 		return (
 			<div
-				className="p-2 md:p-6 border-t-2"
+				className="p-2 md:p-6 border-t-2 w-full max-w-full overflow-hidden"
 				style={{ backgroundColor: colors.backgroundSecondary, borderTopColor: colors.border }}
 			>
-				<div className="max-w-5xl mx-auto space-y-2 md:space-y-3">
+				<div className="max-w-full md:max-w-5xl mx-auto space-y-2 md:space-y-3">
 					<div className="flex items-center gap-2 md:gap-4">
 						<VoiceInput
 							apiKey={apiKey}
@@ -602,7 +602,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 				/>
 			)}
 			<div
-				className="border-t-2"
+				className="border-t-2 w-full max-w-full overflow-hidden"
 				style={{ backgroundColor: colors.backgroundSecondary, borderTopColor: colors.border }}
 			>
 				{/* Mobile collapse toggle - only visible on mobile */}
@@ -627,25 +627,25 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 				</button>
 
 				{/* Options container - collapsible on mobile */}
-				<div className={`p-2 md:p-6 ${isCollapsed ? 'hidden md:block' : 'block'}`}>
-					<div className="max-w-5xl mx-auto">
-						<div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1.5 md:gap-2">
+				<div className={`p-1.5 md:p-6 ${isCollapsed ? 'hidden md:block' : 'block'}`}>
+					<div className="max-w-full md:max-w-5xl mx-auto">
+						<div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2">
 							{options.map((opt, idx) => (
 								<button
 									key={idx}
 									onClick={() => handleOptionClick(opt)}
 									disabled={isBlocked}
-									className="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5"
+									className="p-1.5 md:p-3 border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-0 overflow-hidden"
 									style={{
 										backgroundColor: colors.backgroundSecondary,
 										borderColor: colors.border,
 										color: colors.text,
 									}}
 								>
-									<div className="font-bold uppercase text-[10px] md:text-sm mb-0.5 md:mb-2 line-clamp-2">
+									<div className="font-bold uppercase text-[9px] md:text-sm mb-0.5 md:mb-2 line-clamp-2 break-words">
 										{opt.text}
 									</div>
-									<div className="flex items-center gap-1.5 md:gap-3 text-[10px] md:text-xs">
+									<div className="flex items-center gap-1 md:gap-3 text-[9px] md:text-xs flex-wrap">
 										{opt.goodChance > 0 && (
 											<span
 												className="flex items-center gap-0.5"
@@ -675,15 +675,15 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 							<button
 								onClick={handleCustomClick}
 								disabled={isBlocked}
-								className="p-1.5 md:p-3 border-2 border-dashed text-left font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[10px] md:text-sm flex items-center gap-1.5 md:gap-2"
+								className="p-1.5 md:p-3 border-2 border-dashed text-left font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[9px] md:text-sm flex items-center gap-1 md:gap-2 min-w-0 overflow-hidden"
 								style={{
 									borderColor: colors.border,
 									backgroundColor: colors.backgroundAccent,
 									color: colors.textSecondary,
 								}}
 							>
-								<MoreHorizontal className="w-3.5 h-3.5 md:w-4 md:h-4" />
-								{t.customAction}
+								<MoreHorizontal className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+								<span className="truncate">{t.customAction}</span>
 							</button>
 						</div>
 					</div>
