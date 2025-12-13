@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageType, ChatMessage, ThemeColors, Language, GridSnapshot } from '../../types';
 import { Terminal, Info, Play, Loader2, StopCircle, ChevronLeft, ChevronRight, Map } from 'lucide-react';
 import { generateSpeech } from '../../services/ai/openaiClient';
@@ -81,13 +81,40 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 	// State for Grid Map flip
 	const [isMapFlipped, setIsMapFlipped] = useState(false);
 
+	// Custom scroll refs/state
+	const textContainerRef = useRef<HTMLDivElement>(null);
+	const textContentRef = useRef<HTMLDivElement>(null);
+	const [scrollPosition, setScrollPosition] = useState(0);
+	const [scrollMetrics, setScrollMetrics] = useState({
+		max: 0,
+		thumbHeight: 0,
+		thumbTrack: 0,
+		containerHeight: 0,
+		contentHeight: 0,
+	});
+	const [isDraggingThumb, setIsDraggingThumb] = useState(false);
+	const [isDraggingContent, setIsDraggingContent] = useState(false);
+	const dragStateRef = useRef<{
+		mode: 'content' | 'thumb' | null;
+		startY: number;
+		startScroll: number;
+		startThumbOffset: number;
+	}>({ mode: null, startY: 0, startScroll: 0, startThumbOffset: 0 });
+
 	// Reset flip state when navigating to a different card
 	useEffect(() => {
 		setIsMapFlipped(false);
 	}, [currentIndex]);
 
+	useEffect(() => {
+		setScrollPosition(0);
+		dragStateRef.current = { mode: null, startY: 0, startScroll: 0, startThumbOffset: 0 };
+	}, [message.id]);
+
 	// Check if grid map is available
 	const hasGridData = gridSnapshots && gridSnapshots.length > 0;
+	const canScroll = scrollMetrics.max > 1;
+	const thumbOffset = scrollMetrics.max > 0 ? (scrollPosition / scrollMetrics.max) * scrollMetrics.thumbTrack : 0;
 
 	// Refs to prevent multiple callback calls
 	const hasCalledCompleteRef = useRef(false);
@@ -136,6 +163,179 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 
 		return () => clearInterval(interval);
 	}, [message.text, message.id, skipAnimation, isActive]);
+
+	const applyScroll = useCallback(
+		(value: number) => {
+			setScrollPosition((prev) => {
+				const clamped = Math.max(0, Math.min(value, scrollMetrics.max));
+				return clamped;
+			});
+		},
+		[scrollMetrics.max],
+	);
+
+	const updateScrollMetrics = useCallback(() => {
+		const container = textContainerRef.current;
+		const content = textContentRef.current;
+		if (!container || !content) return;
+
+		const containerHeight = container.clientHeight;
+		const contentHeight = content.scrollHeight;
+		const max = Math.max(0, contentHeight - containerHeight);
+		const ratio = contentHeight === 0 ? 1 : containerHeight / contentHeight;
+		const thumbHeight = max > 0 ? Math.max(32, containerHeight * ratio) : containerHeight;
+		const thumbTrack = Math.max(0, containerHeight - thumbHeight);
+
+		setScrollMetrics((prev) => {
+			if (
+				prev.max === max &&
+				prev.thumbHeight === thumbHeight &&
+				prev.thumbTrack === thumbTrack &&
+				prev.containerHeight === containerHeight &&
+				prev.contentHeight === contentHeight
+			) {
+				return prev;
+			}
+			return { max, thumbHeight, thumbTrack, containerHeight, contentHeight };
+		});
+
+		setScrollPosition((prev) => Math.min(prev, max));
+	}, []);
+
+	useEffect(() => {
+		updateScrollMetrics();
+	}, [displayedText, updateScrollMetrics]);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		if ('ResizeObserver' in window) {
+			const observer = new ResizeObserver(() => updateScrollMetrics());
+			if (textContainerRef.current) observer.observe(textContainerRef.current);
+			if (textContentRef.current) observer.observe(textContentRef.current);
+
+			return () => observer.disconnect();
+		}
+
+		window.addEventListener('resize', updateScrollMetrics);
+		return () => window.removeEventListener('resize', updateScrollMetrics);
+	}, [updateScrollMetrics]);
+
+	const startContentDrag = useCallback(
+		(clientY: number) => {
+			if (!canScroll) return;
+			dragStateRef.current = { mode: 'content', startY: clientY, startScroll: scrollPosition, startThumbOffset: 0 };
+			setIsDraggingContent(true);
+		},
+		[canScroll, scrollPosition],
+	);
+
+	const startThumbDrag = useCallback(
+		(clientY: number, presetOffset?: number) => {
+			if (!canScroll) return;
+			const effectiveOffset =
+				typeof presetOffset === 'number'
+					? presetOffset
+					: scrollMetrics.max > 0
+					? (scrollPosition / scrollMetrics.max) * scrollMetrics.thumbTrack
+					: 0;
+
+			dragStateRef.current = {
+				mode: 'thumb',
+				startY: clientY,
+				startScroll: scrollPosition,
+				startThumbOffset: effectiveOffset,
+			};
+			setIsDraggingThumb(true);
+		},
+		[canScroll, scrollMetrics.max, scrollMetrics.thumbTrack, scrollPosition],
+	);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		const handlePointerMove = (event: PointerEvent) => {
+			if (!dragStateRef.current.mode) return;
+			event.preventDefault();
+			event.stopPropagation();
+			const deltaY = event.clientY - dragStateRef.current.startY;
+
+			if (dragStateRef.current.mode === 'content') {
+				applyScroll(dragStateRef.current.startScroll - deltaY);
+			} else if (dragStateRef.current.mode === 'thumb') {
+				const track = scrollMetrics.thumbTrack || 1;
+				const nextOffset = Math.min(Math.max(dragStateRef.current.startThumbOffset + deltaY, 0), track);
+				const ratio = track === 0 ? 0 : nextOffset / track;
+				applyScroll(ratio * scrollMetrics.max);
+			}
+		};
+
+		const stopDragging = () => {
+			if (dragStateRef.current.mode) {
+				dragStateRef.current.mode = null;
+				setIsDraggingThumb(false);
+				setIsDraggingContent(false);
+			}
+		};
+
+		window.addEventListener('pointermove', handlePointerMove, { passive: false });
+		window.addEventListener('pointerup', stopDragging);
+		window.addEventListener('pointercancel', stopDragging);
+
+		return () => {
+			window.removeEventListener('pointermove', handlePointerMove);
+			window.removeEventListener('pointerup', stopDragging);
+			window.removeEventListener('pointercancel', stopDragging);
+		};
+	}, [applyScroll, scrollMetrics.thumbTrack, scrollMetrics.max]);
+
+	const handleWheel = useCallback(
+		(event: React.WheelEvent<HTMLDivElement>) => {
+			if (!canScroll) return;
+			event.preventDefault();
+			event.stopPropagation();
+			applyScroll(scrollPosition + event.deltaY);
+		},
+		[applyScroll, canScroll, scrollPosition],
+	);
+
+	const handleThumbPointerDown = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (!canScroll || event.button !== 0) return;
+			event.preventDefault();
+			event.stopPropagation();
+			startThumbDrag(event.clientY);
+		},
+		[canScroll, startThumbDrag],
+	);
+
+	const handleTrackPointerDown = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (!canScroll || event.button !== 0) return;
+			if (event.target !== event.currentTarget) return;
+			event.preventDefault();
+			event.stopPropagation();
+			const rect = event.currentTarget.getBoundingClientRect();
+			const offset = Math.min(
+				Math.max(event.clientY - rect.top - scrollMetrics.thumbHeight / 2, 0),
+				scrollMetrics.thumbTrack,
+			);
+			const ratio = scrollMetrics.thumbTrack === 0 ? 0 : offset / scrollMetrics.thumbTrack;
+			applyScroll(ratio * scrollMetrics.max);
+			startThumbDrag(event.clientY, offset);
+		},
+		[applyScroll, canScroll, scrollMetrics.thumbHeight, scrollMetrics.thumbTrack, scrollMetrics.max, startThumbDrag],
+	);
+
+	const handleContentPointerDown = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (!canScroll || event.button !== 0) return;
+			event.preventDefault();
+			event.stopPropagation();
+			startContentDrag(event.clientY);
+		},
+		[canScroll, startContentDrag],
+	);
 
 	// Get avatar source
 	const getAvatarSrc = () => {
@@ -376,12 +576,25 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 							</div>
 
 							{/* Message Text - Book Typography */}
-							<div className="flex-1 overflow-y-auto min-h-0">
+							<div
+								className="flex-1 relative overflow-hidden min-h-0"
+								ref={textContainerRef}
+								onWheel={handleWheel}
+								style={{ touchAction: canScroll ? 'pan-y' : 'auto' }}
+							>
 								<div
-									className={`leading-relaxed whitespace-pre-wrap font-serif ${
+									ref={textContentRef}
+									onPointerDown={handleContentPointerDown}
+									className={`leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 ${
 										isNarrator ? 'text-lg md:text-2xl italic text-center' : 'text-base md:text-xl'
 									}`}
-									style={{ color: colors.text }}
+									style={{
+										color: colors.text,
+										transform: `translateY(-${scrollPosition}px)`,
+										transition: isDraggingThumb || isDraggingContent ? 'none' : 'transform 120ms ease-out',
+										cursor: canScroll ? (isDraggingContent ? 'grabbing' : 'grab') : 'default',
+										userSelect: isDraggingContent ? 'none' : 'text',
+									}}
 								>
 									{isNarrator && (
 										<span
@@ -402,6 +615,28 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 										</span>
 									)}
 								</div>
+
+								{canScroll && (
+									<div className="absolute inset-y-2 right-2 w-3 flex items-center justify-center pointer-events-none">
+										<div
+											className="relative w-1 rounded-full h-full pointer-events-auto"
+											style={{ backgroundColor: colors.border, opacity: 0.4 }}
+											onPointerDown={handleTrackPointerDown}
+										>
+											<div
+												data-scroll-thumb
+												className="absolute left-1/2 -translate-x-1/2 w-3 rounded-full"
+												style={{
+													height: scrollMetrics.thumbHeight,
+													transform: `translateY(${thumbOffset}px)`,
+													backgroundColor: colors.textSecondary,
+													cursor: isDraggingThumb ? 'grabbing' : 'grab',
+												}}
+												onPointerDown={handleThumbPointerDown}
+											/>
+										</div>
+									</div>
+								)}
 							</div>
 
 							{/* Footer - Page Number & Navigation Hint */}
