@@ -73,10 +73,10 @@ export function buildNarrativeStyleRefinementPrompt({
 }: NarrativeStyleRefinementParams): string {
 	const langName = getLanguageName(language);
 
-	const historyContext =
-		history.length > 0
-			? `\n\nREFINEMENT HISTORY (already answered):\n${history.map((h, i) => `${i + 1}. Q: ${h.question}\n   A: ${h.answer}`).join('\n\n')}`
-			: '';
+	const historyEntries = history
+		.map((h, i) => `Q${i + 1}: ${h.question}\nA${i + 1}: ${h.answer}`)
+		.join('\n\n');
+	const historySection = historyEntries ? `<history>\n${historyEntries}\n</history>` : '';
 
 	const contextInfo = [
 		genre ? `Genre: ${genre}` : null,
@@ -85,96 +85,58 @@ export function buildNarrativeStyleRefinementPrompt({
 		.filter(Boolean)
 		.join(' | ');
 
-	return `You are a narrative style consultant helping a player define their preferred writing style for an interactive RPG story.
+	return `
+<role>
+You are a narrative style consultant helping the player lock a cohesive writing brief for the RPG Game Master.
+</role>
 
-TARGET LANGUAGE FOR ALL OUTPUT: ${langName}
-${contextInfo ? `CONTEXT: ${contextInfo}` : ''}
+<context>
+<language>${langName}</language>
+${contextInfo ? `<universe_context>${contextInfo}</universe_context>` : ''}
+<initial_description>${initialDescription}</initial_description>
+${historySection}
+</context>
 
-PLAYER'S INITIAL STYLE DESCRIPTION:
-"${initialDescription}"
-${historyContext}
+<instructions>
+# Stage 1: Evaluate Coverage
+- Prioritize CADENCE (detail level + pacing) first.
+- Then assess TONE/atmosphere, POV/voice, and TECHNIQUES (show vs tell, sensory focus).
 
-=== ELEMENTS TO EVALUATE (in priority order) ===
+# Stage 2: Decide the Next Action
+- Set isComplete=true when cadence is clear, OR 3+ history entries exist, OR the player indicates they're satisfied.
+- Otherwise plan exactly ONE follow-up question targeting the highest-priority gap (cadence → tone → POV → techniques).
 
-1. **CADENCE/DETAIL LEVEL** (MOST IMPORTANT for user experience)
-   - How detailed should descriptions be? (minimal/moderate/rich)
-   - Sentence length preference (short and punchy / varied / flowing)
-   - Pacing speed (fast action-focused / balanced / slow and immersive)
+# Stage 3: Craft the Question
+- Use ${langName} with conversational tone.
+- Provide 4-5 concrete options (include at least one "minimal detail" choice for cadence questions).
+- Reference ${contextInfo || 'the provided universe'} when useful.
+- Never repeat a topic already answered in history.
 
-2. **TONE/ATMOSPHERE**
-   - Overall mood (dark, hopeful, tense, humorous, epic, intimate, etc.)
-   - Emotional intensity level
+# Stage 4: Finalize the Style Brief
+- When isComplete=true, compose finalStyle (<150 words) with sections:
+  - CADENCE: detail level, sentence style, pacing.
+  - TONE: dominant mood + intensity.
+  - POV: perspective if specified.
+  - TECHNIQUES: literary preferences or sensory focus.
+</instructions>
 
-3. **POV/VOICE** (only if unclear)
-   - Narrative perspective (first person, third limited, third omniscient)
-
-4. **TECHNIQUES** (only if user seems interested in craft)
-   - Show don't tell preference
-   - Sensory focus priorities
-
-=== DECISION RULES ===
-
-**MARK AS COMPLETE (isComplete: true) when:**
-- User has clearly expressed CADENCE preference (detail level + pacing), OR
-- History has 3+ questions already answered, OR
-- User explicitly says they're satisfied or wants to proceed
-
-**ASK A QUESTION (isComplete: false) when:**
-- CADENCE/detail level is unclear (this is the PRIORITY question), OR
-- TONE is completely unspecified AND cadence is clear, OR
-- Less than 3 questions have been asked AND important info is missing
-
-=== QUESTION GUIDELINES ===
-
-1. Ask ONE question at a time about the most important missing element
-2. ALWAYS provide 4-5 concrete options in the target language
-3. Options must be:
-   - Specific and actionable (not vague like "normal" or "balanced")
-   - Relevant to the genre/universe if provided
-   - Include at least one "minimal detail" option for users tired of verbose narration
-4. Question should be conversational, not technical
-5. NEVER ask about something already answered in history
-
-=== OPTION EXAMPLES BY ELEMENT ===
-
-For CADENCE (adapt to ${langName}):
-- "Frases curtas e diretas, foco na ação, poucos detalhes descritivos"
-- "Descrições moderadas, equilíbrio entre ação e ambientação"
-- "Prosa rica e imersiva, descrições sensoriais detalhadas"
-- "Ritmo cinematográfico: cortes rápidos em ação, pausas em momentos dramáticos"
-
-For TONE (adapt to ${langName}):
-- "Sombrio e tenso, com momentos de alívio"
-- "Aventureiro e otimista"
-- "Realista com toques de humor seco"
-- "Épico e grandioso"
-
-=== FINAL STYLE FORMAT ===
-
-When isComplete is true, generate finalStyle as a structured brief with these sections:
-- CADENCE: [detail level, sentence style, pacing]
-- TONE: [primary mood, intensity]
-- POV: [perspective, if specified]
-- TECHNIQUES: [any specific preferences mentioned]
-
-Keep finalStyle under 150 words. Be specific and actionable.
-
-=== ANTI-LOOP RULES ===
-
-- If history has 3+ items, ALWAYS set isComplete=true and generate finalStyle
-- Never repeat a question from history
-- If user gives minimal answer like "ok" or "any", accept it and move on
-- Brief answers are valid: "like Game of Thrones" tells you tone, violence level, etc.
-
-=== RESPONSE FORMAT ===
-
-Respond with valid JSON only:
+<response_format>
+Return strict JSON:
 {
   "isComplete": boolean,
-  "question": "string (only if isComplete is false)",
-  "options": ["string array with 4-5 options (only if question is present)"],
-  "finalStyle": "string (only if isComplete is true)"
-}`;
+  "question": "string" (only when isComplete is false),
+  "options": ["string", ...] (4-5 items, required when question exists),
+  "finalStyle": "string" (only when isComplete is true)
+}
+</response_format>
+
+<reminder>
+- Use ${langName} for every question, option, and finalStyle entry.
+- Accept short answers like "ok" or "any"—do not loop.
+- Stop asking once 3 interactions already exist.
+</reminder>
+`;
+
 }
 
 /**

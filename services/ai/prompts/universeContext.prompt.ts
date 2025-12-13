@@ -157,113 +157,93 @@ INTERPRETATION RULES:
   }
 
   return `
+<role>
 You are a world-building expert creating a comprehensive NARRATIVE CONTEXT DOCUMENT for an RPG universe.
+Your mission: Create a thorough reference document that any writer could use to maintain narrative consistency.
+</role>
 
-${universeTypeInstruction}
+<universe_context>
+<name>${universeName}</name>
+<type>${universeType === 'existing' ? 'Well-known IP - use canon elements and established lore' : 'Original creation - be creative while maintaining internal consistency'}</type>
+</universe_context>
 ${customStyleInstructions || genreInstructions}
 
-Create a DETAILED and EXTENSIVE narrative context document in ${langName} for the universe "${universeName}".
+<language>${langName}</language>
 
-This document will be used as a permanent reference for all narrative generation in this universe.
-It should be thorough enough that any writer could use it to maintain consistency.
+<required_sections>
+## 1. COMMUNICATION STYLE
+- Formality levels (addressing superiors, equals, strangers, friends)
+- Common greetings and farewells
+- Expressions of emotion (surprise, anger, joy, fear)
+- Verbal tics, filler words, speech patterns
+- Regional/class variations in speech
 
-===== REQUIRED SECTIONS =====
+## 2. SLANG AND JARGON
+- 10-15 slang words/phrases with meanings
+- Universe-appropriate profanity/curses
+- Professional jargon (soldiers, merchants, mages, pilots)
+- Affectionate terms (lovers, friends, parents)
+- Common insults and severity levels
 
-## 1. COMMUNICATION STYLE (Como as pessoas se comunicam)
+## 3. MONETARY SYSTEM
+- Currency name(s) and denominations
+- Casual references to money (slang)
+- Value examples (meal, lodging, weapon)
+- Economic context (poverty, wealth disparity, black markets)
+- Alternate trade (barter, credits, crystals)
 
-Describe in detail:
-- **Formality levels**: How do people address superiors, equals, strangers, friends?
-- **Common greetings**: How do people say hello, goodbye, good morning/night?
-- **Expressions of emotion**: How do people express surprise, anger, joy, fear?
-- **Verbal tics**: Are there common filler words, interjections, or speech patterns?
-- **Regional/class variations**: Do different groups speak differently?
+## 4. CULTURE AND CUSTOMS
+- Physical greetings/farewells (bows, handshakes, salutes)
+- Eating customs and table manners
+- Religious/spiritual practices, prayers, superstitions
+- Death customs and mourning
+- Major celebrations, holidays, festivals
+- Taboos and forbidden topics
 
-## 2. SLANG AND JARGON (Gírias e Jargões)
+## 5. SOCIAL STRUCTURE
+- Class system (nobles, commoners, outcasts)
+- Power groups (guilds, corporations, orders)
+- Social mobility options
+- Discrimination and prejudices
+- Law and justice system
 
-Create a rich vocabulary including:
-- **Common slang terms**: At least 10-15 slang words/phrases with meanings
-- **Profanity/curses**: Universe-appropriate swear words or exclamations
-- **Professional jargon**: Terms used by soldiers, merchants, mages, pilots, etc.
-- **Affectionate terms**: How do lovers, friends, parents speak to each other?
-- **Insults**: Common insults and their severity levels
+## 6. UNIQUE ELEMENTS
+- Technology level and prevalence
+- Magic/supernatural systems
+- Important organizations and factions
+- Recent historical events affecting daily life
+- Famous geographic locations
 
-## 3. MONETARY SYSTEM (Sistema Monetário)
+## 7. NARRATIVE TONE
+- Overall mood (dark, adventurous, epic)
+- Humor style and frequency
+- Violence description level
+- Romance portrayal style
+- Pacing preferences
 
-Define completely:
-- **Currency name(s)**: What is money called? Are there multiple denominations?
-- **Currency symbols/slang**: How do people casually refer to money?
-- **Value examples**: What does a meal cost? A night at an inn? A weapon?
-- **Economic context**: Is there poverty? Wealth disparity? Black markets?
-- **Alternate trade**: Do people barter? Use credits? Magic crystals?
+## 8. NPC VOICE ARCHETYPES
+For each group, include: verbal tics, formality level, common topics, how they address strangers vs. acquaintances
 
-## 4. CULTURE AND CUSTOMS (Cultura e Costumes)
+- Nobility/Royalty
+- Common folk
+- Scholars/Mages
+- Merchants
+- Warriors/Soldiers
+- Outcasts/Criminals
+</required_sections>
 
-Detail the social fabric:
-- **Greetings and farewells**: Physical gestures (bows, handshakes, salutes)?
-- **Eating customs**: How do people eat? Share meals? Table manners?
-- **Religious/spiritual practices**: Common prayers, blessings, superstitions?
-- **Death and mourning**: How do people deal with death? Funeral customs?
-- **Celebrations**: Major holidays, festivals, traditions?
-- **Taboos**: What topics or actions are considered offensive or forbidden?
-
-## 5. SOCIAL STRUCTURE (Estrutura Social)
-
-Map the power dynamics:
-- **Class system**: Are there nobles, commoners, outcasts?
-- **Power groups**: Who holds power? Guilds? Corporations? Orders?
-- **Social mobility**: Can people change their status? How?
-- **Discrimination**: Are there prejudices based on species, origin, profession?
-- **Law and order**: How is justice administered? Who enforces it?
-
-## 6. UNIQUE ELEMENTS (Elementos Únicos do Universo)
-
-Capture what makes this universe special:
-- **Technology level**: What technology exists? How common is it?
-- **Magic/supernatural**: Are there powers? How do they work? Who has them?
-- **Important organizations**: Major factions, orders, companies?
-- **Historical events**: Recent events that affect daily life?
-- **Geography references**: Famous places people might mention?
-
-## 7. NARRATIVE TONE (Tom Narrativo)
-
-Guide the storytelling style:
-- **Overall tone**: Dark and gritty? Light and adventurous? Epic and dramatic?
-- **Humor style**: Is humor common? What kind?
-- **Violence level**: How graphically is violence described?
-- **Romance style**: How is romance portrayed? Subtle or explicit?
-- **Pacing**: Fast-paced action? Slow character development?
-
-## 8. NPC VOICE ARCHETYPES (Arquétipos de Voz de NPCs)
-
-Define how different social groups speak:
-- **Nobility/Royalty**: Formal patterns, specific greetings, verbal tics
-- **Common folk**: Casual speech, local expressions, slang usage
-- **Scholars/Mages**: Technical vocabulary, reference patterns
-- **Merchants**: Persuasive speech, negotiation phrases
-- **Warriors/Soldiers**: Military jargon, chain of command respect
-- **Outcasts/Criminals**: Street slang, coded language
-
-For each archetype, include:
-- Typical verbal tics or catchphrases
-- Level of formality
-- Common topics they discuss
-- How they address strangers vs. acquaintances
-
-${genreInstructions}
-
-===== FORMAT REQUIREMENTS =====
-
+<format_requirements>
 - Write EVERYTHING in ${langName}
-- Be COMPREHENSIVE - this is the main reference for all future narratives
+- Be COMPREHENSIVE (2000-3000 words minimum)
 - Include SPECIFIC EXAMPLES for each category
-- Make it feel ALIVE and AUTHENTIC to the universe
-- Aim for at least 2000-3000 words of rich, detailed content
-- Use bullet points and clear organization for easy reference
+- Use bullet points and clear organization
+- Make it feel ALIVE and AUTHENTIC
+</format_requirements>
 
-===== OUTPUT =====
-
+<output_format>
 Return ONLY the narrative context document as plain text (not JSON).
 Start directly with the content, no preamble.
+</output_format>
 `;
 }
 

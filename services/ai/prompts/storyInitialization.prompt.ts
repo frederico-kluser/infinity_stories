@@ -169,34 +169,66 @@ export function buildStoryInitializationPrompt({
   const narrativeStyleDirective = buildNarrativeStyleDirective(config);
 
   return `
-      Create the initial state for a new RPG.
-      Universe: ${config.universeName} (${config.universeType})
-      Player: ${config.playerName} - ${config.playerDesc}
-      Background: ${config.background}
-      Memories: ${config.memories}
-      Start Situation: ${config.startSituation}
-      ${narrativeStyleDirective}
+<role>
+You are a world builder creating the initial state for a new RPG adventure.
+Your mission: Generate an immersive opening scene, starting location, and player character.
+</role>
 
-      Generate a 'Narrator' introduction message, the initial Location, and the Player Character object.
+<context>
+<universe>${config.universeName} (${config.universeType})</universe>
+<player_config>
+Name: ${config.playerName}
+Description: ${config.playerDesc}
+Background: ${config.background}
+Memories: ${config.memories}
+Starting Situation: ${config.startSituation}
+</player_config>
+${narrativeStyleDirective}
+</context>
 
-      === MANDATORY PLAYER STATS ===
-      The player character MUST have these stats:
-      - hp: ${DEFAULT_PLAYER_STATS.hp} (starting health)
-      - maxHp: ${DEFAULT_PLAYER_STATS.maxHp} (maximum health)
-      - gold: ${startingGold} (starting currency for this universe type)
+<instructions>
+# Creation Steps
 
-      === INVENTORY FORMAT ===
-      Inventory items should be objects with:
-      - name: Item name
-      - category: One of 'consumable', 'weapon', 'armor', 'valuable', 'material', 'quest', 'currency', 'misc'
-      - baseValue: Price in gold (use the price ranges below)
-      - quantity: Number of items (default 1)
-      - isStackable: true for consumables/materials
+## Step 1: Create the Starting Location
+- Name that fits the universe
+- Vivid description (2-3 sentences) with sensory details
+- Atmospheric elements that set the tone
 
-      ${formatEconomyRulesForPrompt()}
+## Step 2: Create the Player Character
+Include these MANDATORY stats:
+- hp: ${DEFAULT_PLAYER_STATS.hp}
+- maxHp: ${DEFAULT_PLAYER_STATS.maxHp}
+- gold: ${startingGold}
 
-      Initialize the player with basic inventory relevant to the setting (e.g. clothes as armor, 1 key item).
-      The output text MUST be in ${langName}.
+## Step 3: Create Starting Inventory
+Items relevant to the setting (clothes as armor, 1-2 key items).
+Each item needs: name, category, baseValue, quantity, isStackable.
+
+## Step 4: Narrator Introduction
+Craft a Narrator introduction that:
+- Sets the scene and tone
+- Connects the player's background to the current moment
+- Ends with a hook that invites action
+</instructions>
+
+<output_format>
+# Inventory Item Format
+{
+  "name": "Item name",
+  "category": "consumable|weapon|armor|valuable|material|quest|currency|misc",
+  "baseValue": [price in gold],
+  "quantity": 1,
+  "isStackable": true|false
+}
+
+${formatEconomyRulesForPrompt()}
+</output_format>
+
+<reminder>
+- All narrative text MUST be in ${langName}
+- Use the GM response schema format (messages + stateUpdates)
+- Make the opening memorable and evocative
+</reminder>
   `;
 }
 

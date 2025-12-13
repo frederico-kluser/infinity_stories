@@ -108,81 +108,92 @@ ${style.avoid.slice(0, 3).map((a) => `- ${a}`).join('\n')}
   }
 
   return `
+<role>
 You are a literary editor specialized in interactive fiction and RPG narratives.
-Analyze the following narrative text for quality issues and provide detailed feedback.
+Your mission: Analyze narrative text for quality issues and provide detailed, actionable feedback.
+</role>
 
-=== NARRATIVE TEXT TO ANALYZE ===
-"""
+<text_to_analyze>
 ${narrativeText}
-"""
+</text_to_analyze>
 
-=== ANALYSIS CRITERIA ===
+<analysis_criteria>
+# Priority-Ordered Criteria
 
-**1. SHOW VS TELL (Most Important)**
-Identify any instances where emotions or states are TOLD instead of SHOWN.
-- BAD: "She was angry", "He felt nervous", "They were happy"
-- GOOD: Physical actions, body language, environmental details, dialogue subtext
-- Severity: HIGH for direct emotion labels, MEDIUM for implied telling
+## 1. SHOW VS TELL (Most Important)
+Identify instances where emotions or states are TOLD instead of SHOWN.
+| Quality | Example |
+|---------|---------|
+| BAD | "She was angry", "He felt nervous", "They were happy" |
+| GOOD | Physical actions, body language, environmental details, dialogue subtext |
 
-**2. VOICE DIFFERENTIATION**
-If multiple characters speak, check if they sound distinct.
+Severity: HIGH for direct emotion labels, MEDIUM for implied telling
+
+## 2. VOICE DIFFERENTIATION
+If multiple characters speak, verify they sound distinct:
 - Each character should have unique speech patterns
 - Different vocabulary levels, verbal tics, sentence structures
-- Severity: HIGH if all characters sound identical
+Severity: HIGH if all characters sound identical
 
-**3. PACING & RHYTHM**
-Analyze sentence length variation and flow.
+## 3. PACING & RHYTHM
+Analyze sentence length variation and flow:
 - Good pacing alternates between short and long sentences
-- Action scenes should have shorter sentences
-- Reflective moments can have longer sentences
-- Severity: MEDIUM for monotonous rhythm
+- Action scenes → shorter sentences
+- Reflective moments → longer sentences allowed
+Severity: MEDIUM for monotonous rhythm
 
-**4. CLICHÉS & OVERUSED PHRASES**
-Identify tired expressions that should be replaced.
-- "Suddenly", "very", "really", "beautiful", "amazing"
-- Overused metaphors and similes
-- Generic descriptions
-- Severity: LOW for occasional use, MEDIUM for frequent use
+## 4. CLICHÉS & OVERUSED PHRASES
+Identify tired expressions: "Suddenly", "very", "really", "beautiful", "amazing"
+- Check for overused metaphors and similes
+- Flag generic descriptions
+Severity: LOW for occasional use, MEDIUM for frequent use
 
-**5. REPETITION**
-Check for word or phrase repetition within close proximity.
+## 5. REPETITION
+Check for word/phrase repetition within close proximity:
 - Same word used multiple times in a paragraph
 - Same sentence structure repeated
-- Severity: LOW to MEDIUM based on frequency
+Severity: LOW to MEDIUM based on frequency
+</analysis_criteria>
 
-${genreGuidelines}
+${genreGuidelines ? `<genre_guidelines>\n${genreGuidelines}\n</genre_guidelines>` : ''}
 
-=== OUTPUT FORMAT ===
+<scoring_guide>
+| Score | Quality Level |
+|-------|---------------|
+| 90-100 | Excellent prose, publishable quality |
+| 80-89 | Good quality, minor issues |
+| 70-79 | Acceptable, some noticeable issues |
+| 60-69 | Below threshold, needs improvement |
+| Below 60 | Significant quality problems |
 
-Respond with JSON:
+Quality threshold: 70
+</scoring_guide>
+
+<output_format>
+Respond with JSON only:
 {
   "overallScore": 0-100,
-  "meetsQualityThreshold": true/false (threshold is 70),
-  "summary": "Brief 1-2 sentence summary of the narrative quality",
-  "strengths": [
-    "List of things done well (2-4 items)"
-  ],
+  "meetsQualityThreshold": true/false,
+  "summary": "Brief 1-2 sentence summary",
+  "strengths": ["List of 2-4 things done well"],
   "issues": [
     {
-      "type": "tell_not_show" | "voice_homogenization" | "pacing" | "cliche" | "genre_violation" | "repetition",
-      "severity": "low" | "medium" | "high",
-      "originalText": "The problematic text excerpt",
+      "type": "tell_not_show | voice_homogenization | pacing | cliche | genre_violation | repetition",
+      "severity": "low | medium | high",
+      "originalText": "The problematic excerpt",
       "explanation": "Why this is a problem"${includeSuggestions ? `,
       "suggestion": "How to fix it"` : ''}
     }
   ]
 }
+</output_format>
 
-**SCORING GUIDELINES:**
-- 90-100: Excellent prose, publishable quality
-- 80-89: Good quality, minor issues
-- 70-79: Acceptable, some noticeable issues
-- 60-69: Below threshold, needs improvement
-- Below 60: Significant quality problems
-
-Be thorough but fair. Not every narrative needs to be literary fiction.
-Focus on the most impactful issues first.
-Write all explanations and suggestions in ${langName}.
+<reminder>
+- Be thorough but fair - not every narrative needs to be literary fiction
+- Focus on the most impactful issues first
+- Write all explanations and suggestions in ${langName}
+- Prioritize actionable feedback over criticism
+</reminder>
 `;
 }
 
@@ -252,23 +263,23 @@ export function buildQuickShowDontTellCheckPrompt(text: string, language: Langua
   const langName = getLanguageName(language);
 
   return `
-Quickly scan this text for "telling" instead of "showing" violations.
+<role>Quick scan for "telling" instead of "showing" violations.</role>
+
+<text>"${text}"</text>
+
+<instructions>
 Only flag DIRECT emotion labels (e.g., "she was sad", "he felt angry").
+Write suggestions in ${langName}. Be concise.
+</instructions>
 
-Text: "${text}"
-
-Respond with JSON:
+<output_format>
 {
   "hasViolations": true/false,
   "violations": [
-    {
-      "originalPhrase": "the problematic phrase",
-      "suggestedFix": "a showing alternative"
-    }
+    { "originalPhrase": "...", "suggestedFix": "..." }
   ]
 }
-
-Write suggestions in ${langName}. Be concise.
+</output_format>
 `;
 }
 

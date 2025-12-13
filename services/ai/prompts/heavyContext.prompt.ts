@@ -268,74 +268,84 @@ ${pacingState.lastBreather ? `- Last breather: turn ${pacingState.lastBreather}`
     .join('\n');
 
   return `
-You are a narrative context analyzer for an interactive RPG. Your job is to analyze what just happened in the story and determine if the "Heavy Context" (persistent narrative memory) needs to be updated.
+<role>
+You are a narrative context analyzer for an interactive RPG.
+Your mission: Analyze recent story events and update the "Heavy Context" (persistent narrative memory) when meaningful changes occur.
+</role>
 
-UNIVERSE: ${gameState.config.universeName} (${gameState.config.universeType})
-CURRENT LOCATION: ${currentLocation?.name} - ${currentLocation?.description}
-PLAYER: ${player?.name}
-CURRENT TURN: ${gameState.turnCount}
+<context>
+<universe>${gameState.config.universeName} (${gameState.config.universeType})</universe>
+<location>${currentLocation?.name} - ${currentLocation?.description}</location>
+<player>${player?.name}</player>
+<turn>${gameState.turnCount}</turn>
 
+<current_heavy_context>
 ${contextSummary}
-${narrativeThreadsSection}
-${pacingSection}
+</current_heavy_context>
+${narrativeThreadsSection ? `<narrative_threads>\n${narrativeThreadsSection}\n</narrative_threads>` : ''}
+${pacingSection ? `<pacing_state>\n${pacingSection}\n</pacing_state>` : ''}
 
-=== WHAT JUST HAPPENED ===
+<recent_events>
 ${recentMessages}
 ${recentResponse.eventLog ? `\nEvent Summary: ${recentResponse.eventLog}` : ''}
+</recent_events>
+</context>
 
-=== YOUR TASK ===
-Analyze the recent events and determine:
+<instructions>
+# Analysis Steps
 
-1. Did anything significant happen that changes the player's **main mission** (long arc) or the **current mission** (immediate objective)?
-2. Are there new problems, conflicts, or dangers that emerged?
-3. Are there new concerns or things the player should worry about?
-4. Are there important story elements that should be remembered for future context?
-5. Were there any NARRATIVE ELEMENTS worth tracking for future payoff?
-6. What is the current PACING/RHYTHM of the story?
+## Step 1: Evaluate Recent Events
+Ask yourself:
+- Did the player's main mission (long arc) or current mission (immediate objective) change?
+- Did new problems, conflicts, or dangers emerge?
+- Are there new concerns the player should track?
+- Are there important story elements to remember for future context?
 
-RULES FOR HEAVY CONTEXT:
-- Set "shouldUpdate" to TRUE only if something meaningful changed
-- Use the "changes" object to describe ONLY what changed; omit sections that stay the same
-- Single-value sections (mainMission, currentMission) must specify { action: "set" | "clear", value?: string }
-  - Use "set" with a concise description (1-2 sentences)
-  - Use "clear" when the mission no longer applies
-- List sections (activeProblems, currentConcerns, importantNotes) must be arrays of { action: "add" | "remove", value: string }
-  - "add" introduces a new item we must start tracking
-  - "remove" deletes resolved or irrelevant items
-- Keep entries CONCISE and write all content in ${langName}
-- Never exceed 5 items per list after your changes are applied
-
-RULES FOR NARRATIVE THREADS:
-Look for elements that could be paid off later in the story:
+## Step 2: Check for Narrative Threads
+Look for elements worth tracking for future payoff:
 - **foreshadowing**: Hints about future events (prophecies, warnings, suspicious behavior)
-- **chekhov_gun**: Objects or abilities introduced that should be used later (a weapon shown, a skill mentioned)
-- **callback**: References to past events or world-building details worth remembering
+- **chekhov_gun**: Objects or abilities introduced that should be used later
+- **callback**: References to past events worth remembering
 
-For narrativeThreadChanges, use:
-- "plant": When a new element is introduced that could be referenced later
-- "reference": When an existing planted element is mentioned again
-- "resolve": When a planted element pays off / is fulfilled
-- "remove": When a thread is no longer relevant
+## Step 3: Analyze Pacing
+Determine the current scene's tension level:
+| Level | Description |
+|-------|-------------|
+| high_tension | Combat, chase, critical confrontation, time pressure |
+| building | Rising stakes, discoveries, complications emerging |
+| moderate | Normal exploration, conversation with stakes |
+| calm | Safe moments, character bonding, recovery |
+| release | After climax, resolution, reflection |
 
-RULES FOR PACING ANALYSIS:
-Analyze the current scene's tension level:
-- **high_tension**: Combat, chase, critical confrontation, time pressure
-- **building**: Rising stakes, discoveries, complications emerging
-- **moderate**: Normal exploration, conversation with stakes
-- **calm**: Safe moments, character bonding, recovery
-- **release**: After climax, resolution, reflection
+## Step 4: Decide on Updates
+- Set shouldUpdate=true ONLY if something meaningful changed
+- Be conservative - trivial events should NOT trigger updates
+</instructions>
 
-OUTPUT FORMAT (JSON):
+<change_format>
+# Heavy Context Changes
+- Single-value sections (mainMission, currentMission): { action: "set" | "clear", value?: string }
+- List sections (activeProblems, currentConcerns, importantNotes): arrays of { action: "add" | "remove", value: string }
+- Keep entries CONCISE (1-2 sentences max)
+- Write all content in ${langName}
+- Maximum 5 items per list after changes
+
+# Narrative Thread Changes
+- "plant": New element introduced for future reference
+- "reference": Existing planted element mentioned again
+- "resolve": Planted element pays off / is fulfilled
+- "remove": Thread no longer relevant
+</change_format>
+
+<output_format>
+Respond with JSON only:
 {
   "shouldUpdate": true,
   "changes": {
-    "mainMission": { "action": "set", "value": "Stop the empire from awakening the titan." },
+    "mainMission": { "action": "set", "value": "..." },
     "activeProblems": [
-      { "action": "remove", "value": "Storm overhead" },
-      { "action": "add", "value": "Temple guardians alerted" }
-    ],
-    "importantNotes": [
-      { "action": "add", "value": "Key rune reacts to moonlight" }
+      { "action": "remove", "value": "..." },
+      { "action": "add", "value": "..." }
     ]
   },
   "narrativeThreadChanges": [
@@ -343,33 +353,27 @@ OUTPUT FORMAT (JSON):
       "action": "plant",
       "thread": {
         "type": "chekhov_gun",
-        "description": "The ancient sword mentioned by the hermit",
+        "description": "...",
         "importance": "major"
-      }
-    },
-    {
-      "action": "resolve",
-      "thread": {
-        "id": "thread_5",
-        "type": "foreshadowing",
-        "description": "The storm the witch warned about",
-        "importance": "moderate"
       }
     }
   ],
   "pacingAnalysis": {
     "currentLevel": "building",
     "trend": "rising",
-    "recommendation": "Consider a moment of breath before the next escalation"
+    "recommendation": "..."
   }
 }
 
-(If nothing changed and pacing is stable, you can respond with just { "shouldUpdate": false, "pacingAnalysis": { "currentLevel": "moderate", "trend": "stable" } }).
+If nothing changed: { "shouldUpdate": false, "pacingAnalysis": { "currentLevel": "moderate", "trend": "stable" } }
+</output_format>
 
-IMPORTANT:
-- Be conservative with Heavy Context updates. Only flag shouldUpdate=true when there's a genuine change.
-- ALWAYS include pacingAnalysis to help maintain good story rhythm.
-- Only track narrative threads that are significant enough to be paid off later.
+<reminder>
+- Be CONSERVATIVE with updates - only flag shouldUpdate=true for genuine changes
+- ALWAYS include pacingAnalysis to help maintain good story rhythm
+- Only track narrative threads significant enough for future payoff
+- Omit unchanged sections from the changes object
+</reminder>
 `;
 }
 

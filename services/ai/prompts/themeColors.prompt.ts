@@ -140,96 +140,54 @@ export function buildThemeColorsPrompt({
   const fontRegistry = buildFontRegistryForPrompt();
 
   return `
-You are a UI/UX designer specializing in creating atmospheric color palettes and typography for games.
-Generate a cohesive color palette AND select an appropriate font that evokes the atmosphere of the given universe.
+<role>
+You are the lead UI art director for storywell.games, designing adaptive color + font themes that feel cinematic yet pass WCAG AA.
+</role>
 
-=== UNIVERSE CONTEXT ===
-Universe Name: ${universeName}
-Universe Type: ${universeType === 'existing' ? 'Based on existing IP (use iconic colors)' : 'Original creation'}
-${genre ? `Narrative Genre: ${genre}` : ''}
-${visualStyle ? `Visual Style Reference: ${visualStyle}` : ''}
-${genreHint ? `Genre Color Direction: ${genreHint}` : ''}
+<context>
+<universe>
+  <name>${universeName}</name>
+  <type>${universeType === 'existing' ? 'existing_ip' : 'original_world'}</type>
+  ${genre ? `<genre>${genre}</genre>` : ''}
+  ${visualStyle ? `<visual_style>${visualStyle}</visual_style>` : ''}
+</universe>
+<language>${langName}</language>
+${genreHint ? `<genre_hint>${genreHint}</genre_hint>` : ''}
+${userConsiderations ? `<player_preferences>${userConsiderations}</player_preferences>` : ''}
+</context>
 
-${userConsiderations ? `=== USER CUSTOMIZATION REQUESTS ===\n${userConsiderations}\n` : ''}
-
-=== COLOR DESIGN REQUIREMENTS ===
-
-1. **Contrast & Readability**
-   - Text on background must have WCAG AA compliant contrast (4.5:1 minimum)
-   - Button text must be clearly readable on button backgrounds
-   - Maintain usability while being atmospheric
-   - Explicitly validate these pairs: (background vs text), (backgroundSecondary vs text), (backgroundAccent vs textAccent), (buttonPrimary vs buttonPrimaryText), (buttonSecondary vs buttonSecondaryText), (border vs backgroundSecondary)
-
-2. **Color Harmony**
-   - Use a cohesive palette (analogous, complementary, or triadic)
-   - Background colors should be muted/desaturated for readability
-   - Accent colors can be more vibrant for emphasis
-
-3. **Atmospheric Goals**
-   - Colors should immediately evoke the universe's mood
-   - For existing IPs, reference iconic colors (e.g., Matrix green, Star Wars blue/yellow)
-   - For original universes, derive colors from genre conventions
-
-4. **Functional Colors**
-   - Success: Must feel positive/safe (typically green-based)
-   - Warning: Must feel cautionary (typically yellow/orange)
-   - Danger: Must feel threatening/urgent (typically red)
-   - These can be tinted to match the palette but must remain recognizable
-
-=== ACCESSIBILITY CHECKLIST ===
-- Follow WCAG 2.1 AA: 4.5:1 for normal text, 3:1 for large UI labels and supporting copy
-- Ensure every pair (background/text, button/text, alert/text, accent/text) meets or exceeds those ratios; target 7:1 for the main reading color pair
-- Keep textSecondary at least 3:1 against backgroundSecondary and backgroundAccent so helper copy stays legible
-- Borders must remain visible against adjacent backgrounds (≥3:1) to separate cards, inputs and option grids
-- Avoid pairing hues whose relative luminance differs by less than 0.2 (≈20 L*) to prevent muddy blends
-- Prefer deliberate HSL/OKLCH adjustments instead of opacity overlays when darkening/lightening values
-
-=== FONT SELECTION ===
-
-Select ONE font from the available fonts below that best matches the universe's aesthetic.
-The font should complement the color palette and enhance the narrative experience.
-
-**AVAILABLE FONTS (choose exactly one fontFamily value):**
+<available_fonts>
 ${fontRegistry}
+</available_fonts>
 
-**Font Selection Guidelines:**
-- For retro/pixel games: Choose from PIXEL/RETRO category (VT323, Press Start 2P, Silkscreen, etc.)
-- For medieval/fantasy: Choose from FANTASY category (MedievalSharp, Cinzel, Uncial Antiqua, etc.)
-- For cyberpunk/sci-fi: Choose from CYBERPUNK or SCI-FI categories (Orbitron, Exo 2, Share Tech Mono, etc.)
-- For horror: Choose from HORROR category (Creepster, Nosifer, Eater, etc.)
-- For elegant/classic: Choose from ELEGANT category (Playfair Display, Cormorant Garamond, etc.)
-- For noir/detective: Choose from TYPEWRITER category (Special Elite, Courier Prime, etc.)
-- Match the font mood with the universe mood!
+<instructions>
+# Stage 1: Diagnose the Mood
+- Extract emotional tone, era, and materials implied by the universe + genre.
+- Decide on a palette archetype (analogous, complementary, triadic) that fits ${genre || 'the stated genre'}.
 
-=== OUTPUT FORMAT ===
+# Stage 2: Build the Palette
+- Background colors: muted/desaturated, stepped from dark → medium → accent for layering.
+- Text colors: pure, high-contrast values. Validate these pairs ≥4.5:1: (background vs text), (backgroundSecondary vs text), (backgroundAccent vs textAccent), (buttonPrimary vs buttonPrimaryText), (buttonSecondary vs buttonSecondaryText), (border vs backgroundSecondary).
+- Functional colors: success = reassuring greens, warning = amber/orange, danger = urgent reds, shadow = translucent version of background.
 
-Return ONLY a JSON object with these values:
+# Stage 3: Pick the Font
+- Choose EXACTLY one fontFamily from <available_fonts>.
+- Use the category guidance (pixel, fantasy, cyberpunk, horror, elegant, noir) to match the universe mood.
+- Favor readability for body copy; decorative fonts should still pair with long-form text.
 
-{
-  "background": "#XXXXXX",
-  "backgroundSecondary": "#XXXXXX",
-  "backgroundAccent": "#XXXXXX",
-  "text": "#XXXXXX",
-  "textSecondary": "#XXXXXX",
-  "textAccent": "#XXXXXX",
-  "border": "#XXXXXX",
-  "borderStrong": "#XXXXXX",
-  "buttonPrimary": "#XXXXXX",
-  "buttonPrimaryText": "#XXXXXX",
-  "buttonSecondary": "#XXXXXX",
-  "buttonSecondaryText": "#XXXXXX",
-  "success": "#XXXXXX",
-  "warning": "#XXXXXX",
-  "danger": "#XXXXXX",
-  "shadow": "#XXXXXX",
-  "fontFamily": "FontFamilyName"
-}
+# Stage 4: Verify Accessibility & Cohesion
+- Ensure textSecondary maintains ≥3:1 against backgroundSecondary/backgroundAccent.
+- Borders must contrast ≥3:1 with adjacent backgrounds for card separation.
+- Mention internal reasoning only to yourself—final output is JSON only.
+</instructions>
 
-IMPORTANT:
-- All color values must be valid 6-character hex colors (e.g., "#1c1917", "#ff5500")
-- fontFamily must be EXACTLY one of the font family names from the available fonts list above
-- Do NOT include any explanation or text outside the JSON object
-- Ensure the palette and font work together cohesively
+<output_format>
+Return JSON only with keys: background, backgroundSecondary, backgroundAccent, text, textSecondary, textAccent, border, borderStrong, buttonPrimary, buttonPrimaryText, buttonSecondary, buttonSecondaryText, success, warning, danger, shadow, fontFamily. All colors must be 6-digit hex strings (#XXXXXX). fontFamily must match one entry from <available_fonts>.
+</output_format>
+
+<reminder>
+No prose, no markdown—output STRICT JSON. The palette and font must feel cohesive with ${universeName}.
+</reminder>
 `;
 }
 
@@ -385,67 +343,43 @@ export function buildColorsOnlyPrompt({
   const genreHint = genre ? GENRE_COLOR_HINTS[genre] : '';
 
   return `
-You are a UI/UX designer specializing in creating atmospheric color palettes for games.
-Generate a cohesive color palette that evokes the atmosphere of the given universe.
+<role>
+You are a UI color specialist refreshing palette values while keeping the current font untouched.
+</role>
 
-=== UNIVERSE CONTEXT ===
-Universe Name: ${universeName}
-Universe Type: ${universeType === 'existing' ? 'Based on existing IP (use iconic colors)' : 'Original creation'}
-${genre ? `Narrative Genre: ${genre}` : ''}
-${visualStyle ? `Visual Style Reference: ${visualStyle}` : ''}
-${genreHint ? `Genre Color Direction: ${genreHint}` : ''}
+<context>
+<universe>
+  <name>${universeName}</name>
+  <type>${universeType === 'existing' ? 'existing_ip' : 'original_world'}</type>
+  ${genre ? `<genre>${genre}</genre>` : ''}
+  ${visualStyle ? `<visual_style>${visualStyle}</visual_style>` : ''}
+</universe>
+<language>${langName}</language>
+${genreHint ? `<genre_hint>${genreHint}</genre_hint>` : ''}
+${userConsiderations ? `<player_preferences>${userConsiderations}</player_preferences>` : ''}
+</context>
 
-${userConsiderations ? `=== USER CUSTOMIZATION REQUESTS ===\n${userConsiderations}\n` : ''}
+<instructions>
+# Stage 1: Capture Mood
+- Summarize the emotional tone and material palette implied by the context.
 
-=== COLOR DESIGN REQUIREMENTS ===
+# Stage 2: Rebuild Colors Only
+- Provide fresh values for background/backgroundSecondary/backgroundAccent with layered brightness.
+- Ensure readable contrasts: (background vs text), (backgroundSecondary vs text), (backgroundAccent vs textAccent), (buttonPrimary vs buttonPrimaryText), (buttonSecondary vs buttonSecondaryText), (border vs backgroundSecondary).
+- Functional colors (success/warning/danger) must stay recognizable yet harmonized with the palette.
 
-1. **Contrast & Readability**
-   - Text on background must have WCAG AA compliant contrast (4.5:1 minimum)
-   - Button text must be clearly readable on button backgrounds
-   - Maintain usability while being atmospheric
+# Stage 3: Quality Checks
+- Keep shadow as a translucent variant of background (darker by ~15%).
+- No new font data should be introduced.
+</instructions>
 
-2. **Color Harmony**
-   - Use a cohesive palette (analogous, complementary, or triadic)
-   - Background colors should be muted/desaturated for readability
-   - Accent colors can be more vibrant for emphasis
+<output_format>
+Return JSON with keys background, backgroundSecondary, backgroundAccent, text, textSecondary, textAccent, border, borderStrong, buttonPrimary, buttonPrimaryText, buttonSecondary, buttonSecondaryText, success, warning, danger, shadow. All values must be 6-digit hex strings (#XXXXXX). DO NOT include fontFamily.
+</output_format>
 
-3. **Atmospheric Goals**
-   - Colors should immediately evoke the universe's mood
-   - For existing IPs, reference iconic colors
-   - For original universes, derive colors from genre conventions
-
-4. **Functional Colors**
-   - Success: Must feel positive/safe (typically green-based)
-   - Warning: Must feel cautionary (typically yellow/orange)
-   - Danger: Must feel threatening/urgent (typically red)
-
-=== OUTPUT FORMAT ===
-
-Return ONLY a JSON object with color values:
-
-{
-  "background": "#XXXXXX",
-  "backgroundSecondary": "#XXXXXX",
-  "backgroundAccent": "#XXXXXX",
-  "text": "#XXXXXX",
-  "textSecondary": "#XXXXXX",
-  "textAccent": "#XXXXXX",
-  "border": "#XXXXXX",
-  "borderStrong": "#XXXXXX",
-  "buttonPrimary": "#XXXXXX",
-  "buttonPrimaryText": "#XXXXXX",
-  "buttonSecondary": "#XXXXXX",
-  "buttonSecondaryText": "#XXXXXX",
-  "success": "#XXXXXX",
-  "warning": "#XXXXXX",
-  "danger": "#XXXXXX",
-  "shadow": "#XXXXXX"
-}
-
-IMPORTANT:
-- All values must be valid 6-character hex colors (e.g., "#1c1917")
-- Do NOT include fontFamily - we are only generating colors
-- Do NOT include any explanation outside the JSON object
+<reminder>
+Output strict JSON only—no prose, no markdown.
+</reminder>
 `;
 }
 
@@ -518,41 +452,43 @@ export function buildFontOnlyPrompt({
   const fontRegistry = buildFontRegistryForPrompt();
 
   return `
-You are a typography expert specializing in selecting fonts that match game universes.
-Select ONE font from the available fonts that best matches the universe's aesthetic.
+<role>
+You are a typography curator choosing a single display/system font that embodies the universe while staying legible in long UI passages.
+</role>
 
-=== UNIVERSE CONTEXT ===
-Universe Name: ${universeName}
-Universe Type: ${universeType === 'existing' ? 'Based on existing IP' : 'Original creation'}
-${genre ? `Narrative Genre: ${genre}` : ''}
-${visualStyle ? `Visual Style Reference: ${visualStyle}` : ''}
+<context>
+<universe>
+  <name>${universeName}</name>
+  <type>${universeType === 'existing' ? 'existing_ip' : 'original_world'}</type>
+  ${genre ? `<genre>${genre}</genre>` : ''}
+  ${visualStyle ? `<visual_style>${visualStyle}</visual_style>` : ''}
+</universe>
+${userConsiderations ? `<player_preferences>${userConsiderations}</player_preferences>` : ''}
+</context>
 
-${userConsiderations ? `=== USER CUSTOMIZATION REQUESTS ===\n${userConsiderations}\n` : ''}
-
-=== AVAILABLE FONTS (choose exactly one fontFamily value) ===
+<available_fonts>
 ${fontRegistry}
+</available_fonts>
 
-=== FONT SELECTION GUIDELINES ===
-- For retro/pixel games: Choose from PIXEL/RETRO category (VT323, Press Start 2P, Silkscreen, etc.)
-- For medieval/fantasy: Choose from FANTASY category (MedievalSharp, Cinzel, Uncial Antiqua, etc.)
-- For cyberpunk/sci-fi: Choose from CYBERPUNK or SCI-FI categories (Orbitron, Exo 2, Share Tech Mono, etc.)
-- For horror: Choose from HORROR category (Creepster, Nosifer, Eater, etc.)
-- For elegant/classic: Choose from ELEGANT category (Playfair Display, Cormorant Garamond, etc.)
-- For noir/detective: Choose from TYPEWRITER category (Special Elite, Courier Prime, etc.)
-- Match the font mood with the universe mood!
+<instructions>
+# Stage 1: Match Mood to Category
+- Map the universe/genre to the closest font category (pixel, fantasy, cyberpunk, horror, elegant, noir, modern UI).
 
-=== OUTPUT FORMAT ===
+# Stage 2: Evaluate Practicality
+- Ensure the font is readable for paragraphs, supports mixed-case, and works across Latin characters.
+- Avoid fonts that are overly stylized if the universe expects high readability.
 
-Return ONLY a JSON object with the selected font:
+# Stage 3: Decide
+- Select EXACTLY one fontFamily from <available_fonts> and justify mentally (no prose output).
+</instructions>
 
-{
-  "fontFamily": "FontFamilyName"
-}
+<output_format>
+Return JSON only: { "fontFamily": "ExactFontNameFromList" }
+</output_format>
 
-IMPORTANT:
-- fontFamily must be EXACTLY one of the font family names from the available fonts list above
-- Do NOT include colors - we are only selecting a font
-- Do NOT include any explanation outside the JSON object
+<reminder>
+No commentary or markdown—just the JSON object.
+</reminder>
 `;
 }
 

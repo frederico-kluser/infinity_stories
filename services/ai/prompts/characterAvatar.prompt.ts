@@ -140,28 +140,47 @@ export function buildCharacterAvatarPrompt({
   const styleReference = visualStyle || 'classic RPG portrait art style';
 
   return `
-    Square avatar portrait of a character named "${characterName}".
+<role>
+You are a senior concept artist creating consistent pixel-art avatars for a narrative RPG. Deliver a 1024x1024 square portrait ready for UI export.
+</role>
 
-    CHARACTER APPEARANCE:
-    ${characterDescription}
+<context>
+<character>
+  <name>${characterName}</name>
+  <description>${characterDescription}</description>
+</character>
+<setting>${universeContext}</setting>
+<style_reference>${styleReference}</style_reference>
+<format>8/16-bit pixel art · square · head & shoulders</format>
+</context>
 
-    UNIVERSE/SETTING:
-    ${universeContext}
+<instructions>
+# Stage 1: Interpret Identity
+- Extract signature colors, insignias, species traits, armor pieces, and cultural cues from the description.
+- Highlight defining silhouettes (horns, lekku, helmets, scars) so the character is unmistakable at thumbnail size.
 
-    ARTISTIC STYLE (CRITICAL - FOLLOW THIS EXACTLY):
-    Create this portrait in the style of "${styleReference}".
-    Study and emulate the specific visual characteristics, color palettes, lighting, and artistic techniques of this reference.
-    All characters in this story share this same visual style for consistency.
+# Stage 2: Compose the Portrait
+- Crop from chest-up, character facing the viewer with confident/neutral posture.
+- Fill ~70% of the frame with the character; keep a tidy margin for UI overlays.
+- Use a simple gradient or atmospheric hint of ${universeContext} in the background.
 
-    COMPOSITION REQUIREMENTS:
-    - Close-up face portrait showing head and upper shoulders only
-    - Face looking directly at the viewer (front-facing)
-    - Centered composition optimized for small avatar display
-    - Simple, uncluttered background (dark, gradient, or contextually appropriate)
-    - High contrast and clear facial features visible even at small sizes
-    - No text, watermarks, or borders
+# Stage 3: Enforce Style Consistency
+- Render with crisp pixel clusters, controlled dithering, and limited palette inspired by ${styleReference}.
+- Add rim lighting or emissive cues when relevant but avoid bloom or blur.
+- No text, HUD, lens flare, extra props, or second characters.
 
-    The final image should look like a character avatar/profile picture from a video game or visual novel,
-    instantly recognizable even when displayed at thumbnail size.
-  `;
+# Stage 4: Finish for UI
+- Ensure strong contrast between silhouette and backdrop.
+- Keep facial features readable at 64px.
+- Output should feel premium, safe-for-work, and cohesive with every other avatar.
+</instructions>
+
+<output_format>
+Write ONE concise directive for DALL·E beginning with "Pixel art portrait of ${characterName}". Mention palette, lighting, notable accessories, and mood in a single paragraph.
+</output_format>
+
+<reminder>
+Do not include words, watermarks, frames, or background clutter. Focus entirely on the character.
+</reminder>
+`;
 }

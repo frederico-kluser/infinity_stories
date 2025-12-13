@@ -113,186 +113,148 @@ export function buildGridUpdatePrompt({
     .join('\n');
 
   return `
+<role>
 You are a PROACTIVE spatial positioning analyzer for an RPG game.
-Your MISSION is to make the 10x10 grid map ALIVE and RICH with elements from the narrative.
+Your mission: Make the 10x10 grid map ALIVE and RICH with elements from the narrative.
+An EMPTY or SPARSE map is a FAILURE.
+</role>
 
-=== CURRENT CONTEXT ===
-Location: ${currentLocation?.name || 'Unknown'}
+<context>
+<location>
+Name: ${currentLocation?.name || 'Unknown'}
 Description: ${currentLocation?.description || 'No description'}
-Language: ${langName}
+</location>
+<language>${langName}</language>
 
-=== CHARACTERS AT THIS LOCATION ===
+<characters_at_location>
 ${charactersText}
+</characters_at_location>
 
-=== CURRENT GRID STATE ===
-**Character Positions:**
+<current_grid_state>
+<character_positions>
 ${currentPositionsText}
+</character_positions>
 
-**Scene Elements (currently on map):**
+<scene_elements>
 ${currentElementsText}
+</scene_elements>
+</current_grid_state>
 
-=== WHAT JUST HAPPENED ===
+<recent_events>
 ${eventLog ? `Event Summary: ${eventLog}\n` : ''}
-Recent messages:
 ${messagesContext}
+</recent_events>
+</context>
 
-=== YOUR MISSION: EXTRACT ALL NARRATIVE ELEMENTS ===
-You must ACTIVELY SCAN the narrative and location description for ANY elements that should appear on the map.
-An EMPTY or SPARSE map is a FAILURE. The map should visually represent the scene!
+<instructions>
+# Element Extraction Steps
 
-**STEP 1: SCAN FOR ELEMENTS IN LOCATION DESCRIPTION**
-Read the location description above. Extract ALL physical features:
+## Step 1: Scan Location Description
+Extract ALL physical features:
 - Furniture: tables, chairs, beds, thrones, counters, shelves
 - Structures: doors, windows, stairs, pillars, arches, walls
 - Nature: trees, rocks, bushes, water, fire pits, gardens
 - Interactive: chests, levers, switches, altars, pedestals
 - Ambient: torches, lamps, fountains, statues, paintings
 
-**STEP 2: SCAN FOR ELEMENTS IN RECENT MESSAGES**
-Read the narration for ANY objects mentioned:
-- Characters interacting with something? ADD IT (the sword, the potion, the book)
-- Environment details? ADD THEM (the old well, the mysterious stone, the ancient altar)
-- NPCs near objects? ADD THOSE OBJECTS
-- Combat references? ADD weapons, obstacles, cover
+## Step 2: Scan Recent Messages
+Look for objects mentioned:
+- Characters interacting with something → ADD IT
+- Environment details → ADD THEM
+- NPCs near objects → ADD THOSE OBJECTS
+- Combat references → ADD weapons, obstacles, cover
 
-**STEP 3: SCAN FOR CHARACTERS/CREATURES**
-Look for beings that should appear on the map:
-- NPCs mentioned but not in character list (add as elements with @ prefix or letter)
-- Creatures: wolves, dragons, spiders, ghosts
-- Groups: guards, bandits, villagers watching from distance
-
-**CRITICAL: DELTA-ONLY RESPONSE**
-Return ONLY items that are NEW or CHANGED:
-- New elements mentioned in narrative that aren't on map yet → ADD them
+## Step 3: Check for Movement/Changes
 - Character moved → include new position
-- Element destroyed/transformed → add to removedElements + add replacement
-- If map is EMPTY but narrative describes a rich scene → ADD ELEMENTS!
+- Element destroyed/transformed → removedElements + add replacement
+- New character entered → add with initial position
 
-**GRID RULES:**
-- Grid is 10x10 (coordinates 0-9 for x and y)
-- x=0 is left, x=9 is right
-- y=0 is top, y=9 is bottom
-- Characters can share cells (conversation range)
-- Elements should NOT overlap each other
-- Movement: 1-3 cells per action typically
+# Delta-Only Response
+Return ONLY items that are NEW or CHANGED.
+If map is EMPTY but narrative describes a rich scene → POPULATE IT!
+</instructions>
 
-**COMMON ELEMENTS BY LOCATION TYPE:**
-- **Tavern/Inn**: [B] Bar Counter, [T] Tables, [F] Fireplace, [S] Stairs, [D] Door, [K] Kitchen
-- **Forest**: [T] Trees, [R] Rocks, [B] Bushes, [P] Path, [S] Stream, [C] Campfire
-- **Cave/Dungeon**: [R] Rocks, [P] Pillars, [C] Chest, [A] Altar, [D] Door, [W] Web
-- **Castle/Throne**: [T] Throne, [P] Pillars, [B] Banners, [G] Guards, [D] Doors
-- **Market/Town**: [S] Stalls, [F] Fountain, [C] Carts, [B] Barrels, [W] Well
-- **Beach/Shore**: [R] Rocks, [B] Boat, [D] Driftwood, [S] Shells, [W] Waves
-- **Library/Study**: [B] Bookshelves, [D] Desk, [C] Candles, [G] Globe, [S] Scrolls
+<grid_rules>
+- Grid: 10x10 (coordinates 0-9)
+- x=0 left, x=9 right
+- y=0 top, y=9 bottom
+- Characters can share cells
+- Elements should NOT overlap
+- Movement: 1-3 cells per action
+</grid_rules>
 
-**WHEN TO UPDATE (BE PROACTIVE!):**
-- Map is empty/sparse but location has described features → ADD ELEMENTS
-- New object mentioned in narrative (even briefly) → ADD IT
-- Character moves or enters scene → UPDATE POSITIONS
-- Element transformed (opened, broken, burned) → REMOVE + ADD new state
-- Scene feels incomplete → ADD ambient elements from location type
+<location_templates>
+| Location | Common Elements |
+|----------|----------------|
+| Tavern/Inn | [B] Bar, [T] Tables, [F] Fireplace, [S] Stairs, [D] Door |
+| Forest | [T] Trees, [R] Rocks, [B] Bushes, [P] Path, [S] Stream |
+| Cave/Dungeon | [R] Rocks, [P] Pillars, [C] Chest, [A] Altar, [D] Door |
+| Castle | [T] Throne, [P] Pillars, [B] Banners, [G] Guards, [D] Doors |
+| Market | [S] Stalls, [F] Fountain, [C] Carts, [B] Barrels, [W] Well |
+| Library | [B] Bookshelves, [D] Desk, [C] Candles, [G] Globe, [S] Scrolls |
+</location_templates>
 
-**ELEMENT SYMBOLS:**
-- Use intuitive letters: D=Door, C=Chest, T=Table/Tree, W=Well/Water, F=Fire, B=Barrel/Bar
-- If letter is taken, use next available
-- Be creative but consistent
+<transformation_rules>
+When an element changes state:
+1. REMOVE original (add symbol to "removedElements")
+2. ADD transformed element(s) with NEW symbol
 
-**ELEMENT TRANSFORMATION (CRITICAL):**
-When an element changes state but doesn't disappear completely, you must:
-1. REMOVE the original element (add its symbol to "removedElements")
-2. ADD the transformed element(s) with NEW symbol(s) and updated description
+Examples:
+- Tree cut → [T] removed, add [S] Stump + [L] Fallen Log
+- Chest opened → [C] removed, add [O] Open Chest
+- Door broken → [D] removed, add [B] Broken Door
+- Debris/byproducts go ADJACENT to original, AWAY from player
+</transformation_rules>
 
-Examples of transformations:
-- **Tree cut down**: Remove [T] "Oak Tree", Add [S] "Tree Stump" (same position) + [L] "Fallen Log" (adjacent cell)
-- **Chest opened**: Remove [C] "Locked Chest", Add [O] "Open Chest" (same position, new description)
-- **Door broken**: Remove [D] "Wooden Door", Add [B] "Broken Door" (same position)
-- **Barrel smashed**: Remove [B] "Barrel", Add [D] "Debris" (same position) - contents may spawn nearby
-- **Fire started on haystack**: Remove [H] "Haystack", Add [F] "Burning Haystack" (same position)
-- **Lever pulled**: Keep same symbol but update description to reflect new state
-
-When something is cut/broken and creates debris or byproducts:
-- Place the main remnant in the SAME position as the original
-- Place secondary pieces (logs, debris, shards) in ADJACENT cells (choose a logical direction)
-- If player cut something, fallen piece typically falls AWAY from player
-
-**CHARACTER OUTPUT RULES (DELTA ONLY):**
-- Return ONLY characters whose position CHANGED
-- Do NOT include characters that stayed in the same place
-- For new characters entering the scene, include them with their initial position
-- Always set isPlayer=true for the player character
-
-**ELEMENT OUTPUT RULES (DELTA ONLY):**
-- Return ONLY new elements, transformed elements, or elements that MOVED
-- Use "removedElements" array to list symbols of elements that were destroyed/removed/transformed
-- When transforming: FIRST add to removedElements, THEN add new element(s) to elements array
-- Do NOT repeat elements that haven't changed
-
-**POSITIONING GUIDELINES:**
-- Player character should generally be near the center (around 4-5, 4-5) initially
-- NPCs in conversation should be within 1-2 cells of each other
-- Hostile NPCs might be further away (3-5 cells)
-- Place elements logically: doors near edges, tables/furniture toward center, etc.
-- When placing fallen/broken pieces, consider physics (things fall down, roll away, etc.)
-
-Respond with a JSON object following the schema.
-IMPORTANT: If the map is EMPTY but the scene has described elements, you MUST populate it!
-
-**EXAMPLE 1 - POPULATING AN EMPTY MAP:**
-Location: "The Dragon's Breath Tavern - A cozy tavern with a large fireplace, wooden tables scattered about, and a long bar counter where the innkeeper serves drinks. Stairs lead to the upper rooms."
-Current elements: None
-Narrative: "You enter the tavern. The warmth of the fire greets you as you notice the innkeeper polishing glasses behind the bar."
-
-Response:
-{
-  "shouldUpdate": true,
-  "characterPositions": [
-    { "characterId": "player_1", "characterName": "Hero", "x": 5, "y": 8, "isPlayer": true }
-  ],
-  "elements": [
-    { "symbol": "D", "name": "Tavern Door", "description": "The entrance to the Dragon's Breath Tavern.", "x": 5, "y": 9 },
-    { "symbol": "F", "name": "Fireplace", "description": "A large stone fireplace crackling with warm flames.", "x": 1, "y": 2 },
-    { "symbol": "B", "name": "Bar Counter", "description": "A long wooden bar where drinks are served.", "x": 7, "y": 2 },
-    { "symbol": "T", "name": "Wooden Table", "description": "A sturdy oak table with chairs around it.", "x": 3, "y": 5 },
-    { "symbol": "S", "name": "Stairs", "description": "Wooden stairs leading up to the guest rooms.", "x": 9, "y": 3 }
-  ],
-  "removedElements": [],
-  "reasoning": "Populated tavern with elements from description: door at entrance, fireplace on left, bar on right, table in center, stairs to upper floor."
-}
-
-**EXAMPLE 2 - DETECTING ELEMENTS FROM NARRATIVE:**
-Narrative: "The old wizard stands near a glowing crystal pedestal, ancient runes carved into the stone floor around it. A mysterious orb floats above the crystal."
+<examples>
+## Example 1: Populating Empty Map
+Location: "A tavern with fireplace, tables, and bar counter"
 Current elements: None
 
 Response:
 {
   "shouldUpdate": true,
-  "characterPositions": [],
   "elements": [
-    { "symbol": "P", "name": "Crystal Pedestal", "description": "An ancient pedestal with a glowing crystal, pulsing with arcane energy.", "x": 5, "y": 4 },
-    { "symbol": "O", "name": "Floating Orb", "description": "A mysterious orb that hovers above the crystal, emanating soft light.", "x": 5, "y": 3 },
-    { "symbol": "R", "name": "Carved Runes", "description": "Ancient magical runes carved into the stone floor in a circular pattern.", "x": 5, "y": 5 }
+    { "symbol": "D", "name": "Door", "description": "Tavern entrance", "x": 5, "y": 9 },
+    { "symbol": "F", "name": "Fireplace", "description": "Stone fireplace with flames", "x": 1, "y": 2 },
+    { "symbol": "B", "name": "Bar Counter", "description": "Long wooden bar", "x": 7, "y": 2 }
   ],
-  "removedElements": [],
-  "reasoning": "Extracted narrative elements: wizard's crystal pedestal, floating orb, and floor runes. These are key interactive elements."
+  "reasoning": "Populated tavern from description"
 }
 
-**EXAMPLE 3 - TRANSFORMATION:**
-Narrative: "You swing your axe and cut down the oak tree. It falls to the east with a loud crash."
-Current state: [T] Oak Tree at (5, 5), Player at (4, 5)
+## Example 2: Transformation
+Narrative: "You cut down the oak tree. It falls east."
+Current: [T] Oak Tree at (5,5), Player at (4,5)
 
 Response:
 {
   "shouldUpdate": true,
-  "characterPositions": [],
   "elements": [
-    { "symbol": "S", "name": "Tree Stump", "description": "The remains of the oak tree you cut down. Fresh sawdust surrounds it.", "x": 5, "y": 5 },
-    { "symbol": "L", "name": "Fallen Oak Log", "description": "A large oak log that fell when you cut the tree. Could be used for lumber.", "x": 6, "y": 5 }
+    { "symbol": "S", "name": "Tree Stump", "description": "Remains of cut tree", "x": 5, "y": 5 },
+    { "symbol": "L", "name": "Fallen Log", "description": "Oak log for lumber", "x": 6, "y": 5 }
   ],
   "removedElements": ["T"],
-  "reasoning": "Tree was cut down. Stump remains at original position. Log fell eastward (away from player at x=4)."
+  "reasoning": "Tree cut. Stump at original position. Log fell east (away from player)."
 }
+</examples>
 
-**REMEMBER: An empty map in a described scene is WRONG. Always extract elements!**
+<output_format>
+Respond with JSON only:
+{
+  "shouldUpdate": true|false,
+  "characterPositions": [{ "characterId": "...", "characterName": "...", "x": 0-9, "y": 0-9, "isPlayer": true|false }],
+  "elements": [{ "symbol": "A-Z", "name": "...", "description": "...", "x": 0-9, "y": 0-9 }],
+  "removedElements": ["A", "B"],
+  "reasoning": "..."
+}
+</output_format>
+
+<reminder>
+- Empty map in described scene = WRONG
+- Always extract elements from location description
+- Use intuitive symbols: D=Door, C=Chest, T=Table/Tree, W=Water, F=Fire
+- Delta only: include only NEW or CHANGED items
+</reminder>
 `;
 }
 

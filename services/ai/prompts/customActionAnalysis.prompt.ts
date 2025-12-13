@@ -139,69 +139,88 @@ ${gridPositions}
   }
 
   return `
-You are a game master analyzing a custom player action to determine its success/failure probabilities.
-Your analysis must be DETERMINISTIC and CONSISTENT - the same action in the same context should always yield the same probabilities.
+<role>
+You are a game master analyzing a custom player action to determine success/failure probabilities.
+Your mission: Evaluate the action consistently and return calibrated probabilities.
+</role>
 
-=== CURRENT SITUATION ===
-Universe: ${gameState.config.universeName} (${gameState.config.universeType})
-Location: ${currentLocation?.name || 'Unknown'} - ${currentLocation?.description || 'No description'}
-Player: ${player?.name || 'Unknown'} - ${player?.description || 'No description'}
-Player Stats: ${playerStats}
-Player Inventory: ${playerInventory}
-Player State: ${player?.state || 'Unknown'}
+<context>
+<universe>${gameState.config.universeName} (${gameState.config.universeType})</universe>
+<location>${currentLocation?.name || 'Unknown'} - ${currentLocation?.description || 'No description'}</location>
+<player>
+Name: ${player?.name || 'Unknown'}
+Description: ${player?.description || 'No description'}
+Stats: ${playerStats}
+Inventory: ${playerInventory}
+State: ${player?.state || 'Unknown'}
+</player>
 ${heavyContextSection}${gridContextSection}
-=== RECENT EVENTS ===
+<recent_events>
 ${recentMessagesText}
+</recent_events>
+</context>
 
-=== CUSTOM ACTION TO ANALYZE ===
+<action_to_analyze>
 "${customAction}"
+</action_to_analyze>
 
-=== ANALYSIS RULES ===
-You must evaluate the action based on:
+<instructions>
+# Analysis Steps
 
-1. **COMPLEXITY/DIFFICULTY:**
-   - Simple actions (look, wait, talk casually): goodChance 5-15, badChance 0-10
-   - Moderate actions (search, negotiate, sneak past): goodChance 10-25, badChance 10-20
-   - Complex actions (elaborate plans, risky maneuvers): goodChance 20-40, badChance 20-40
-   - Extremely difficult/dangerous: goodChance 30-50, badChance 30-50
-   - Impossible/absurd actions: goodChance 5-15, badChance 40-50
+Follow these steps to determine probabilities:
 
-2. **CONTEXTUAL FEASIBILITY:**
-   - Does the player have necessary items/skills?
-   - Is the action appropriate for the current location?
-   - Does it align with the character's capabilities?
-   - Consider active problems and dangers
+## Step 1: Assess Complexity/Difficulty
+| Action Type | goodChance | badChance |
+|-------------|------------|-----------|
+| Simple (look, wait, talk) | 5-15 | 0-10 |
+| Moderate (search, negotiate) | 10-25 | 10-20 |
+| Complex (elaborate plans) | 20-40 | 20-40 |
+| Extremely difficult | 30-50 | 30-50 |
+| Impossible/absurd | 5-15 | 40-50 |
 
-3. **ELABORATION LEVEL:**
-   - Vague actions: lower chances for both (more neutral outcomes)
-   - Detailed/specific actions: higher potential for both good and bad
-   - Over-complicated plans: higher badChance due to more failure points
+## Step 2: Check Feasibility
+- Does player have required items/skills?
+- Is action appropriate for location?
+- Does it align with character capabilities?
+- Consider active problems and dangers
 
-4. **RESOURCE CHECK:**
-   - If action requires items player doesn't have: increase badChance significantly
-   - If action uses player's strengths: increase goodChance
-   - If action goes against player's weaknesses: increase badChance
+## Step 3: Evaluate Elaboration
+- Vague actions: lower chances (more neutral)
+- Detailed/specific: higher potential for both
+- Over-complicated: higher badChance (more failure points)
 
-5. **SPATIAL POSITIONING (if grid data available):**
-   - Actions targeting distant characters (4+ cells) are harder
-   - Close range actions (0-1 cells) are more reliable
-   - Movement-based actions depend on distance to destination
-   - Stealth actions harder when characters are nearby
+## Step 4: Resource Check
+- Missing required items → increase badChance significantly
+- Using player's strengths → increase goodChance
+- Against player's weaknesses → increase badChance
 
-6. **PROBABILITY CONSTRAINTS:**
-   - goodChance: 0-50 (max 50%)
-   - badChance: 0-50 (max 50%)
-   - Sum should typically not exceed 70% (leaving room for neutral outcomes)
-   - Both hints must be written in ${langName}
+## Step 5: Spatial Positioning (if grid available)
+- Distant targets (4+ cells) → harder
+- Close range (0-1 cells) → more reliable
+- Nearby enemies → stealth harder
 
-RESPOND WITH JSON:
+## Step 6: Apply Constraints
+- goodChance: 0-50 (max)
+- badChance: 0-50 (max)
+- Sum typically ≤ 70 (leave room for neutral)
+</instructions>
+
+<output_format>
+Respond with JSON only:
 {
-  "goodChance": <number 0-50>,
-  "badChance": <number 0-50>,
-  "goodHint": "<brief description of potential benefit in ${langName}>",
-  "badHint": "<brief description of potential harm in ${langName}>",
-  "reasoning": "<1-2 sentence explanation of why these probabilities in ${langName}>"
+  "goodChance": [0-50],
+  "badChance": [0-50],
+  "goodHint": "[benefit description in ${langName}]",
+  "badHint": "[harm description in ${langName}]",
+  "reasoning": "[1-2 sentence explanation in ${langName}]"
 }
+</output_format>
+
+<reminder>
+- Be DETERMINISTIC: same action + context = same probabilities
+- Write hints and reasoning in ${langName}
+- If action seems impossible, still provide low goodChance (not zero) for dramatic luck
+</reminder>
 `;
 }
 

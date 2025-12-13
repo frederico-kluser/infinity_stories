@@ -267,82 +267,120 @@ ${elementsText}
   }
 
   return `
-You are a game master assistant. Based on the current game context, generate exactly 5 action options for the player.
+<role>
+You are a game master assistant generating 5 contextual action options for the player.
+Your mission: Create meaningful choices with calibrated risk/reward that advance the narrative.
+</role>
 
-=== UNIVERSE ===
-${gameState.config.universeName}
-
-=== CURRENT LOCATION ===
+<context>
+<universe>${gameState.config.universeName}</universe>
+<location>
 ${currentLocation?.name || 'Unknown'}: ${currentLocation?.description || ''}
 ${connectedLocations.length > 0 ? `Connected to: ${connectedLocations.map((loc) => loc.name).join(', ')}` : ''}
+</location>
 
-=== PLAYER CHARACTER ===
+<player>
 Name: ${player?.name || 'Unknown'}
 Description: ${player?.description || ''}
 Status: HP ${playerHp}/${playerMaxHp} (${healthPercent}%) | Gold: ${playerGold}
 Inventory: ${playerInventory || 'empty'}
+</player>
 
-=== NPCs PRESENT ===
+<npcs_present>
 ${npcList}
+</npcs_present>
 ${gridContextSection}
-=== NARRATIVE CONTEXT ===
+<narrative_context>
 ${narrativeContext.length > 0 ? narrativeContext.join('\n') : 'No active quests or objectives'}
+</narrative_context>
 
-=== RECENT EVENTS ===
+<recent_events>
 ${recentMessages.map((m) => m.text).join(' | ')}
+</recent_events>
+</context>
 
 ${getItemAwarenessRulesForPrompt()}
 
-=== PROBABILITY CALIBRATION ===
-- Safe: badChance 0-10%, goodChance 5-15% (fallback/maintenance plays)
-- Moderate: badChance 11-25%, goodChance 16-30% (balanced risk/reward)
-- High Risk: badChance 26-40%, goodChance 20-40% (bold tactical swings)
-- Extreme: badChance 41-50%, goodChance 30-50% (only when narrative stakes justify it)
-Always clamp each value to 0-50 and ensure goodChance + badChance ≤ 80 so neutral outcomes remain possible.
+<probability_calibration>
+# Risk Bands (decide band FIRST, then pick numbers)
 
-=== CRITICAL OUTCOME DIRECTIVE ===
-- Any roll inside badChance becomes a **CRITICAL ERROR**: the player's intention must fail or backfire violently. Describe the concrete punishment in the badHint so the GM prompt can enforce it verbatim.
-- Any roll inside goodChance becomes a **CRITICAL SUCCESS**: the player's intention must triumph completely and deliver the exact boon you outline in the goodHint.
-- Make it explicit that these critical states override normal resolution; the eventual action must follow the hints you provide when a critical triggers.
+| Band     | badChance | goodChance | Use Case |
+|----------|-----------|------------|----------|
+| Safe     | 0-10%     | 5-15%      | Fallback, maintenance, cautious plays |
+| Moderate | 11-25%    | 16-30%     | Balanced risk/reward |
+| High     | 26-40%    | 20-40%     | Bold tactical swings |
+| Extreme  | 41-50%    | 30-50%     | Only when narrative stakes justify it |
 
-=== QUALITY RUBRIC ===
-- "Good" options must advance missions, reveal intel, or leverage resources the player actually has.
-- "Cautious" options should proactively mitigate danger (retreat, regroup, prepare, heal) and keep risks in the Safe band.
-- "Bold" options can use High/Extreme bands only when the potential reward (goodHint) is explicit and meaningful.
-- Avoid duplicate phrasing from the last 3 actions shown in the prompt context.
+Constraints:
+- Each value: 0-50 (never exceed)
+- goodChance + badChance ≤ 80 (leave room for neutral outcomes)
+</probability_calibration>
 
-Rules:
-1. Generate exactly 5 distinct, contextually appropriate actions
-2. Actions should be short (3-8 words each)
-3. Mix action types: dialogue, exploration, combat, interaction
-4. Write in ${langName}
-5. Make them specific to the current situation
-6. Include at least one cautious/defensive option (keep every such option inside the Safe band)
-7. If scene elements exist in the SPATIAL MAP, suggest at least one action interacting with nearby elements (doors, chests, levers, etc.)
-${hasHealingItems && healthPercent < 70 ? '8. IMPORTANT: Player has low HP and healing items - suggest using them!\n' : ''}
-9. For each action, assign probability percentages for good and bad events using the calibration table above (decide the band first, then pick numbers). Never exceed 50 on any field and keep goodChance + badChance ≤ 80.
-   - goodChance: 0-50 (probability of something beneficial happening)
-   - badChance: 0-50 (probability of something harmful happening)
-   - The remaining percentage (100 - goodChance - badChance) is neutral (nothing special happens)
-   - Internally tag each action as Safe/Moderate/High/Extreme to guide the numbers (do not output the tag)
-10. For each action, provide brief hints about what could happen and explicitly connect the hint to the risk level you chose:
-   - goodHint: brief description of the potential benefit (e.g., "find hidden treasure", "gain ally trust")
-   - badHint: brief description of the potential harm (e.g., "alert enemies", "trigger trap")
-11. If you assign High or Extreme risk, the goodHint must describe the concrete payoff that justifies the danger.
-12. Prefix every goodHint with "Critical Success:" and every badHint with "Critical Error:" before describing the localized outcome so the GM knows these effects are mandatory when a critical triggers.
+<critical_outcomes>
+# How Critical Rolls Work
 
-Respond with JSON:
+When a roll lands inside badChance → CRITICAL ERROR:
+- Player's intention FAILS or BACKFIRES violently
+- The badHint describes the EXACT punishment the GM will enforce
+
+When a roll lands inside goodChance → CRITICAL SUCCESS:
+- Player's intention TRIUMPHS completely
+- The goodHint describes the EXACT boon the GM will deliver
+
+These critical states OVERRIDE normal resolution. Write hints as concrete outcomes.
+</critical_outcomes>
+
+<instructions>
+# Reasoning Steps
+
+Before generating each option, think through:
+
+## Step 1: Assess the Situation
+- What is the player's current state? (HP, resources, position)
+- What NPCs or elements are nearby?
+- What are the active objectives?
+
+## Step 2: Design Each Option
+For each of the 5 options:
+1. Choose a risk band (Safe/Moderate/High/Extreme)
+2. Pick numbers within that band
+3. Write concrete hints for critical outcomes
+
+## Step 3: Ensure Variety
+- At least 1 dialogue option
+- At least 1 exploration option
+- At least 1 cautious/defensive option (Safe band only)
+- If scene elements exist, 1 option interacting with them
+${hasHealingItems && healthPercent < 70 ? '- PRIORITY: Player has low HP and healing items - include an option to use them!\n' : ''}
+
+# Quality Rules
+- Actions: 3-8 words, specific to current situation
+- Write in ${langName}
+- Prefix goodHint with "Critical Success:"
+- Prefix badHint with "Critical Error:"
+- High/Extreme risk options must have meaningful payoff in goodHint
+- Avoid repeating phrasing from recent events
+</instructions>
+
+<output_format>
+Respond with JSON only:
 {
   "options": [
     {
-      "text": "action text",
+      "text": "action text in ${langName}",
       "goodChance": 15,
       "badChance": 10,
-      "goodHint": "what good could happen",
-      "badHint": "what bad could happen"
+      "goodHint": "Critical Success: [concrete benefit]",
+      "badHint": "Critical Error: [concrete harm]"
     }
   ]
 }
+</output_format>
+
+<reminder>
+Generate exactly 5 distinct options. Each must have text, goodChance, badChance, goodHint, and badHint.
+Calibrate probabilities using the band table. Make hints specific and enforceable.
+</reminder>
 `;
 }
 

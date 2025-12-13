@@ -79,33 +79,47 @@ export function buildLocationBackgroundPrompt({
   const styleReference = visualStyle || 'atmospheric concept art';
 
   return `
-    Wide cinematic environment background image of "${locationName}".
+<role>
+You are a cinematic environment artist crafting atmospheric backdrops for an RPG chat interface. Deliver a wide illustration optimized for text legibility.
+</role>
 
-    LOCATION DESCRIPTION:
-    ${locationDescription}
+<context>
+<location>
+  <name>${locationName}</name>
+  <description>${locationDescription}</description>
+</location>
+<setting>${universeContext}</setting>
+<style_reference>${styleReference}</style_reference>
+<format>32:18 panoramic · no characters · storytelling props only</format>
+</context>
 
-    UNIVERSE/SETTING:
-    ${universeContext}
+<instructions>
+# Stage 1: Understand the Space
+- Identify architectural style, era, weather, and dominant materials from the description.
+- Capture signature props or landmarks that prove we are in ${locationName}.
 
-    ARTISTIC STYLE (CRITICAL - FOLLOW THIS EXACTLY):
-    Create this background in the style of "${styleReference}".
-    Study and emulate the specific visual characteristics, color palettes, lighting, and artistic techniques of this reference.
+# Stage 2: Compose for Background Use
+- Use a wide cinematic camera with gentle perspective; keep focal point off-center for text overlays.
+- Ensure depth layering (foreground, midground, background) with atmospheric perspective.
+- Avoid characters, silhouettes, or creatures—environment only.
 
-    COMPOSITION REQUIREMENTS:
-    - Wide/panoramic aspect ratio (landscape orientation)
-    - NO characters, people, or creatures in the scene - environment only
-    - Atmospheric lighting that evokes the mood of the location
-    - Subtle depth of field to allow text overlay
-    - Rich environmental details that tell the story of the place
-    - Slightly desaturated or muted colors to work well as a background
-    - Gentle vignette effect at edges
+# Stage 3: Apply Style & Lighting
+- Emulate ${styleReference} color grading, brushwork, and lighting direction.
+- Slightly mute saturation so UI text remains readable; keep contrast around 60%.
+- Use volumetric light, fog, embers, rain, or particles only if they reinforce the mood.
 
-    MOOD AND ATMOSPHERE:
-    - Capture the essence and feeling of this location
-    - Use lighting to set the emotional tone
-    - Include environmental storytelling elements (signs of life, wear, history)
+# Stage 4: Finish for UI Integration
+- Add subtle vignette and soft depth-of-field blur on edges.
+- Reserve the central third for potential text overlays by keeping detail medium-low there.
+- No text, logos, frames, or borders.
+</instructions>
 
-    The final image should work as an immersive background behind chat text,
-    setting the scene without being visually distracting.
-  `;
+<output_format>
+Describe the scene for DALL·E in one cohesive paragraph beginning with "Wide environmental concept art of ${locationName}". Mention lighting, palette, weather, notable props, and camera angle.
+</output_format>
+
+<reminder>
+Environment only. Keep the mood immersive yet not visually noisy.
+</reminder>
+`;
 }

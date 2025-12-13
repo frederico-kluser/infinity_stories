@@ -143,97 +143,109 @@ export function buildTextClassificationPrompt({
   }).join('\n');
 
   return `
-You are a text parser for an interactive RPG game. Your CRITICAL task is to:
-1. SEPARATE the player's input into distinct ACTION and SPEECH segments
-2. TRANSFORM each segment appropriately for narrative presentation
+<role>
+You are a text parser for an interactive RPG game.
+Your mission: Separate player input into ACTION and SPEECH segments, then transform each appropriately.
+</role>
 
-CONTEXT:
-- Universe: ${gameState.config.universeName} (${gameState.config.universeType})
-- Character Name: ${playerName}
-- Character Description: ${player?.description || 'A mysterious adventurer'}
-- Character Background: ${(gameState.config as any).background || 'Unknown background'}
-- Character Personality: ${(gameState.config as any).personality || 'Unknown personality'}
-- Current Location: ${currentLocation?.name || 'Unknown'} - ${currentLocation?.description || ''}
-- Language: ${langName}
+<context>
+<universe>${gameState.config.universeName} (${gameState.config.universeType})</universe>
+<character>
+Name: ${playerName}
+Description: ${player?.description || 'A mysterious adventurer'}
+Background: ${(gameState.config as any).background || 'Unknown background'}
+Personality: ${(gameState.config as any).personality || 'Unknown personality'}
+</character>
+<location>${currentLocation?.name || 'Unknown'} - ${currentLocation?.description || ''}</location>
+<language>${langName}</language>
 
-RECENT CONVERSATION:
+<recent_conversation>
 ${recentContext || 'No recent messages'}
+</recent_conversation>
+</context>
 
-=== SEGMENT IDENTIFICATION ===
-
-**ACTION segments** - What the character DOES:
-- Physical actions: attack, move, jump, run, hide, climb
-- Object interactions: pick up, open, close, use, examine
+<segment_types>
+# ACTION Segments (what the character DOES)
+- Physical: attack, move, jump, run, hide, climb
+- Objects: pick up, open, close, use, examine
 - Movement: go to, enter, exit, follow, approach
 - Combat: strike, parry, dodge, cast spell
 - Observation: look around, inspect, observe
-- Emotional expressions: smile, frown, sigh, laugh
+- Emotions: smile, frown, sigh, laugh
 
-**SPEECH segments** - What the character SAYS:
+# SPEECH Segments (what the character SAYS)
 - Dialogue with NPCs or others
 - Questions directed at someone
 - Greetings, farewells, exclamations
-- Anything between quotes or after "digo:", "falo:", "pergunto:"
+- Anything in quotes or after "digo:", "falo:", "pergunto:"
+</segment_types>
 
-=== TRANSFORMATION RULES ===
-
-**For ACTION segments:**
+<transformation_rules>
+# For ACTION Segments
 Transform into THIRD-PERSON NARRATIVE with literary style:
-- DO NOT use first person ("I", "eu", "yo")
-- Use third person or poetic descriptions
-- Avoid being literal - be creative and atmospheric
+- Use third person or poetic descriptions (avoid "I", "eu", "yo")
+- Be creative and atmospheric, not literal
 - Match the universe's tone
 
-Examples of ACTION transformation:
-- "Olho ao redor" → "${playerName} percorre o ambiente com o olhar, absorvendo cada detalhe"
-- "Pego a espada" → "Os dedos se fecham em torno do cabo da espada, sentindo o peso familiar do aço"
-- "Corro em direção à porta" → "Seus pés ecoam pelo piso de pedra enquanto corre em direção à porta"
+Vary these phrases - do not repeat verbatim:
+- "Olho ao redor" → "${playerName} percorre o ambiente com o olhar"
+- "Pego a espada" → "Os dedos se fecham em torno do cabo da espada"
 - "Sorrio" → "Um sorriso sutil se forma em seus lábios"
 
-**For SPEECH segments:**
-Adapt to character's voice and universe style:
+# For SPEECH Segments
+Adapt to character's voice and universe:
 - Medieval fantasy: archaic, formal
 - Sci-fi: technical, modern
-- Keep meaning and intent identical
-- Keep similar length
+- Keep meaning identical, similar length
+</transformation_rules>
 
-=== CRITICAL: SEGMENT SEPARATION ===
+<examples>
+# Example 1: Mixed Input
+Input: "Olho para o guarda e digo: 'Boa noite' antes de sorrir"
 
-When input contains BOTH actions and speech, SEPARATE them:
-
-Example: "Olho para o guarda e digo: 'Boa noite' antes de sorrir"
-→ 3 segments:
-1. ACTION: "Olho para o guarda" → "Seu olhar se dirige ao guarda de plantão"
-2. SPEECH: "Boa noite" → "Boa noite, senhor"
-3. ACTION: "antes de sorrir" → "Um sorriso cordial acompanha a saudação"
-
-Example: "Pergunto onde fica a taverna enquanto caminho até ele"
-→ 2 segments:
-1. ACTION: "caminho até ele" → "${playerName} se aproxima com passos decididos"
-2. SPEECH: "Pergunto onde fica a taverna" → "Poderia me indicar onde fica a taverna?"
-
-=== RESPONSE FORMAT ===
-
-RESPOND WITH JSON ONLY:
+Output:
 {
   "segments": [
-    {
-      "type": "action" or "speech",
-      "originalText": "the original part",
-      "processedText": "the transformed text"
-    }
+    { "type": "action", "originalText": "Olho para o guarda", "processedText": "Seu olhar se dirige ao guarda de plantão" },
+    { "type": "speech", "originalText": "Boa noite", "processedText": "Boa noite, senhor" },
+    { "type": "action", "originalText": "antes de sorrir", "processedText": "Um sorriso cordial acompanha a saudação" }
   ],
-  "hasMultipleSegments": true or false
+  "hasMultipleSegments": true
 }
 
-IMPORTANT:
-- segments array must preserve the ORDER of the original input
-- Each segment must be a complete, standalone piece
-- All text must be in ${langName}
-- Actions MUST be in third person narrative style
-- Speech should match character personality
+# Example 2: Action with embedded speech
+Input: "Pergunto onde fica a taverna enquanto caminho até ele"
 
-Player input to parse and transform: "${rawInput}"
+Output:
+{
+  "segments": [
+    { "type": "action", "originalText": "caminho até ele", "processedText": "${playerName} se aproxima com passos decididos" },
+    { "type": "speech", "originalText": "Pergunto onde fica a taverna", "processedText": "Poderia me indicar onde fica a taverna?" }
+  ],
+  "hasMultipleSegments": true
+}
+</examples>
+
+<output_format>
+Respond with JSON only:
+{
+  "segments": [
+    { "type": "action|speech", "originalText": "...", "processedText": "..." }
+  ],
+  "hasMultipleSegments": true|false
+}
+</output_format>
+
+<reminder>
+- Preserve ORDER of segments from original input
+- All text in ${langName}
+- Actions in third person narrative
+- Speech matches character personality
+</reminder>
+
+<input>
+Player input to parse: "${rawInput}"
+</input>
 `;
 }
 

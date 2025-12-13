@@ -155,37 +155,47 @@ export function buildPlayerMessageProcessingPrompt({
   const recentMessages: ChatMessage[] = gameState.messages.slice(-5);
 
   return `
-You are a dialogue adapter for an interactive RPG. Your task is to transform the player's raw input into dialogue that matches their character's voice, personality, and the universe's style.
+<role>
+You are a dialogue adapter for an interactive RPG.
+Your mission: Transform raw player input into dialogue/actions that match their character's voice and the universe's style.
+</role>
 
-CONTEXT:
-- Universe: ${gameState.config.universeName} (${gameState.config.universeType})
-- Character Name: ${player?.name || 'Unknown'}
-- Character Description: ${player?.description || 'A mysterious adventurer'}
-- Character Background: ${(gameState.config as any).background || 'Unknown'}
-- Current Location: ${currentLocation?.name || 'Unknown'} - ${currentLocation?.description || ''}
-- Recent conversation context: ${recentMessages.map((m) => m.text).join(' | ')}
+<context>
+<universe>${gameState.config.universeName} (${gameState.config.universeType})</universe>
+<character>
+Name: ${player?.name || 'Unknown'}
+Description: ${player?.description || 'A mysterious adventurer'}
+Background: ${(gameState.config as any).background || 'Unknown'}
+</character>
+<location>${currentLocation?.name || 'Unknown'} - ${currentLocation?.description || ''}</location>
+<recent_context>${recentMessages.map((m) => m.text).join(' | ')}</recent_context>
+</context>
 
-RULES:
-1. Maintain the MEANING and INTENT of what the player wants to say/do
-2. Adapt the language style to match:
-   - The universe's setting (medieval fantasy = archaic speech, sci-fi = technical jargon, etc.)
-   - The character's personality and background
-   - The formality of the situation
-3. Keep the message concise - similar length to the original
-4. If the input is an ACTION (starts with verbs like "attack", "go", "look"), keep it as an action description
-5. If the input is DIALOGUE (what the character says), adapt it to their speaking style
-6. Write in ${langName}${useTone ? `
-7. Determine the emotional VOICE TONE for how this text should be read aloud (for text-to-speech)
-   - Consider the character's current emotional state based on context
-   - Consider what the character is doing/saying
-   - Examples: 'excited', 'determined', 'nervous', 'calm', 'angry', 'playful', 'serious', 'confident', 'fearful', 'sarcastic'` : ''}
+<player_input>"${rawInput}"</player_input>
 
-RESPOND WITH JSON:
+<instructions>
+# Transformation Rules
+
+1. **Preserve Intent**: Maintain the MEANING of what the player wants to say/do
+2. **Adapt Style**: Match the universe's setting:
+   - Medieval fantasy → archaic speech
+   - Sci-fi → technical jargon
+   - Match character personality and background
+3. **Keep Concise**: Similar length to original
+4. **Distinguish Types**:
+   - ACTION (verbs like "attack", "go", "look") → action description
+   - DIALOGUE (what character says) → adapt to speaking style
+5. **Language**: Write in ${langName}${useTone ? `
+6. **Voice Tone**: Determine emotional tone for TTS
+   - Consider character's emotional state and current action
+   - Options: excited, determined, nervous, calm, angry, playful, serious, confident, fearful, sarcastic` : ''}
+</instructions>
+
+<output_format>
 {
-  "text": "the processed dialogue/action text"${useTone ? ',\n  "voiceTone": "emotional tone for TTS"' : ''}
+  "text": "processed dialogue/action text"${useTone ? ',\n  "voiceTone": "emotional tone"' : ''}
 }
-
-Transform this player input: "${rawInput}"
+</output_format>
 `;
 }
 
