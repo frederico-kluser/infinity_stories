@@ -668,7 +668,7 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 				>
 					<span className="hidden md:inline">
 						{t.next || 'Next'}
-						{newCardsCount > 0 && ` (${newCardsCount})`}
+						{newCardsCount > 0 && ` (${newCardsCount} ${t.newCards})`}
 					</span>
 					<ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
 				</button>
