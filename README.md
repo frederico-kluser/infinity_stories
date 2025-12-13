@@ -7,6 +7,9 @@ GPT-4.1 da OpenAI para gerar histórias, gerenciar estados de personagens e resp
 
 > **Novidade v1.4.0:** Sistema completo de Qualidade Narrativa com 15 gêneros literários, técnicas de "mostrar, não
 > contar", diferenciação de vozes de NPCs, geração de backgrounds de localização e controle de ritmo narrativo.
+>
+> **Novidade v1.4.7 (commit 79cc5d6):** Sistema de mapa em grade 10x10 com snapshots históricos, prompt dedicado de
+> atualização espacial e UI flip no StoryCard para visualizar posicionamento tático sem sair da narrativa.
 
 ---
 
@@ -23,12 +26,13 @@ GPT-4.1 da OpenAI para gerar histórias, gerenciar estados de personagens e resp
 9. [Sistema de Economia](#sistema-de-economia)
 10. [Engenharia de Prompts](#engenharia-de-prompts)
 11. [Fluxo do Jogo](#fluxo-do-jogo)
-12. [Componentes de UI](#componentes-de-ui)
-13. [Internacionalização](#internacionalização)
-14. [Tratamento de Erros](#tratamento-de-erros)
-15. [Stack Tecnológico](#stack-tecnológico)
-16. [Instalação e Uso](#instalação-e-uso)
-17. [Guia de Contribuição](#guia-de-contribuição)
+12. [Sistema de Mapa em Grade](#sistema-de-mapa-em-grade)
+13. [Componentes de UI](#componentes-de-ui)
+14. [Internacionalização](#internacionalização)
+15. [Tratamento de Erros](#tratamento-de-erros)
+16. [Stack Tecnológico](#stack-tecnológico)
+17. [Instalação e Uso](#instalação-e-uso)
+18. [Guia de Contribuição](#guia-de-contribuição)
 
 ---
 
@@ -42,6 +46,7 @@ storywell.games é um motor de RPG baseado em navegador que usa inteligência ar
 - **Criar narrativas** - Diálogos e narrações contextualmente apropriados com 15 gêneros narrativos
 - **Gerar avatares** - Retratos de personagens via gpt-image-1-mini
 - **Gerar backgrounds** - Cenários imersivos de localização via gpt-image-1-mini
+- **Mapa tático 10x10** - Grid com snapshots por mensagem, legendas dinâmicas e integração direta com o StoryCard
 - **Text-to-Speech** - Narração por voz com tom emocional via gpt-4o-mini-tts
 - **Speech-to-Text** - Comandos por voz via Whisper
 - **Sistema de Destino (Fate)** - Cada sugestão de ação inclui probabilidades de eventos positivos/negativos
@@ -67,7 +72,8 @@ storywell.games é um motor de RPG baseado em navegador que usa inteligência ar
   /ActionInput            # Input com sugestões, rolagem de destino e modo "Outro"
     ActionInput.tsx       # Componente principal (300+ linhas)
   /ChatBubble             # Balões com typewriter e avatares
-  /StoryCard              # Cards de história com navegação
+  /StoryCard              # Cards de história com navegação + flip para mapa
+  /GridMap                # Visualização 3D do grid 10x10 com legendas e fundo
   /ErrorModal             # Modal de erros categorizados
   /FateToast              # Toast para feedback do FateResult
   /StoryCreator.tsx       # Wizard colaborativo de mundo/personagem
@@ -165,8 +171,49 @@ interface GameState {
 
   // Theme Colors - Paleta de cores baseada no universo
   themeColors?: ThemeColors;
+
+  // Grid Map snapshots sincronizados com pageNumber
+  gridSnapshots?: GridSnapshot[];
 }
 ```
+
+### GridSnapshot & Tipos do Mapa
+
+**Arquivo:** `types.ts:457-521`
+
+```typescript
+export interface GridPosition {
+  x: number;
+  y: number;
+}
+
+export interface GridCharacterPosition {
+  characterId: string;
+  characterName: string;
+  position: GridPosition;
+  isPlayer: boolean;
+  avatarBase64?: string;
+}
+
+export interface GridSnapshot {
+  id: string;
+  gameId: string;
+  atMessageNumber: number;
+  timestamp: number;
+  locationId: string;
+  locationName: string;
+  characterPositions: GridCharacterPosition[];
+}
+
+export interface GridUpdateResponse {
+  shouldUpdate: boolean;
+  characterPositions?: { characterId: string; characterName: string; x: number; y: number; isPlayer: boolean; }[];
+  reasoning?: string;
+}
+```
+
+- `GameState.gridSnapshots` guarda uma linha do tempo espacial sincronizada com `pageNumber`, permitindo reconstruir o mapa para qualquer carta.
+- `GridUpdateResponse` é o contrato consumido por `openaiClient.updateGridPositions`/`gridUpdate.prompt.ts`, garantindo que só updates necessários sejam persistidos.
 
 ### Character - Modelo de Entidade
 
@@ -901,6 +948,54 @@ export const transcribeAudioWithWhisper = async (
 };
 ```
 
+### Atualização de Grid via LLM
+
+**Arquivos:** `services/ai/openaiClient.ts:1550-1729` e `services/ai/prompts/gridUpdate.prompt.ts`
+
+```typescript
+export const updateGridPositions = async (
+  apiKey: string,
+  gameState: GameState,
+  recentResponse: GMResponse,
+  language: Language,
+  currentMessageNumber: number,
+): Promise<GridUpdateResult> => {
+  const prompt = buildGridUpdatePrompt({
+    gameState,
+    recentMessages,
+    eventLog: recentResponse.stateUpdates.eventLog,
+    currentGridPositions,
+    language,
+  });
+
+  const response = await queryLLM(apiKey, messages, {
+    model: MODEL_CONFIG.gridUpdate,
+    responseFormat: 'json',
+  });
+
+  const parsed: GridUpdateResponse = JSON.parse(cleanJsonString(response.text));
+  if (!parsed.shouldUpdate || !parsed.characterPositions) {
+    return { updated: false };
+  }
+
+  const snapshot: GridSnapshot = {
+    id: `grid_${gameState.id}_${Date.now()}`,
+    gameId: gameState.id,
+    atMessageNumber: currentMessageNumber,
+    locationId: gameState.currentLocationId,
+    locationName: currentLocation?.name || 'Unknown',
+    timestamp: Date.now(),
+    characterPositions,
+  };
+
+  return { updated: true, snapshot };
+};
+```
+
+- O prompt `gridUpdate` aplica regras físicas (velocidade máxima, ocupação compartilhada, reset em mudança de localização) e schema JSON obrigatório para manter determinismo.
+- A função reaproveita o snapshot mais recente como contexto, só cria novo registro quando há movimento e loga o `reasoning` retornado pela IA.
+- Quando não há histórico, `createInitialGridSnapshot` gera posições padrão (player no centro, NPCs ao redor) para evitar jitter no primeiro update.
+
 ---
 
 ## Gerenciamento de Estado
@@ -1001,6 +1096,13 @@ export const useGameEngine = (): UseGameEngineReturn => {
 };
 ```
 
+### Linha do Tempo de Grid no Estado
+
+- Na criação de histórias, `createInitialGridSnapshot(newState, newMessages.length)` posiciona o jogador no centro (5,5) e distribui NPCs em círculo, garantindo snapshot para a primeira carta.
+- A cada turno, após `generateGameTurn`, o hook executa `updateGridPositions` em background; se `updated: true`, o snapshot retornado é anexado via `safeUpdateStory`, preservando todo o histórico.
+- Saves legados sem snapshots recebem um snapshot inicial on-the-fly antes de qualquer análise, evitando erros no `GridMap`.
+- `gridSnapshots` é persistido no IndexedDB (store `GRIDS`) e exportado/importado junto com o resto do estado, permitindo reconstruir o mapa em qualquer dispositivo.
+
 ### Fases de Criação
 
 **Arquivo:** `hooks/useGameEngine.ts:14-29`
@@ -1028,28 +1130,33 @@ type ProcessingPhase =
 
 ## Banco de Dados IndexedDB
 
-### Schema (Versão 2)
+### Schema (Versão 3)
 
-**Arquivo:** `services/db.ts:5-24`
+**Arquivo:** `services/db.ts:5-66`
 
 ```typescript
 const DB_NAME = 'InfinitumRPG_Core';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
+const EXPORT_VERSION = 2;
 
 const STORES = {
-  GAMES: 'games',          // Metadados do jogo
-  CHARACTERS: 'characters', // Entidades com FK para gameId
-  LOCATIONS: 'locations',   // Localizações com FK
-  MESSAGES: 'messages',     // Histórico de chat
-  EVENTS: 'events',         // Log de eventos
+  GAMES: 'games',
+  CHARACTERS: 'characters',
+  LOCATIONS: 'locations',
+  MESSAGES: 'messages',
+  EVENTS: 'events',
+  GRIDS: 'grids', // Snapshots 10x10 sincronizados com pageNumber
 };
 
-// Índices criados para queries eficientes
 charStore.createIndex('by_game_id', 'gameId', { unique: false });
 locStore.createIndex('by_game_id', 'gameId', { unique: false });
 msgStore.createIndex('by_game_id', 'gameId', { unique: false });
 evtStore.createIndex('by_game_id', 'gameId', { unique: false });
+gridStore.createIndex('by_game_id', 'gameId', { unique: false });
 ```
+
+- A atualização de schema adiciona a store `GRIDS`, permitindo persistir histórico infinito de `GridSnapshot` sem inflar documentos principais.
+- `EXPORT_VERSION` permanece 2, mas agora inclui snapshots; durante importação os IDs `grid_*` e o `characterId` do player são reescritos para manter consistência (ver `services/db.ts:281-399`).
 
 ### Exportação e Importação
 
@@ -1399,16 +1506,50 @@ O sistema envia apenas diferenças incrementais:
 
 ---
 
+## Sistema de Mapa em Grade
+
+> Introduzido no commit `79cc5d6` (merge `claude/grid-navigation-system-HYTk0`) para fornecer contexto espacial sincronizado a cada carta.
+
+### Visão Geral
+
+- `gridSnapshots` grava posições 10x10 por `pageNumber`, permitindo voltar no tempo sem perder coerência.
+- A IA especializada (`gridUpdate.prompt.ts`) lê mensagens recentes + `eventLog` e decide se houve movimento físico antes de sugerir uma nova matriz.
+- A UI expõe o mapa via flip-card dentro do `StoryCard`, evitando modais externos.
+
+### Fluxo Completo
+
+1. **Criação** – `createInitialGridSnapshot` posiciona o jogador no centro e NPCs em círculo após as mensagens iniciais.
+2. **Turno** – Após `generateGameTurn`, `updateGridPositions` consulta o prompt e pode retornar `updated: true` com `GridSnapshot` completo.
+3. **Persistência** – Snapshots são salvos na store IndexedDB `GRIDS`, exportados/importados e anexados em memória via `safeUpdateStory`.
+4. **Renderização** – `StoryCard` passa `gridSnapshots`, `pageNumber` atual e cache de avatares para o `GridMap`, que seleciona o snapshot <= carta ativa.
+
+### UX e Traduções
+
+- `GridMap` traz animação 3D, highlight piscante no player, badge de crowd e legenda rolável.
+- Botões `Map`/`Back to card`, rótulo `Map` e mensagem `No map data` estão traduzidos em EN/PT/ES/FR/RU/ZH (`i18n/locales.ts`).
+
+---
+
 ## Componentes de UI
 
 ### StoryCard
 
 **Arquivo:** `components/StoryCard/StoryCard.view.tsx`
 
-- Efeito typewriter para novas mensagens
-- Background blur com imagem de localização
-- Botão de play para TTS
-- Navegação com swipe
+- Efeito typewriter + fallback instantâneo para mensagens já vistas.
+- Background híbrido (avatar, cenário ou textura) com overlay para leitura confortável.
+- Botão de play com TTS configurável por voz/tom.
+- Navegação Prev/Next com barra de progresso, swipe e atalhos de teclado.
+- Botão **Map** aciona flip 3D e envia `gridSnapshots`, `pageNumber` e avatares atuais para o `GridMap` renderizar o snapshot correto.
+
+### GridMap
+
+**Arquivo:** `components/GridMap/GridMap.tsx`
+
+- Busca o snapshot mais recente com `atMessageNumber <= carta atual` e aplica fallback de avatar.
+- Grid 10x10 responsivo com player piscando (intervalo de 500 ms) e badges de quantidade para NPCs empilhados.
+- Cabeçalho com localização, botão "Back" e integração total com `ThemeColors`; corpo pode usar o background da cena com overlay.
+- Legenda rolável lista personagens, coordenadas e avatar, mantendo contexto mesmo em telas menores.
 
 ### ActionInput
 
