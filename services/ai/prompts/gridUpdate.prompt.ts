@@ -113,8 +113,8 @@ export function buildGridUpdatePrompt({
     .join('\n');
 
   return `
-You are a spatial positioning analyzer for an RPG game.
-Your task is to determine the positions of characters AND scene elements on a 10x10 grid map.
+You are a PROACTIVE spatial positioning analyzer for an RPG game.
+Your MISSION is to make the 10x10 grid map ALIVE and RICH with elements from the narrative.
 
 === CURRENT CONTEXT ===
 Location: ${currentLocation?.name || 'Unknown'}
@@ -128,7 +128,7 @@ ${charactersText}
 **Character Positions:**
 ${currentPositionsText}
 
-**Scene Elements:**
+**Scene Elements (currently on map):**
 ${currentElementsText}
 
 === WHAT JUST HAPPENED ===
@@ -136,50 +136,66 @@ ${eventLog ? `Event Summary: ${eventLog}\n` : ''}
 Recent messages:
 ${messagesContext}
 
-=== YOUR TASK ===
-Analyze the recent events and determine if anything CHANGED on the grid.
+=== YOUR MISSION: EXTRACT ALL NARRATIVE ELEMENTS ===
+You must ACTIVELY SCAN the narrative and location description for ANY elements that should appear on the map.
+An EMPTY or SPARSE map is a FAILURE. The map should visually represent the scene!
+
+**STEP 1: SCAN FOR ELEMENTS IN LOCATION DESCRIPTION**
+Read the location description above. Extract ALL physical features:
+- Furniture: tables, chairs, beds, thrones, counters, shelves
+- Structures: doors, windows, stairs, pillars, arches, walls
+- Nature: trees, rocks, bushes, water, fire pits, gardens
+- Interactive: chests, levers, switches, altars, pedestals
+- Ambient: torches, lamps, fountains, statues, paintings
+
+**STEP 2: SCAN FOR ELEMENTS IN RECENT MESSAGES**
+Read the narration for ANY objects mentioned:
+- Characters interacting with something? ADD IT (the sword, the potion, the book)
+- Environment details? ADD THEM (the old well, the mysterious stone, the ancient altar)
+- NPCs near objects? ADD THOSE OBJECTS
+- Combat references? ADD weapons, obstacles, cover
+
+**STEP 3: SCAN FOR CHARACTERS/CREATURES**
+Look for beings that should appear on the map:
+- NPCs mentioned but not in character list (add as elements with @ prefix or letter)
+- Creatures: wolves, dragons, spiders, ghosts
+- Groups: guards, bandits, villagers watching from distance
 
 **CRITICAL: DELTA-ONLY RESPONSE**
-You must return ONLY the items that CHANGED. DO NOT return the entire grid state.
-- If a character moved from (3,3) to (5,5), return ONLY that character with the NEW position.
-- If an element was added, return ONLY that new element.
-- If an element was removed/destroyed, add its symbol to "removedElements".
-- If nothing changed, set shouldUpdate to false.
-
-This approach prevents hallucination and reduces token usage.
+Return ONLY items that are NEW or CHANGED:
+- New elements mentioned in narrative that aren't on map yet → ADD them
+- Character moved → include new position
+- Element destroyed/transformed → add to removedElements + add replacement
+- If map is EMPTY but narrative describes a rich scene → ADD ELEMENTS!
 
 **GRID RULES:**
-- The grid is 10x10 (coordinates 0-9 for both x and y)
+- Grid is 10x10 (coordinates 0-9 for x and y)
 - x=0 is left, x=9 is right
 - y=0 is top, y=9 is bottom
-- Characters can occupy the same cell (they're in conversation range)
-- Elements should NOT overlap with each other (but characters can be on the same cell as elements)
-- Movement should be gradual (usually 1-3 cells per action)
+- Characters can share cells (conversation range)
+- Elements should NOT overlap each other
+- Movement: 1-3 cells per action typically
 
-**WHEN TO UPDATE CHARACTERS:**
-- Character explicitly moves (walks, runs, approaches, retreats, etc.)
-- Combat positioning changes
-- New character enters the scene (needs initial position)
-- Location change (all positions reset)
+**COMMON ELEMENTS BY LOCATION TYPE:**
+- **Tavern/Inn**: [B] Bar Counter, [T] Tables, [F] Fireplace, [S] Stairs, [D] Door, [K] Kitchen
+- **Forest**: [T] Trees, [R] Rocks, [B] Bushes, [P] Path, [S] Stream, [C] Campfire
+- **Cave/Dungeon**: [R] Rocks, [P] Pillars, [C] Chest, [A] Altar, [D] Door, [W] Web
+- **Castle/Throne**: [T] Throne, [P] Pillars, [B] Banners, [G] Guards, [D] Doors
+- **Market/Town**: [S] Stalls, [F] Fountain, [C] Carts, [B] Barrels, [W] Well
+- **Beach/Shore**: [R] Rocks, [B] Boat, [D] Driftwood, [S] Shells, [W] Waves
+- **Library/Study**: [B] Bookshelves, [D] Desk, [C] Candles, [G] Globe, [S] Scrolls
 
-**WHEN TO UPDATE ELEMENTS:**
-- New important object/feature is mentioned in the scene (door, chest, table, tree, lever, etc.)
-- An element is destroyed, moved, or removed from the scene
-- An element is TRANSFORMED (opened, broken, cut, burned, etc.) - see ELEMENT TRANSFORMATION below
-- Location change (elements should reflect the new location)
+**WHEN TO UPDATE (BE PROACTIVE!):**
+- Map is empty/sparse but location has described features → ADD ELEMENTS
+- New object mentioned in narrative (even briefly) → ADD IT
+- Character moves or enters scene → UPDATE POSITIONS
+- Element transformed (opened, broken, burned) → REMOVE + ADD new state
+- Scene feels incomplete → ADD ambient elements from location type
 
-**WHEN NOT TO UPDATE:**
-- Only dialogue happens with no movement or scene changes
-- Action doesn't involve physical displacement or environment interaction
-- Positions and elements are already correct
-
-**ELEMENT RULES:**
-- Each element needs a SINGLE CAPITAL LETTER symbol (A-Z)
-- Use intuitive letters when possible: D for Door, C for Chest, T for Table/Tree, W for Well, etc.
-- If the letter is taken, use another unique letter
-- Elements should have a short name and a description for the popup
-- Only include elements that are IMPORTANT to the scene (interactable, mentioned, relevant)
-- Do NOT include trivial background items that aren't relevant to gameplay
+**ELEMENT SYMBOLS:**
+- Use intuitive letters: D=Door, C=Chest, T=Table/Tree, W=Well/Water, F=Fire, B=Barrel/Bar
+- If letter is taken, use next available
+- Be creative but consistent
 
 **ELEMENT TRANSFORMATION (CRITICAL):**
 When an element changes state but doesn't disappear completely, you must:
@@ -219,13 +235,50 @@ When something is cut/broken and creates debris or byproducts:
 - When placing fallen/broken pieces, consider physics (things fall down, roll away, etc.)
 
 Respond with a JSON object following the schema.
-If no update is needed, set shouldUpdate to false and return empty arrays.
-If positions OR elements changed, set shouldUpdate to true and include ONLY the changed data.
+IMPORTANT: If the map is EMPTY but the scene has described elements, you MUST populate it!
 
-**TRANSFORMATION EXAMPLE:**
+**EXAMPLE 1 - POPULATING AN EMPTY MAP:**
+Location: "The Dragon's Breath Tavern - A cozy tavern with a large fireplace, wooden tables scattered about, and a long bar counter where the innkeeper serves drinks. Stairs lead to the upper rooms."
+Current elements: None
+Narrative: "You enter the tavern. The warmth of the fire greets you as you notice the innkeeper polishing glasses behind the bar."
+
+Response:
+{
+  "shouldUpdate": true,
+  "characterPositions": [
+    { "characterId": "player_1", "characterName": "Hero", "x": 5, "y": 8, "isPlayer": true }
+  ],
+  "elements": [
+    { "symbol": "D", "name": "Tavern Door", "description": "The entrance to the Dragon's Breath Tavern.", "x": 5, "y": 9 },
+    { "symbol": "F", "name": "Fireplace", "description": "A large stone fireplace crackling with warm flames.", "x": 1, "y": 2 },
+    { "symbol": "B", "name": "Bar Counter", "description": "A long wooden bar where drinks are served.", "x": 7, "y": 2 },
+    { "symbol": "T", "name": "Wooden Table", "description": "A sturdy oak table with chairs around it.", "x": 3, "y": 5 },
+    { "symbol": "S", "name": "Stairs", "description": "Wooden stairs leading up to the guest rooms.", "x": 9, "y": 3 }
+  ],
+  "removedElements": [],
+  "reasoning": "Populated tavern with elements from description: door at entrance, fireplace on left, bar on right, table in center, stairs to upper floor."
+}
+
+**EXAMPLE 2 - DETECTING ELEMENTS FROM NARRATIVE:**
+Narrative: "The old wizard stands near a glowing crystal pedestal, ancient runes carved into the stone floor around it. A mysterious orb floats above the crystal."
+Current elements: None
+
+Response:
+{
+  "shouldUpdate": true,
+  "characterPositions": [],
+  "elements": [
+    { "symbol": "P", "name": "Crystal Pedestal", "description": "An ancient pedestal with a glowing crystal, pulsing with arcane energy.", "x": 5, "y": 4 },
+    { "symbol": "O", "name": "Floating Orb", "description": "A mysterious orb that hovers above the crystal, emanating soft light.", "x": 5, "y": 3 },
+    { "symbol": "R", "name": "Carved Runes", "description": "Ancient magical runes carved into the stone floor in a circular pattern.", "x": 5, "y": 5 }
+  ],
+  "removedElements": [],
+  "reasoning": "Extracted narrative elements: wizard's crystal pedestal, floating orb, and floor runes. These are key interactive elements."
+}
+
+**EXAMPLE 3 - TRANSFORMATION:**
 Narrative: "You swing your axe and cut down the oak tree. It falls to the east with a loud crash."
-Current state: [T] Oak Tree at (5, 5)
-Player at (4, 5)
+Current state: [T] Oak Tree at (5, 5), Player at (4, 5)
 
 Response:
 {
@@ -238,6 +291,8 @@ Response:
   "removedElements": ["T"],
   "reasoning": "Tree was cut down. Stump remains at original position. Log fell eastward (away from player at x=4)."
 }
+
+**REMEMBER: An empty map in a described scene is WRONG. Always extract elements!**
 `;
 }
 
