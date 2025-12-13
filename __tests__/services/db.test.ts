@@ -495,7 +495,7 @@ describe('dbService', () => {
       const exported = await dbService.exportGame(gameState.id);
 
       expect(exported).toBeDefined();
-      expect(exported?.version).toBe(1);
+      expect(exported?.version).toBe(2);
       expect(exported?.exportedAt).toBeDefined();
       expect(exported?.game.id).toBe(gameState.id);
     });

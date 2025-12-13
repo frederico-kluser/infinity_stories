@@ -77,6 +77,11 @@ jest.mock('../../services/ai/openaiClient', () => ({
     warning: '#d97706',
     danger: '#dc2626',
     shadow: '#1c1917'
+  }),
+  generateLocationBackground: jest.fn().mockResolvedValue('data:image/png;base64,test'),
+  createInitialGridSnapshot: jest.fn().mockReturnValue({
+    grid: [],
+    lastKnownLocationId: 'loc-1'
   })
 }));
 
