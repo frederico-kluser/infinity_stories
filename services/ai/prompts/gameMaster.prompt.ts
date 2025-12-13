@@ -37,17 +37,28 @@
  * @see {@link gmResponseSchema} - Schema JSON da resposta esperada
  */
 
-import { GameState, Language, FateResult, Character, Location, HeavyContext, Item, GridSnapshot, GridCharacterPosition, NarrativeStyleMode } from '../../../types';
+import {
+	GameState,
+	Language,
+	FateResult,
+	Character,
+	Location,
+	HeavyContext,
+	Item,
+	GridSnapshot,
+	GridCharacterPosition,
+	NarrativeStyleMode,
+} from '../../../types';
 import { getLanguageName } from '../../../i18n/locales';
 import { getEconomyRulesForGMPrompt } from '../../../constants/economy';
 import { formatInventoryForPrompt, formatStatsForPrompt, isItemInventory } from '../../../utils/inventory';
 import {
-  NarrativeGenre,
-  PacingState,
-  NarrativeThread,
-  NPCVoiceProfile,
-  generateNarrativeInstructions,
-  VOICE_TEMPLATES,
+	NarrativeGenre,
+	PacingState,
+	NarrativeThread,
+	NPCVoiceProfile,
+	generateNarrativeInstructions,
+	VOICE_TEMPLATES,
 } from './narrativeStyles';
 
 /**
@@ -65,26 +76,26 @@ import {
  * @property {NarrativeThread[]} [narrativeThreads] - Threads de foreshadowing e callbacks
  */
 export interface GameMasterPromptParams {
-  /** Estado completo do jogo com todos os personagens, localizações e histórico */
-  gameState: GameState;
-  /** Texto da ação que o jogador deseja executar */
-  playerInput: string;
-  /** Idioma no qual a narrativa deve ser gerada */
-  language: Language;
-  /** Resultado do roll de destino, se houver um evento especial a incorporar */
-  fateResult?: FateResult;
-  /** Gênero narrativo para aplicar convenções de estilo específicas */
-  genre?: NarrativeGenre;
-  /** Modo de seleção do estilo narrativo (auto vs custom) */
-  narrativeStyleMode?: NarrativeStyleMode;
-  /** Instruções personalizadas para substituir o gênero automático */
-  customNarrativeStyle?: string;
-  /** Estado atual do ritmo/pacing da narrativa */
-  pacingState?: PacingState;
-  /** Threads narrativas ativas (foreshadowing, callbacks, Chekhov's guns) */
-  narrativeThreads?: NarrativeThread[];
-  /** Se true, solicita voiceTone para TTS. Se false, não inclui instruções de tom */
-  useTone?: boolean;
+	/** Estado completo do jogo com todos os personagens, localizações e histórico */
+	gameState: GameState;
+	/** Texto da ação que o jogador deseja executar */
+	playerInput: string;
+	/** Idioma no qual a narrativa deve ser gerada */
+	language: Language;
+	/** Resultado do roll de destino, se houver um evento especial a incorporar */
+	fateResult?: FateResult;
+	/** Gênero narrativo para aplicar convenções de estilo específicas */
+	genre?: NarrativeGenre;
+	/** Modo de seleção do estilo narrativo (auto vs custom) */
+	narrativeStyleMode?: NarrativeStyleMode;
+	/** Instruções personalizadas para substituir o gênero automático */
+	customNarrativeStyle?: string;
+	/** Estado atual do ritmo/pacing da narrativa */
+	pacingState?: PacingState;
+	/** Threads narrativas ativas (foreshadowing, callbacks, Chekhov's guns) */
+	narrativeThreads?: NarrativeThread[];
+	/** Se true, solicita voiceTone para TTS. Se false, não inclui instruções de tom */
+	useTone?: boolean;
 }
 
 /**
@@ -94,12 +105,12 @@ export interface GameMasterPromptParams {
  * @interface CharacterContext
  */
 interface CharacterContext {
-  id: string;
-  name: string;
-  state: string;
-  description: string;
-  stats: Record<string, number>;
-  inventory: Item[] | string[];
+	id: string;
+	name: string;
+	state: string;
+	description: string;
+	stats: Record<string, number>;
+	inventory: Item[] | string[];
 }
 
 /**
@@ -107,63 +118,96 @@ interface CharacterContext {
  * Usa heurísticas simples para criar diferenciação de voz.
  */
 function inferVoiceProfileFromDescription(description: string, name: string): Partial<NPCVoiceProfile> {
-  const desc = description.toLowerCase();
-  const profile: Partial<NPCVoiceProfile> = {};
+	const desc = description.toLowerCase();
+	const profile: Partial<NPCVoiceProfile> = {};
 
-  // Inferir classe social
-  if (desc.includes('rei') || desc.includes('rainha') || desc.includes('king') || desc.includes('queen') || desc.includes('majest')) {
-    profile.socialClass = 'royalty';
-    profile.educationLevel = 'educated';
-  } else if (desc.includes('nobre') || desc.includes('lord') || desc.includes('lady') || desc.includes('conde') || desc.includes('duque')) {
-    profile.socialClass = 'nobility';
-    profile.educationLevel = 'educated';
-  } else if (desc.includes('mercador') || desc.includes('merchant') || desc.includes('comerciante') || desc.includes('lojista')) {
-    profile.socialClass = 'middle';
-    profile.educationLevel = 'common';
-    profile.verbalTics = ['meu amigo', 'bom negócio', 'entre nós'];
-  } else if (desc.includes('camponês') || desc.includes('peasant') || desc.includes('fazendeiro') || desc.includes('farmer')) {
-    profile.socialClass = 'lower';
-    profile.educationLevel = 'uneducated';
-  } else if (desc.includes('mendigo') || desc.includes('beggar') || desc.includes('ladrão') || desc.includes('thief')) {
-    profile.socialClass = 'outcast';
-    profile.educationLevel = 'uneducated';
-  }
+	// Inferir classe social
+	if (
+		desc.includes('rei') ||
+		desc.includes('rainha') ||
+		desc.includes('king') ||
+		desc.includes('queen') ||
+		desc.includes('majest')
+	) {
+		profile.socialClass = 'royalty';
+		profile.educationLevel = 'educated';
+	} else if (
+		desc.includes('nobre') ||
+		desc.includes('lord') ||
+		desc.includes('lady') ||
+		desc.includes('conde') ||
+		desc.includes('duque')
+	) {
+		profile.socialClass = 'nobility';
+		profile.educationLevel = 'educated';
+	} else if (
+		desc.includes('mercador') ||
+		desc.includes('merchant') ||
+		desc.includes('comerciante') ||
+		desc.includes('lojista')
+	) {
+		profile.socialClass = 'middle';
+		profile.educationLevel = 'common';
+		profile.verbalTics = ['meu amigo', 'bom negócio', 'entre nós'];
+	} else if (
+		desc.includes('camponês') ||
+		desc.includes('peasant') ||
+		desc.includes('fazendeiro') ||
+		desc.includes('farmer')
+	) {
+		profile.socialClass = 'lower';
+		profile.educationLevel = 'uneducated';
+	} else if (desc.includes('mendigo') || desc.includes('beggar') || desc.includes('ladrão') || desc.includes('thief')) {
+		profile.socialClass = 'outcast';
+		profile.educationLevel = 'uneducated';
+	}
 
-  // Inferir educação por profissão
-  if (desc.includes('mago') || desc.includes('wizard') || desc.includes('scholar') || desc.includes('estudioso') || desc.includes('sábio')) {
-    profile.educationLevel = 'scholarly';
-    profile.verbalTics = ['de fato', 'curiosamente', 'segundo os textos'];
-  } else if (desc.includes('padre') || desc.includes('priest') || desc.includes('monge') || desc.includes('monk')) {
-    profile.educationLevel = 'educated';
-    profile.verbalTics = ['que os deuses', 'abençoado seja', 'minha criança'];
-  } else if (desc.includes('soldado') || desc.includes('soldier') || desc.includes('guarda') || desc.includes('guard')) {
-    profile.educationLevel = 'common';
-    profile.speechRhythm = 'fast';
-    profile.verbalTics = ['senhor', 'entendido', 'às ordens'];
-  }
+	// Inferir educação por profissão
+	if (
+		desc.includes('mago') ||
+		desc.includes('wizard') ||
+		desc.includes('scholar') ||
+		desc.includes('estudioso') ||
+		desc.includes('sábio')
+	) {
+		profile.educationLevel = 'scholarly';
+		profile.verbalTics = ['de fato', 'curiosamente', 'segundo os textos'];
+	} else if (desc.includes('padre') || desc.includes('priest') || desc.includes('monge') || desc.includes('monk')) {
+		profile.educationLevel = 'educated';
+		profile.verbalTics = ['que os deuses', 'abençoado seja', 'minha criança'];
+	} else if (
+		desc.includes('soldado') ||
+		desc.includes('soldier') ||
+		desc.includes('guarda') ||
+		desc.includes('guard')
+	) {
+		profile.educationLevel = 'common';
+		profile.speechRhythm = 'fast';
+		profile.verbalTics = ['senhor', 'entendido', 'às ordens'];
+	}
 
-  // Inferir ritmo de fala
-  if (desc.includes('velho') || desc.includes('old') || desc.includes('ancião') || desc.includes('elderly')) {
-    profile.speechRhythm = 'slow';
-  } else if (desc.includes('criança') || desc.includes('child') || desc.includes('jovem') || desc.includes('young')) {
-    profile.speechRhythm = 'fast';
-    profile.educationLevel = 'uneducated';
-  } else if (desc.includes('nervoso') || desc.includes('nervous') || desc.includes('ansioso')) {
-    profile.speechRhythm = 'erratic';
-  }
+	// Inferir ritmo de fala
+	if (desc.includes('velho') || desc.includes('old') || desc.includes('ancião') || desc.includes('elderly')) {
+		profile.speechRhythm = 'slow';
+	} else if (desc.includes('criança') || desc.includes('child') || desc.includes('jovem') || desc.includes('young')) {
+		profile.speechRhythm = 'fast';
+		profile.educationLevel = 'uneducated';
+	} else if (desc.includes('nervoso') || desc.includes('nervous') || desc.includes('ansioso')) {
+		profile.speechRhythm = 'erratic';
+	}
 
-  // Traço de personalidade baseado em adjetivos
-  if (desc.includes('sombrio') || desc.includes('dark') || desc.includes('sinistro')) {
-    profile.personalityTrait = 'misterioso e reservado';
-  } else if (desc.includes('alegre') || desc.includes('cheerful') || desc.includes('sorridente')) {
-    profile.personalityTrait = 'otimista e caloroso';
-  } else if (desc.includes('sério') || desc.includes('serious') || desc.includes('grave')) {
-    profile.personalityTrait = 'solene e direto';
-  } else if (desc.includes('astuto') || desc.includes('cunning') || desc.includes('esperto')) {
-    profile.personalityTrait = 'calculista e observador';
-  }
+	// Traço de personalidade baseado em adjetivos
+	if (desc.includes('sombrio') || desc.includes('dark') || desc.includes('sinistro')) {
+		profile.personalityTrait = 'misterioso e reservado';
+	} else if (desc.includes('alegre') || desc.includes('cheerful') || desc.includes('sorridente')) {
+		profile.personalityTrait = 'otimista e caloroso';
+	} else if (desc.includes('sério') || desc.includes('serious') || desc.includes('grave')) {
+		profile.personalityTrait = 'solene e direto';
+	} else if (desc.includes('astuto') || desc.includes('cunning') || desc.includes('esperto')) {
+		profile.personalityTrait = 'calculista e observador';
+	}
 
-  return profile;
+	return profile;
 }
 
 /**
@@ -243,57 +287,58 @@ function inferVoiceProfileFromDescription(description: string, name: string): Pa
  * ```
  */
 export function buildGameMasterPrompt({
-  gameState,
-  playerInput,
-  language,
-  fateResult,
-  genre,
-  pacingState,
-  narrativeThreads,
-  useTone = true,
-  narrativeStyleMode,
-  customNarrativeStyle,
+	gameState,
+	playerInput,
+	language,
+	fateResult,
+	genre,
+	pacingState,
+	narrativeThreads,
+	useTone = true,
+	narrativeStyleMode,
+	customNarrativeStyle,
 }: GameMasterPromptParams): string {
-  const currentLocation: Location | undefined =
-    gameState.locations[gameState.currentLocationId];
-  const charactersHere: Character[] = Object.values(gameState.characters).filter(
-    (c) => c.locationId === gameState.currentLocationId
-  );
-  const player: Character = gameState.characters[gameState.playerCharacterId];
-  const langName = getLanguageName(language);
-  const playerNameForPrompt = player.name.replace(/"/g, '\"');
+	const currentLocation: Location | undefined = gameState.locations[gameState.currentLocationId];
+	const charactersHere: Character[] = Object.values(gameState.characters).filter(
+		(c) => c.locationId === gameState.currentLocationId,
+	);
+	const player: Character = gameState.characters[gameState.playerCharacterId];
+	const langName = getLanguageName(language);
+	const playerNameForPrompt = player.name.replace(/"/g, '"');
 
-  // Build NPC voice profiles for differentiation
-  const npcsInScene = charactersHere
-    .filter((c) => !c.isPlayer && c.state !== 'dead')
-    .map((npc) => {
-      // Try to infer voice profile from NPC description
-      const profile: Partial<NPCVoiceProfile> = inferVoiceProfileFromDescription(npc.description, npc.name);
-      return { name: npc.name, profile };
-    });
+	// Build NPC voice profiles for differentiation
+	const npcsInScene = charactersHere
+		.filter((c) => !c.isPlayer && c.state !== 'dead')
+		.map((npc) => {
+			// Try to infer voice profile from NPC description
+			const profile: Partial<NPCVoiceProfile> = inferVoiceProfileFromDescription(npc.description, npc.name);
+			return { name: npc.name, profile };
+		});
 
-  const configNarrativeMode: NarrativeStyleMode = gameState.config?.narrativeStyleMode ?? 'auto';
-  const effectiveNarrativeMode = narrativeStyleMode ?? configNarrativeMode;
-  const configCustomStyle = gameState.config?.customNarrativeStyle?.trim();
-  const providedCustomStyle = customNarrativeStyle?.trim();
-  const finalCustomStyle =
-    effectiveNarrativeMode === 'custom' ? (providedCustomStyle || configCustomStyle) : undefined;
-  const shouldUseCustomStyle = effectiveNarrativeMode === 'custom' && !!finalCustomStyle;
-  const resolvedGenre = shouldUseCustomStyle ? undefined : genre ?? gameState.config?.genre;
+	const runtimeNarrative = gameState.narrativeConfig || {};
+	const configNarrativeMode: NarrativeStyleMode =
+		runtimeNarrative.narrativeStyleMode ?? gameState.config?.narrativeStyleMode ?? 'auto';
+	const effectiveNarrativeMode = narrativeStyleMode ?? configNarrativeMode;
+	const configCustomStyle =
+		runtimeNarrative.customNarrativeStyle?.trim() || gameState.config?.customNarrativeStyle?.trim();
+	const providedCustomStyle = customNarrativeStyle?.trim();
+	const finalCustomStyle = effectiveNarrativeMode === 'custom' ? providedCustomStyle || configCustomStyle : undefined;
+	const shouldUseCustomStyle = effectiveNarrativeMode === 'custom' && !!finalCustomStyle;
+	const runtimeGenre = runtimeNarrative.genre ?? gameState.config?.genre;
+	const resolvedGenre = shouldUseCustomStyle ? undefined : genre ?? runtimeGenre;
 
-  const narrativeStyleSection = generateNarrativeInstructions({
-    genre: resolvedGenre,
-    customStyleDescription: shouldUseCustomStyle ? finalCustomStyle : undefined,
-    pacingState,
-    npcsInScene: npcsInScene.length > 0 ? npcsInScene : undefined,
-    narrativeThreads,
-  });
+	const narrativeStyleSection = generateNarrativeInstructions({
+		genre: resolvedGenre,
+		customStyleDescription: shouldUseCustomStyle ? finalCustomStyle : undefined,
+		pacingState,
+		npcsInScene: npcsInScene.length > 0 ? npcsInScene : undefined,
+		narrativeThreads,
+	});
 
-
-  // Build universe context section if available
-  let universeContextSection = '';
-  if (gameState.universeContext) {
-    universeContextSection = `
+	// Build universe context section if available
+	let universeContextSection = '';
+	if (gameState.universeContext) {
+		universeContextSection = `
     === UNIVERSE NARRATIVE CONTEXT ===
     This is the comprehensive narrative context for the "${gameState.config.universeName}" universe.
     USE THIS CONTEXT to maintain consistency in:
@@ -308,32 +353,32 @@ export function buildGameMasterPrompt({
     --- END UNIVERSE CONTEXT ---
 
 `;
-  }
+	}
 
-  // Build heavy context section if available
-  let heavyContextSection = '';
-  if (gameState.heavyContext) {
-    const ctx: HeavyContext = gameState.heavyContext;
-    const parts: string[] = [];
+	// Build heavy context section if available
+	let heavyContextSection = '';
+	if (gameState.heavyContext) {
+		const ctx: HeavyContext = gameState.heavyContext;
+		const parts: string[] = [];
 
-    if (ctx.mainMission) {
-      parts.push(`MAIN MISSION: ${ctx.mainMission}`);
-    }
-    if (ctx.currentMission) {
-      parts.push(`CURRENT MISSION: ${ctx.currentMission}`);
-    }
-    if (ctx.activeProblems && ctx.activeProblems.length > 0) {
-      parts.push(`ACTIVE PROBLEMS: ${ctx.activeProblems.join(' | ')}`);
-    }
-    if (ctx.currentConcerns && ctx.currentConcerns.length > 0) {
-      parts.push(`CURRENT CONCERNS: ${ctx.currentConcerns.join(' | ')}`);
-    }
-    if (ctx.importantNotes && ctx.importantNotes.length > 0) {
-      parts.push(`IMPORTANT NOTES: ${ctx.importantNotes.join(' | ')}`);
-    }
+		if (ctx.mainMission) {
+			parts.push(`MAIN MISSION: ${ctx.mainMission}`);
+		}
+		if (ctx.currentMission) {
+			parts.push(`CURRENT MISSION: ${ctx.currentMission}`);
+		}
+		if (ctx.activeProblems && ctx.activeProblems.length > 0) {
+			parts.push(`ACTIVE PROBLEMS: ${ctx.activeProblems.join(' | ')}`);
+		}
+		if (ctx.currentConcerns && ctx.currentConcerns.length > 0) {
+			parts.push(`CURRENT CONCERNS: ${ctx.currentConcerns.join(' | ')}`);
+		}
+		if (ctx.importantNotes && ctx.importantNotes.length > 0) {
+			parts.push(`IMPORTANT NOTES: ${ctx.importantNotes.join(' | ')}`);
+		}
 
-    if (parts.length > 0) {
-      heavyContextSection = `
+		if (parts.length > 0) {
+			heavyContextSection = `
     === NARRATIVE CONTEXT (HEAVY CONTEXT) ===
     This is important ongoing context that should influence your narrative decisions:
     ${parts.join('\n    ')}
@@ -344,24 +389,34 @@ export function buildGameMasterPrompt({
     - Adding tension or urgency when appropriate
     - Referencing ongoing story threads
 `;
-    }
-  }
+		}
+	}
 
-  // Build grid context section if available
-  let gridContextSection = '';
-  if (gameState.gridSnapshots && gameState.gridSnapshots.length > 0) {
-    const latestGrid = gameState.gridSnapshots[gameState.gridSnapshots.length - 1];
-    const gridPositions = latestGrid.characterPositions
-      .map((pos: GridCharacterPosition) => {
-        const distance = pos.isPlayer ? '' : ` - Distance from player: ~${
-          Math.abs(pos.position.x - (latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer)?.position.x || 5)) +
-          Math.abs(pos.position.y - (latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer)?.position.y || 5))
-        } cells`;
-        return `- ${pos.characterName}${pos.isPlayer ? ' [PLAYER]' : ''}: position (${pos.position.x}, ${pos.position.y})${distance}`;
-      })
-      .join('\n    ');
+	// Build grid context section if available
+	let gridContextSection = '';
+	if (gameState.gridSnapshots && gameState.gridSnapshots.length > 0) {
+		const latestGrid = gameState.gridSnapshots[gameState.gridSnapshots.length - 1];
+		const gridPositions = latestGrid.characterPositions
+			.map((pos: GridCharacterPosition) => {
+				const distance = pos.isPlayer
+					? ''
+					: ` - Distance from player: ~${
+							Math.abs(
+								pos.position.x -
+									(latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer)?.position.x || 5),
+							) +
+							Math.abs(
+								pos.position.y -
+									(latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer)?.position.y || 5),
+							)
+					  } cells`;
+				return `- ${pos.characterName}${pos.isPlayer ? ' [PLAYER]' : ''}: position (${pos.position.x}, ${
+					pos.position.y
+				})${distance}`;
+			})
+			.join('\n    ');
 
-    gridContextSection = `
+		gridContextSection = `
     === SPATIAL CONTEXT (10x10 GRID MAP) ===
     Characters' current positions on the map (coordinates 0-9):
     ${gridPositions}
@@ -376,13 +431,13 @@ export function buildGameMasterPrompt({
     - Combat range and positioning
     - Characters at distance (3+ cells) require movement to interact closely
 `;
-  }
+	}
 
-  // Build fate instruction if there's a fate event
-  let fateInstruction = '';
-  if (fateResult && fateResult.type !== 'neutral') {
-    if (fateResult.type === 'good') {
-      fateInstruction = `
+	// Build fate instruction if there's a fate event
+	let fateInstruction = '';
+	if (fateResult && fateResult.type !== 'neutral') {
+		if (fateResult.type === 'good') {
+			fateInstruction = `
     === FATE EVENT: FORTUNATE OCCURRENCE ===
     The dice of fate have favored the player! Something GOOD must happen during this action.
     Hint about what should happen: "${fateResult.hint || 'An unexpected benefit or advantage'}"
@@ -397,8 +452,8 @@ export function buildGameMasterPrompt({
     Make this feel organic to the story, not forced. The benefit should match the hint provided.
     Update stats/inventory accordingly if the player gains something.
 `;
-    } else {
-      fateInstruction = `
+		} else {
+			fateInstruction = `
     === FATE EVENT: MISFORTUNE STRIKES ===
     The dice of fate have turned against the player! Something BAD must happen during this action.
     Hint about what should happen: "${fateResult.hint || 'An unexpected complication or danger'}"
@@ -413,27 +468,29 @@ export function buildGameMasterPrompt({
     Make this feel organic to the story, not forced. The setback should match the hint provided.
     Update stats/inventory accordingly if the player loses something or takes damage.
 `;
-    }
-  }
+		}
+	}
 
-  // Build character context array for characters present at current location
-  const charactersContext: CharacterContext[] = charactersHere.map((c) => ({
-    id: c.id,
-    name: c.name,
-    state: c.state,
-    description: c.description,
-    stats: c.stats,
-    inventory: c.inventory,
-  }));
+	// Build character context array for characters present at current location
+	const charactersContext: CharacterContext[] = charactersHere.map((c) => ({
+		id: c.id,
+		name: c.name,
+		state: c.state,
+		description: c.description,
+		stats: c.stats,
+		inventory: c.inventory,
+	}));
 
-  // Build list of ALL known characters in the game (for dialogue attribution)
-  const allCharacters = Object.values(gameState.characters);
-  const knownCharactersList = allCharacters
-    .filter((c) => !c.isPlayer)
-    .map((c) => `- "${c.name}" (ID: ${c.id}) - ${c.description.substring(0, 80)}${c.description.length > 80 ? '...' : ''}`)
-    .join('\n    ');
+	// Build list of ALL known characters in the game (for dialogue attribution)
+	const allCharacters = Object.values(gameState.characters);
+	const knownCharactersList = allCharacters
+		.filter((c) => !c.isPlayer)
+		.map(
+			(c) => `- "${c.name}" (ID: ${c.id}) - ${c.description.substring(0, 80)}${c.description.length > 80 ? '...' : ''}`,
+		)
+		.join('\n    ');
 
-  return `
+	return `
     You are the Game Master (GM), Physics Engine, and Logic Core for a text-based RPG.
 
     Current Universe: ${gameState.config.universeName} (${gameState.config.universeType})
@@ -486,7 +543,9 @@ ${getEconomyRulesForGMPrompt()}
     **For DIALOGUE (type: "dialogue") - IMPORTANT:**
     - Use "characterName" for WHO is speaking
     - Use "dialogue" for WHAT they say
-    - Example: { "type": "dialogue", "characterName": "Old Sage", "dialogue": "Welcome, traveler!"${useTone ? ', "voiceTone": "warm"' : ''} }
+    - Example: { "type": "dialogue", "characterName": "Old Sage", "dialogue": "Welcome, traveler!"${
+			useTone ? ', "voiceTone": "warm"' : ''
+		} }
 
     === CHARACTER DIALOGUE RULES (CRITICAL) ===
 
@@ -541,12 +600,18 @@ ${getEconomyRulesForGMPrompt()}
     { "type": "dialogue", "characterName": "${playerNameForPrompt}", "dialogue": "Claro, eu aceito a missão." }
 
     CORRECT:
-    { "type": "narration", "text": "${playerNameForPrompt} sente o peso da decisão enquanto todos aguardam sua resposta."${useTone ? ', "voiceTone": "tense"' : ''} }
-${useTone ? `
+    { "type": "narration", "text": "${playerNameForPrompt} sente o peso da decisão enquanto todos aguardam sua resposta."${
+		useTone ? ', "voiceTone": "tense"' : ''
+	} }
+${
+	useTone
+		? `
     === VOICE TONE (for Text-to-Speech) ===
     For EACH message, specify a 'voiceTone' describing how it should be read aloud.
     Examples: 'excited', 'mysterious', 'angry', 'sad', 'fearful', 'whispering', 'shouting', 'sarcastic', 'calm', 'urgent', 'playful', 'solemn', 'threatening', 'warm', 'cold', 'nervous', 'confident'.
-` : ''}
+`
+		: ''
+}
     CRITICAL: All narrative text must be in ${langName} (${language}).
   `;
 }
@@ -556,56 +621,56 @@ ${useTone ? `
  * Defines the structure for items with category, value, and effects.
  */
 export const itemSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'string',
-      description: 'Unique identifier. Format: item_[timestamp]_[random]',
-    },
-    name: {
-      type: 'string',
-      description: 'Display name of the item',
-    },
-    category: {
-      type: 'string',
-      enum: ['consumable', 'weapon', 'armor', 'valuable', 'material', 'quest', 'currency', 'misc'],
-      description: 'Item category for pricing and rules',
-    },
-    description: {
-      type: 'string',
-      description: 'Optional description of the item',
-    },
-    baseValue: {
-      type: 'number',
-      description: 'Base value in gold (use PRICE_RANGES by category)',
-    },
-    quantity: {
-      type: 'number',
-      description: 'Quantity if stackable (default: 1)',
-    },
-    isStackable: {
-      type: 'boolean',
-      description: 'Whether multiple can stack (consumables/materials typically stack)',
-    },
-    effects: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          stat: { type: 'string', description: 'Stat to modify (hp, gold, etc.)' },
-          value: { type: 'number', description: 'Amount to add/subtract' },
-          duration: { type: 'number', description: 'Duration in turns (optional)' },
-        },
-        required: ['stat', 'value'],
-      },
-      description: 'Effects when used/equipped',
-    },
-    isEquipped: {
-      type: 'boolean',
-      description: 'Whether currently equipped (for weapons/armor)',
-    },
-  },
-  required: ['name', 'category'],
+	type: 'object',
+	properties: {
+		id: {
+			type: 'string',
+			description: 'Unique identifier. Format: item_[timestamp]_[random]',
+		},
+		name: {
+			type: 'string',
+			description: 'Display name of the item',
+		},
+		category: {
+			type: 'string',
+			enum: ['consumable', 'weapon', 'armor', 'valuable', 'material', 'quest', 'currency', 'misc'],
+			description: 'Item category for pricing and rules',
+		},
+		description: {
+			type: 'string',
+			description: 'Optional description of the item',
+		},
+		baseValue: {
+			type: 'number',
+			description: 'Base value in gold (use PRICE_RANGES by category)',
+		},
+		quantity: {
+			type: 'number',
+			description: 'Quantity if stackable (default: 1)',
+		},
+		isStackable: {
+			type: 'boolean',
+			description: 'Whether multiple can stack (consumables/materials typically stack)',
+		},
+		effects: {
+			type: 'array',
+			items: {
+				type: 'object',
+				properties: {
+					stat: { type: 'string', description: 'Stat to modify (hp, gold, etc.)' },
+					value: { type: 'number', description: 'Amount to add/subtract' },
+					duration: { type: 'number', description: 'Duration in turns (optional)' },
+				},
+				required: ['stat', 'value'],
+			},
+			description: 'Effects when used/equipped',
+		},
+		isEquipped: {
+			type: 'boolean',
+			description: 'Whether currently equipped (for weapons/armor)',
+		},
+	},
+	required: ['name', 'category'],
 };
 
 /**
@@ -632,173 +697,177 @@ export const itemSchema = {
  * - eventLog: Resumo do que aconteceu (obrigatório)
  */
 export const gmResponseSchema = {
-  type: 'object',
-  properties: {
-    messages: {
-      type: 'array',
-      description: 'List of response messages (bubbles) to be displayed in the chat UI. Each message is either a narration, system message, or character dialogue.',
-      items: {
-        type: 'object',
-        properties: {
-          type: {
-            type: 'string',
-            enum: ['dialogue', 'narration', 'system'],
-            description: 'Type of message: narration (GM describing), dialogue (character speaking), or system (OOC mechanics).',
-          },
-          voiceTone: {
-            type: 'string',
-            description:
-              "Emotional tone for text-to-speech. Examples: 'excited', 'mysterious', 'angry', 'sad', 'fearful', 'whispering', 'shouting', 'sarcastic', 'calm', 'urgent', 'playful', 'solemn', 'threatening', 'warm', 'cold', 'nervous', 'confident'.",
-          },
-          // For narration and system messages
-          text: {
-            type: 'string',
-            description: 'Text content for narration or system messages. Use this field when type is "narration" or "system".',
-          },
-          // For dialogue messages
-          characterName: {
-            type: 'string',
-            description: 'Name of the character speaking. REQUIRED when type is "dialogue". Must match a character from KNOWN_CHARACTERS or be a new character.',
-          },
-          dialogue: {
-            type: 'string',
-            description: 'The dialogue text spoken by the character. REQUIRED when type is "dialogue".',
-          },
-          // For NEW characters speaking for the first time
-          newCharacterData: {
-            type: 'object',
-            description: 'REQUIRED when type is "dialogue" AND the characterName is NOT in KNOWN_CHARACTERS list. Contains data to create the new character.',
-            properties: {
-              id: {
-                type: 'string',
-                description: 'Unique ID for the character. Format: npc_[turnNumber]_[shortName]_[random4digits]',
-              },
-              name: {
-                type: 'string',
-                description: 'Full name of the character (must match characterName).',
-              },
-              description: {
-                type: 'string',
-                description: 'Physical description and notable features (2-3 sentences).',
-              },
-              locationId: {
-                type: 'string',
-                description: 'Current location ID where the character is.',
-              },
-              state: {
-                type: 'string',
-                enum: ['idle', 'talking', 'fighting', 'unconscious', 'dead'],
-                description: 'Current state of the character.',
-              },
-              inventory: {
-                type: 'array',
-                items: itemSchema,
-                description: 'Items the character carries (use Item format with category and baseValue).',
-              },
-              stats: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    key: { type: 'string' },
-                    value: { type: 'number' },
-                  },
-                  required: ['key', 'value'],
-                },
-                description: 'Character stats like hp, strength, etc.',
-              },
-            },
-            required: ['id', 'name', 'description', 'locationId', 'state'],
-          },
-        },
-        required: ['type'],
-      },
-    },
-    stateUpdates: {
-      type: 'object',
-      description: 'Instructions to update the internal IndexedDB state.',
-      properties: {
-        newLocations: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'string' },
-              name: { type: 'string' },
-              description: { type: 'string' },
-              connectedLocationIds: { type: 'array', items: { type: 'string' } },
-            },
-            required: ['id', 'name', 'description'],
-          },
-        },
-        newCharacters: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'string' },
-              name: { type: 'string' },
-              description: { type: 'string' },
-              locationId: { type: 'string' },
-              state: { type: 'string' },
-              inventory: { type: 'array', items: itemSchema },
-              stats: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    key: { type: 'string' },
-                    value: { type: 'number' },
-                  },
-                  required: ['key', 'value'],
-                },
-              },
-            },
-            required: ['id', 'name', 'description', 'locationId', 'state'],
-          },
-        },
-        updatedCharacters: {
-          type: 'array',
-          description:
-            'Modifications to existing characters (Inventory, Stats, Relationships).',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'string' },
-              name: { type: 'string' },
-              relationships: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    targetId: { type: 'string' },
-                    score: { type: 'number' },
-                  },
-                  required: ['targetId', 'score'],
-                },
-              },
-              state: { type: 'string' },
-              inventory: { type: 'array', items: itemSchema },
-              stats: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    key: { type: 'string' },
-                    value: { type: 'number' },
-                  },
-                  required: ['key', 'value'],
-                },
-              },
-            },
-            required: ['id'],
-          },
-        },
-        locationChange: { type: 'string' },
-        eventLog: { type: 'string' },
-      },
-      required: ['eventLog'],
-    },
-  },
-  required: ['messages', 'stateUpdates'],
+	type: 'object',
+	properties: {
+		messages: {
+			type: 'array',
+			description:
+				'List of response messages (bubbles) to be displayed in the chat UI. Each message is either a narration, system message, or character dialogue.',
+			items: {
+				type: 'object',
+				properties: {
+					type: {
+						type: 'string',
+						enum: ['dialogue', 'narration', 'system'],
+						description:
+							'Type of message: narration (GM describing), dialogue (character speaking), or system (OOC mechanics).',
+					},
+					voiceTone: {
+						type: 'string',
+						description:
+							"Emotional tone for text-to-speech. Examples: 'excited', 'mysterious', 'angry', 'sad', 'fearful', 'whispering', 'shouting', 'sarcastic', 'calm', 'urgent', 'playful', 'solemn', 'threatening', 'warm', 'cold', 'nervous', 'confident'.",
+					},
+					// For narration and system messages
+					text: {
+						type: 'string',
+						description:
+							'Text content for narration or system messages. Use this field when type is "narration" or "system".',
+					},
+					// For dialogue messages
+					characterName: {
+						type: 'string',
+						description:
+							'Name of the character speaking. REQUIRED when type is "dialogue". Must match a character from KNOWN_CHARACTERS or be a new character.',
+					},
+					dialogue: {
+						type: 'string',
+						description: 'The dialogue text spoken by the character. REQUIRED when type is "dialogue".',
+					},
+					// For NEW characters speaking for the first time
+					newCharacterData: {
+						type: 'object',
+						description:
+							'REQUIRED when type is "dialogue" AND the characterName is NOT in KNOWN_CHARACTERS list. Contains data to create the new character.',
+						properties: {
+							id: {
+								type: 'string',
+								description: 'Unique ID for the character. Format: npc_[turnNumber]_[shortName]_[random4digits]',
+							},
+							name: {
+								type: 'string',
+								description: 'Full name of the character (must match characterName).',
+							},
+							description: {
+								type: 'string',
+								description: 'Physical description and notable features (2-3 sentences).',
+							},
+							locationId: {
+								type: 'string',
+								description: 'Current location ID where the character is.',
+							},
+							state: {
+								type: 'string',
+								enum: ['idle', 'talking', 'fighting', 'unconscious', 'dead'],
+								description: 'Current state of the character.',
+							},
+							inventory: {
+								type: 'array',
+								items: itemSchema,
+								description: 'Items the character carries (use Item format with category and baseValue).',
+							},
+							stats: {
+								type: 'array',
+								items: {
+									type: 'object',
+									properties: {
+										key: { type: 'string' },
+										value: { type: 'number' },
+									},
+									required: ['key', 'value'],
+								},
+								description: 'Character stats like hp, strength, etc.',
+							},
+						},
+						required: ['id', 'name', 'description', 'locationId', 'state'],
+					},
+				},
+				required: ['type'],
+			},
+		},
+		stateUpdates: {
+			type: 'object',
+			description: 'Instructions to update the internal IndexedDB state.',
+			properties: {
+				newLocations: {
+					type: 'array',
+					items: {
+						type: 'object',
+						properties: {
+							id: { type: 'string' },
+							name: { type: 'string' },
+							description: { type: 'string' },
+							connectedLocationIds: { type: 'array', items: { type: 'string' } },
+						},
+						required: ['id', 'name', 'description'],
+					},
+				},
+				newCharacters: {
+					type: 'array',
+					items: {
+						type: 'object',
+						properties: {
+							id: { type: 'string' },
+							name: { type: 'string' },
+							description: { type: 'string' },
+							locationId: { type: 'string' },
+							state: { type: 'string' },
+							inventory: { type: 'array', items: itemSchema },
+							stats: {
+								type: 'array',
+								items: {
+									type: 'object',
+									properties: {
+										key: { type: 'string' },
+										value: { type: 'number' },
+									},
+									required: ['key', 'value'],
+								},
+							},
+						},
+						required: ['id', 'name', 'description', 'locationId', 'state'],
+					},
+				},
+				updatedCharacters: {
+					type: 'array',
+					description: 'Modifications to existing characters (Inventory, Stats, Relationships).',
+					items: {
+						type: 'object',
+						properties: {
+							id: { type: 'string' },
+							name: { type: 'string' },
+							relationships: {
+								type: 'array',
+								items: {
+									type: 'object',
+									properties: {
+										targetId: { type: 'string' },
+										score: { type: 'number' },
+									},
+									required: ['targetId', 'score'],
+								},
+							},
+							state: { type: 'string' },
+							inventory: { type: 'array', items: itemSchema },
+							stats: {
+								type: 'array',
+								items: {
+									type: 'object',
+									properties: {
+										key: { type: 'string' },
+										value: { type: 'number' },
+									},
+									required: ['key', 'value'],
+								},
+							},
+						},
+						required: ['id'],
+					},
+				},
+				locationChange: { type: 'string' },
+				eventLog: { type: 'string' },
+			},
+			required: ['eventLog'],
+		},
+	},
+	required: ['messages', 'stateUpdates'],
 };

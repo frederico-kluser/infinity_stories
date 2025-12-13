@@ -97,6 +97,16 @@ const MODEL_CONFIG = {
 // Modelo padrão para fallback
 const DEFAULT_MODEL = 'gpt-4.1';
 
+const resolveNarrativeSettings = (gameState: GameState) => {
+	const runtime = gameState.narrativeConfig || {};
+	const mode: NarrativeStyleMode = runtime.narrativeStyleMode ?? gameState.config?.narrativeStyleMode ?? 'auto';
+	return {
+		mode,
+		customStyle: runtime.customNarrativeStyle ?? gameState.config?.customNarrativeStyle,
+		genre: runtime.genre ?? gameState.config?.genre,
+	};
+};
+
 const IMAGE_PROMPT_DOC_EXCERPT = `Excerpt from docs/bypass.md:
 "The key lies in describing, not naming, and using alternative contexts. Use oblique or metaphorical descriptions. Frame the request within artistic or historical context. Separate complex generations into two steps when needed."
 These strategies reduce copyright collisions and keep prompts within policy.`;
@@ -843,9 +853,10 @@ export const generateGameTurn = async (
 	fateResult?: FateResult,
 	useTone: boolean = true,
 ): Promise<GMResponse> => {
-	const configNarrativeMode: NarrativeStyleMode = gameState.config?.narrativeStyleMode ?? 'auto';
-	const customStyle = configNarrativeMode === 'custom' ? gameState.config?.customNarrativeStyle?.trim() : undefined;
-	const genreForPrompt = configNarrativeMode === 'custom' ? undefined : gameState.config.genre;
+	const runtimeNarrative = resolveNarrativeSettings(gameState);
+	const configNarrativeMode: NarrativeStyleMode = runtimeNarrative.mode;
+	const customStyle = configNarrativeMode === 'custom' ? runtimeNarrative.customStyle?.trim() : undefined;
+	const genreForPrompt = configNarrativeMode === 'custom' ? undefined : runtimeNarrative.genre;
 
 	const systemInstruction = buildGameMasterPrompt({
 		gameState,

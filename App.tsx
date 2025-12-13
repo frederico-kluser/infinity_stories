@@ -11,12 +11,13 @@ import { CharacterZoomModal } from './components/CharacterZoomModal';
 import { StoryCreationLoader } from './components/StoryCreationLoader/StoryCreationLoader';
 import { ProcessingIndicator } from './components/ProcessingIndicator/ProcessingIndicator';
 import { SettingsModal } from './components/SettingsModal';
+import { NarrativeStyleModal } from './components/NarrativeStyleModal';
 import { useGameEngine } from './hooks/useGameEngine';
 import { dbService } from './services/db';
 import { useMessageQueue } from './hooks/useMessageQueue';
 import { useCardNavigation } from './hooks/useCardNavigation';
 import { useThemeColors } from './hooks/useThemeColors';
-import { Item } from './types';
+import { Item, NarrativeStyleMode } from './types';
 import {
 	Plus,
 	Terminal,
@@ -136,16 +137,25 @@ const App: React.FC = () => {
 		creationPhase,
 		processingPhase,
 		markCardAsViewed,
+		updateNarrativeStyle,
 	} = useGameEngine();
 
 	const { colors } = useThemeColors();
 	const storyLanguage = activeStory?.config?.language || language;
+	const narrativeModeForModal: NarrativeStyleMode =
+		activeStory?.narrativeConfig?.narrativeStyleMode || activeStory?.config?.narrativeStyleMode || 'auto';
+	const narrativeStylePreset =
+		activeStory?.narrativeConfig?.customNarrativeStyle ||
+		(activeStory?.config?.narrativeStyleMode === 'custom' ? activeStory?.config?.customNarrativeStyle : '') ||
+		'';
+	const narrativeGenre = activeStory?.narrativeConfig?.genre || activeStory?.config?.genre;
 
 	const [showWizard, setShowWizard] = useState(false);
 	const [showStatus, setShowStatus] = useState(false);
 	const [showVoiceSettings, setShowVoiceSettings] = useState(false);
 	const [showThemeColors, setShowThemeColors] = useState(false);
 	const [showSettings, setShowSettings] = useState(false);
+	const [showNarrativeStyleModal, setShowNarrativeStyleModal] = useState(false);
 	const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 	const [zoomModalData, setZoomModalData] = useState<{ imageSrc: string; name: string } | null>(null);
 
@@ -188,6 +198,12 @@ const App: React.FC = () => {
 	const previousLengthRef = useRef(0);
 	const userJustSentRef = useRef(false);
 	const [newCardsCount, setNewCardsCount] = useState(0);
+
+	useEffect(() => {
+		if (!activeStory) {
+			setShowNarrativeStyleModal(false);
+		}
+	}, [activeStory]);
 
 	useEffect(() => {
 		if (!currentStoryId) {
@@ -471,7 +487,10 @@ const App: React.FC = () => {
 
 			{/* Main Game Area */}
 			{currentStoryId && activeStory ? (
-				<div className="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden" style={{ backgroundColor: colors.background }}>
+				<div
+					className="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden"
+					style={{ backgroundColor: colors.background }}
+				>
 					<div
 						className="h-auto min-h-14 md:h-16 flex items-center justify-between px-2 md:px-6 py-2 md:py-0 z-10 shadow-sm sticky top-0 flex-shrink-0 w-full max-w-full overflow-hidden"
 						style={{ backgroundColor: colors.backgroundSecondary, borderBottom: `2px solid ${colors.border}` }}
@@ -623,13 +642,11 @@ const App: React.FC = () => {
 
 									const sender = activeStory.characters[msg.senderId];
 									const pageIndex =
-									typeof msg.pageNumber === 'number'
-										? msg.pageNumber - 1
-										: Math.max(0, visibleMessages.indexOf(msg));
-								const isActiveCard = pageIndex === currentCardIndex;
-								// Skip animation if card is not active OR if it was previously viewed
-								const wasViewed = activeStory.viewedCards?.includes(msg.id) ?? false;
-								const shouldSkipAnimation = !isActiveCard || wasViewed;
+										typeof msg.pageNumber === 'number' ? msg.pageNumber - 1 : Math.max(0, visibleMessages.indexOf(msg));
+									const isActiveCard = pageIndex === currentCardIndex;
+									// Skip animation if card is not active OR if it was previously viewed
+									const wasViewed = activeStory.viewedCards?.includes(msg.id) ?? false;
+									const shouldSkipAnimation = !isActiveCard || wasViewed;
 
 									let senderName = '';
 									if (sender) {
@@ -685,7 +702,7 @@ const App: React.FC = () => {
 												gridSnapshots={activeStory.gridSnapshots}
 												currentLocationName={activeStory.locations[activeStory.currentLocationId]?.name}
 												characterAvatars={Object.fromEntries(
-													Object.entries(activeStory.characters).map(([id, char]) => [id, char.avatarBase64])
+													Object.entries(activeStory.characters).map(([id, char]) => [id, char.avatarBase64]),
 												)}
 											/>
 										</div>
@@ -718,7 +735,9 @@ const App: React.FC = () => {
 										boxShadow: `2px 2px 0px ${colors.shadow}`,
 									}}
 								>
-									<span>{newCardsCount} {t.newCards || 'new'}</span>
+									<span>
+										{newCardsCount} {t.newCards || 'new'}
+									</span>
 								</div>
 							)}
 						</div>
@@ -747,7 +766,9 @@ const App: React.FC = () => {
 								style={{ color: colors.textSecondary }}
 							>
 								<Terminal className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
-								<span className="line-clamp-2">{t.lastCardReminder || 'Navigate to the latest card to unlock your next move.'}</span>
+								<span className="line-clamp-2">
+									{t.lastCardReminder || 'Navigate to the latest card to unlock your next move.'}
+								</span>
 							</div>
 						</div>
 					)}
@@ -963,6 +984,7 @@ const App: React.FC = () => {
 				isOpen={showSettings}
 				onClose={() => setShowSettings(false)}
 				onOpenVoiceSettings={() => setShowVoiceSettings(true)}
+				onOpenNarrativeStyle={() => setShowNarrativeStyleModal(true)}
 				onDeleteDatabase={async () => {
 					await dbService.deleteAllGames();
 					// Clear local state after database deletion
@@ -974,6 +996,7 @@ const App: React.FC = () => {
 					window.location.reload();
 				}}
 				onDeleteApiKey={handleLogout}
+				canEditNarrativeStyle={!!activeStory}
 				t={t}
 			/>
 
@@ -983,6 +1006,16 @@ const App: React.FC = () => {
 				onClose={() => setShowThemeColors(false)}
 				onRegenerate={regenerateThemeColors}
 				isGenerating={isGeneratingColors}
+			/>
+
+			<NarrativeStyleModal
+				isOpen={showNarrativeStyleModal && !!activeStory}
+				onClose={() => setShowNarrativeStyleModal(false)}
+				currentMode={narrativeModeForModal}
+				currentStyle={narrativeStylePreset}
+				genre={narrativeGenre}
+				onSave={updateNarrativeStyle}
+				t={t}
 			/>
 
 			{/* Character Zoom Modal */}
