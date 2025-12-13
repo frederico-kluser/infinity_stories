@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { ThemeColors, DEFAULT_THEME_COLORS, DEFAULT_FONT_FAMILY } from '../types';
+import { ThemeColors, DEFAULT_THEME_COLORS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE } from '../types';
 import { getFontByFamily, buildFontFamily, DEFAULT_FONT } from '../constants/fonts';
 
 /**
@@ -27,6 +27,7 @@ export function mergeWithDefaults(colors: Partial<ThemeColors> | undefined | nul
     danger: colors.danger || DEFAULT_THEME_COLORS.danger,
     shadow: colors.shadow || DEFAULT_THEME_COLORS.shadow,
     fontFamily: colors.fontFamily || DEFAULT_THEME_COLORS.fontFamily,
+    fontSize: colors.fontSize ?? DEFAULT_THEME_COLORS.fontSize,
   };
 }
 
@@ -63,6 +64,8 @@ interface ThemeColorsContextValue {
   fontFamily: string;
   /** CSS font-family value with fallbacks (e.g., "'Orbitron', sans-serif") */
   fontFamilyCSS: string;
+  /** Current font size multiplier (1.0 = 100%) */
+  fontSize: number;
 }
 
 const ThemeColorsContext = createContext<ThemeColorsContextValue | undefined>(undefined);
@@ -84,6 +87,7 @@ function getFontFamilyCSSValue(fontFamilyName: string | undefined): string {
  */
 function colorsToCssVariables(colors: ThemeColors): React.CSSProperties {
   const fontFamilyCSS = getFontFamilyCSSValue(colors.fontFamily);
+  const fontSize = colors.fontSize ?? DEFAULT_FONT_SIZE;
 
   return {
     '--theme-bg': colors.background,
@@ -103,6 +107,7 @@ function colorsToCssVariables(colors: ThemeColors): React.CSSProperties {
     '--theme-danger': colors.danger,
     '--theme-shadow': colors.shadow,
     '--theme-font': fontFamilyCSS,
+    '--theme-font-size': `${fontSize}`,
   } as React.CSSProperties;
 }
 
@@ -113,7 +118,7 @@ const THEME_STYLE_ID = 'storywell-theme-font-override';
  * Injects or updates a style tag with !important font rules.
  * This ensures the font applies to ALL elements, overriding inline styles.
  */
-function injectFontStyleTag(fontFamilyCSS: string): void {
+function injectFontStyleTag(fontFamilyCSS: string, fontSize: number): void {
   let styleTag = document.getElementById(THEME_STYLE_ID) as HTMLStyleElement | null;
 
   if (!styleTag) {
@@ -122,9 +127,16 @@ function injectFontStyleTag(fontFamilyCSS: string): void {
     document.head.appendChild(styleTag);
   }
 
+  // Calculate font size in rem (1rem = 16px base, but we scale from there)
+  const fontSizeRem = fontSize;
+
   // Use high specificity and !important to override all inline styles
   styleTag.textContent = `
     /* Theme Font Override - Injected by useThemeColors */
+    html {
+      font-size: ${fontSizeRem * 100}% !important;
+    }
+
     html, body, #root, #root *,
     div, span, p, h1, h2, h3, h4, h5, h6,
     button, input, textarea, select, label,
@@ -135,6 +147,7 @@ function injectFontStyleTag(fontFamilyCSS: string): void {
     /* Ensure CSS variable is also updated */
     :root {
       --theme-font: ${fontFamilyCSS};
+      --theme-font-size: ${fontSize};
     }
 
     body {
@@ -155,6 +168,7 @@ function injectFontStyleTag(fontFamilyCSS: string): void {
 function applyColorsToRoot(colors: ThemeColors): void {
   const root = document.documentElement;
   const fontFamilyCSS = getFontFamilyCSSValue(colors.fontFamily);
+  const fontSize = colors.fontSize ?? DEFAULT_FONT_SIZE;
 
   // Set CSS custom properties for colors
   root.style.setProperty('--theme-bg', colors.background);
@@ -174,9 +188,10 @@ function applyColorsToRoot(colors: ThemeColors): void {
   root.style.setProperty('--theme-danger', colors.danger);
   root.style.setProperty('--theme-shadow', colors.shadow);
   root.style.setProperty('--theme-font', fontFamilyCSS);
+  root.style.setProperty('--theme-font-size', `${fontSize}`);
 
   // Inject font override style tag with !important
-  injectFontStyleTag(fontFamilyCSS);
+  injectFontStyleTag(fontFamilyCSS, fontSize);
 
   // Also update body background and text color for immediate visual effect
   document.body.style.backgroundColor = colors.background;
@@ -229,6 +244,7 @@ export const ThemeColorsProvider: React.FC<ThemeColorsProviderProps> = ({
   // Font values
   const fontFamily = colors.fontFamily || DEFAULT_FONT_FAMILY;
   const fontFamilyCSS = useMemo(() => getFontFamilyCSSValue(colors.fontFamily), [colors.fontFamily]);
+  const fontSize = colors.fontSize ?? DEFAULT_FONT_SIZE;
 
   const value = useMemo(() => ({
     colors,
@@ -240,7 +256,8 @@ export const ThemeColorsProvider: React.FC<ThemeColorsProviderProps> = ({
     getColor: getColorFromContext,
     fontFamily,
     fontFamilyCSS,
-  }), [colors, setColors, resetColors, isGenerating, cssVariables, getColorFromContext, fontFamily, fontFamilyCSS]);
+    fontSize,
+  }), [colors, setColors, resetColors, isGenerating, cssVariables, getColorFromContext, fontFamily, fontFamilyCSS, fontSize]);
 
   return (
     <ThemeColorsContext.Provider value={value}>

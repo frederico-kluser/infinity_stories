@@ -131,7 +131,11 @@ const App: React.FC = () => {
 		useTone,
 		setUseTone,
 		regenerateThemeColors,
+		regenerateColorsOnly,
+		regenerateFontOnly,
+		updateFontSize,
 		isGeneratingColors,
+		isGeneratingFont,
 		isGeneratingBackground,
 		backgroundLocationName,
 		creationPhase,
@@ -1004,8 +1008,13 @@ const App: React.FC = () => {
 			<ThemeColorsModal
 				isOpen={showThemeColors}
 				onClose={() => setShowThemeColors(false)}
-				onRegenerate={regenerateThemeColors}
-				isGenerating={isGeneratingColors}
+				onRegenerateColors={regenerateColorsOnly}
+				onRegenerateFont={regenerateFontOnly}
+				onFontSizeChange={updateFontSize}
+				isGeneratingColors={isGeneratingColors}
+				isGeneratingFont={isGeneratingFont}
+				apiKey={apiKey}
+				language={storyLanguage}
 			/>
 
 			<NarrativeStyleModal
