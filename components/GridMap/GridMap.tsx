@@ -101,14 +101,14 @@ const GridCell: React.FC<{
 
   // Determine cell styling based on content
   const isOccupied = charsAtPosition.length > 0;
-  const borderColor = isOccupied ? colors.borderStrong : colors.border;
+  const borderColor = isOccupied ? colors.borderStrong : `${colors.border}40`;
   const bgColor = hasPlayer
     ? blinkState
       ? colors.buttonPrimary
       : colors.backgroundAccent
     : isOccupied
     ? colors.backgroundSecondary
-    : colors.background;
+    : 'transparent';
 
   return (
     <div
@@ -381,16 +381,6 @@ export const GridMap: React.FC<GridMapProps> = ({
               backgroundPosition: 'center',
             }}
           >
-            {/* Background overlay for better grid visibility */}
-            {locationBackgroundImage && (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  backgroundColor: `${colors.background}CC`,
-                }}
-              />
-            )}
             {currentGrid ? (
               <div
                 style={{
@@ -403,8 +393,8 @@ export const GridMap: React.FC<GridMapProps> = ({
                   maxWidth: '100%',
                   maxHeight: '100%',
                   aspectRatio: gridSize > 0 ? undefined : '1',
-                  backgroundColor: colors.border,
-                  border: `2px solid ${colors.borderStrong}`,
+                  backgroundColor: 'transparent',
+                  border: `2px solid ${colors.borderStrong}40`,
                   borderRadius: '4px',
                   overflow: 'hidden',
                   position: 'relative',
