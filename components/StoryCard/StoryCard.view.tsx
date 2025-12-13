@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageType, ChatMessage, ThemeColors, Language, GridSnapshot } from '../../types';
-import { Terminal, Info, Play, Loader2, StopCircle, ChevronLeft, ChevronRight, Map } from 'lucide-react';
+import { Terminal, Info, Play, Loader2, StopCircle, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Map } from 'lucide-react';
 import { generateSpeech } from '../../services/ai/openaiClient';
 import { playMP3Audio, TTSVoice } from '../../utils/ai';
 import { GridMap } from '../GridMap';
@@ -81,10 +81,82 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 	// State for Grid Map flip
 	const [isMapFlipped, setIsMapFlipped] = useState(false);
 
+	// Manual scroll controls
+	const textContainerRef = useRef<HTMLDivElement>(null);
+	const textContentRef = useRef<HTMLDivElement>(null);
+	const [scrollOffset, setScrollOffset] = useState(0);
+	const [scrollMetrics, setScrollMetrics] = useState({ maxOffset: 0, hasOverflow: false });
+
 	// Reset flip state when navigating to a different card
 	useEffect(() => {
 		setIsMapFlipped(false);
 	}, [currentIndex]);
+
+	const SCROLL_STEP = 140;
+
+	useEffect(() => {
+		setScrollOffset(0);
+	}, [message.id]);
+
+	const updateScrollMetrics = useCallback(() => {
+		const container = textContainerRef.current;
+		const content = textContentRef.current;
+		if (!container || !content) return;
+
+		const maxOffset = Math.max(0, content.scrollHeight - container.clientHeight);
+		setScrollMetrics((prev) => {
+			const hasOverflow = maxOffset > 0;
+			if (prev.maxOffset === maxOffset && prev.hasOverflow === hasOverflow) {
+				return prev;
+			}
+			return { maxOffset, hasOverflow };
+		});
+		setScrollOffset((prev) => Math.min(prev, maxOffset));
+	}, []);
+
+	useEffect(() => {
+		updateScrollMetrics();
+	}, [displayedText, updateScrollMetrics]);
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		if ('ResizeObserver' in window) {
+			const observer = new ResizeObserver(() => updateScrollMetrics());
+			if (textContainerRef.current) observer.observe(textContainerRef.current);
+			if (textContentRef.current) observer.observe(textContentRef.current);
+
+			return () => observer.disconnect();
+		}
+
+		window.addEventListener('resize', updateScrollMetrics);
+		return () => window.removeEventListener('resize', updateScrollMetrics);
+	}, [updateScrollMetrics]);
+
+	const scrollBy = useCallback(
+		(delta: number) => {
+			setScrollOffset((prev) => {
+				const next = Math.max(0, Math.min(prev + delta, scrollMetrics.maxOffset));
+				return next === prev ? prev : next;
+			});
+		},
+		[scrollMetrics.maxOffset],
+	);
+
+	const handleScrollUp = useCallback(() => scrollBy(-SCROLL_STEP), [scrollBy]);
+	const handleScrollDown = useCallback(() => scrollBy(SCROLL_STEP), [scrollBy]);
+
+	const handleWheelScroll = useCallback(
+		(event: React.WheelEvent<HTMLDivElement>) => {
+			if (!scrollMetrics.hasOverflow) return;
+			event.preventDefault();
+			scrollBy(event.deltaY);
+		},
+		[scrollBy, scrollMetrics.hasOverflow],
+	);
+
+	const canScrollUp = scrollOffset > 0;
+	const canScrollDown = scrollOffset < scrollMetrics.maxOffset;
 
 	// Check if grid map is available
 	const hasGridData = gridSnapshots && gridSnapshots.length > 0;
@@ -376,35 +448,78 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 							</div>
 
 							{/* Message Text - Book Typography */}
-							<div className="flex-1 overflow-y-auto">
-								<div
-									className={`leading-relaxed whitespace-pre-wrap font-serif ${
-										isNarrator ? 'text-lg md:text-2xl italic text-center' : 'text-base md:text-xl'
-									}`}
-									style={{ color: colors.text }}
+					<div
+						className="flex-1 relative overflow-hidden min-h-0"
+						ref={textContainerRef}
+						onWheel={handleWheelScroll}
+					>
+						<div
+							ref={textContentRef}
+							className={`leading-relaxed whitespace-pre-wrap font-serif pr-4 md:pr-8 ${
+								isNarrator ? 'text-lg md:text-2xl italic text-center' : 'text-base md:text-xl'
+							}`}
+							style={{
+								color: colors.text,
+								transform: `translateY(-${scrollOffset}px)`,
+								transition: 'transform 120ms ease-out',
+							}}
+						>
+							{isNarrator && (
+								<span
+									className="text-3xl md:text-4xl leading-none align-text-top mr-2"
+									style={{ color: colors.textSecondary }}
 								>
-									{isNarrator && (
-										<span
-											className="text-3xl md:text-4xl leading-none align-text-top mr-2"
-											style={{ color: colors.textSecondary }}
-										>
-											&ldquo;
-										</span>
-									)}
-									{displayedText}
-									{isTyping && <span className="animate-pulse ml-0.5">|</span>}
-									{isNarrator && !isTyping && (
-										<span
-											className="text-3xl md:text-4xl leading-none align-text-bottom ml-2"
-											style={{ color: colors.textSecondary }}
-										>
-											&rdquo;
-										</span>
-									)}
-								</div>
-							</div>
+									&ldquo;
+								</span>
+							)}
+							{displayedText}
+							{isTyping && <span className="animate-pulse ml-0.5">|</span>}
+							{isNarrator && !isTyping && (
+								<span
+									className="text-3xl md:text-4xl leading-none align-text-bottom ml-2"
+									style={{ color: colors.textSecondary }}
+								>
+									&rdquo;
+								</span>
+							)}
+						</div>
 
-							{/* Footer - Page Number & Navigation Hint */}
+						{scrollMetrics.hasOverflow && (
+							<div className="absolute top-2 right-2 flex flex-col gap-2">
+								<button
+									type="button"
+									onClick={handleScrollUp}
+									disabled={!canScrollUp}
+									className="p-1 rounded-sm border"
+									style={{
+										backgroundColor: colors.backgroundSecondary,
+										color: colors.text,
+										borderColor: colors.border,
+										opacity: canScrollUp ? 1 : 0.4,
+									}}
+									aria-label="Scroll up"
+								>
+									<ChevronUp className="w-4 h-4" />
+								</button>
+								<button
+									type="button"
+									onClick={handleScrollDown}
+									disabled={!canScrollDown}
+									className="p-1 rounded-sm border"
+									style={{
+										backgroundColor: colors.backgroundSecondary,
+										color: colors.text,
+										borderColor: colors.border,
+										opacity: canScrollDown ? 1 : 0.4,
+									}}
+									aria-label="Scroll down"
+								>
+									<ChevronDown className="w-4 h-4" />
+								</button>
+							</div>
+						)}
+					</div>
+					{/* Footer - Page Number & Navigation Hint */}
 							<div
 								className="mt-4 md:mt-6 pt-4 flex items-center justify-between"
 								style={{ borderTop: `1px solid ${colors.border}` }}
