@@ -287,3 +287,15 @@ export {
   type GridUpdatePromptParams,
   type GridUpdateResponse,
 } from './gridUpdate.prompt';
+
+// =============================================================================
+// NARRATIVE STYLE EVALUATION PROMPT
+// =============================================================================
+
+export {
+  buildNarrativeStyleEvaluationPrompt,
+  narrativeStyleEvaluationSchema,
+  type NarrativeStyleEvaluationParams,
+  type NarrativeStyleEvaluationResponse,
+  type NarrativeStyleHistoryItem,
+} from './narrativeStyleEvaluation.prompt';

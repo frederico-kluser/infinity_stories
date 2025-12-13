@@ -36,11 +36,13 @@ import {
 	buildThemeColorsPrompt,
 	buildLocationBackgroundPrompt,
 	buildGridUpdatePrompt,
+	buildNarrativeStyleEvaluationPrompt,
 	themeColorsSchema,
 	customActionAnalysisSchema,
 	onboardingSchema,
 	heavyContextSchema,
 	gridUpdateSchema,
+	narrativeStyleEvaluationSchema,
 } from './prompts';
 import { getRecentMessagesForPrompt } from './prompts/helpers';
 import type { TextClassificationResponse, CustomActionAnalysisResponse } from './prompts';
@@ -1674,6 +1676,66 @@ export const processOnboardingStep = async (
 		return JSON.parse(cleanJsonString(response.text!));
 	} catch (error) {
 		console.error('Onboarding Error:', error);
+		throw error;
+	}
+};
+
+/**
+ * Evaluates and refines a player's narrative style description.
+ * Identifies missing elements and generates clarifying questions with options.
+ *
+ * @param apiKey - OpenAI API Key.
+ * @param initialDescription - The player's initial style description.
+ * @param history - Previous Q&A for refinement.
+ * @param language - Language for questions.
+ * @returns Evaluation result with next question or final style.
+ */
+export const processNarrativeStyleStep = async (
+	apiKey: string,
+	initialDescription: string,
+	history: { question: string; answer: string }[],
+	language: Language,
+): Promise<{
+	isComplete: boolean;
+	question?: string;
+	options?: string[];
+	finalStyle?: string;
+}> => {
+	const prompt = buildNarrativeStyleEvaluationPrompt({
+		initialDescription,
+		history,
+		language,
+	});
+
+	const schemaStr = JSON.stringify(narrativeStyleEvaluationSchema, null, 2);
+
+	const messages: LLMMessage[] = [
+		{
+			role: 'system',
+			content: `You are a narrative style consultant. Always respond with valid JSON following this schema:\n${schemaStr}`,
+		},
+		{
+			role: 'user',
+			content: prompt,
+		},
+	];
+
+	try {
+		const response = await queryLLM(apiKey, messages, {
+			model: MODEL_CONFIG.onboarding, // gpt-4.1-mini - similar complexity to onboarding
+			responseFormat: 'json',
+		});
+
+		const result = JSON.parse(cleanJsonString(response.text!));
+
+		return {
+			isComplete: result.isComplete,
+			question: result.question,
+			options: result.options,
+			finalStyle: result.finalStyle,
+		};
+	} catch (error) {
+		console.error('Narrative Style Evaluation Error:', error);
 		throw error;
 	}
 };

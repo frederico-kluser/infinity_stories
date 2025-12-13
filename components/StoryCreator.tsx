@@ -12,11 +12,12 @@ import {
 	Edit3,
 	ArrowLeft,
 	Info,
+	Palette,
 } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../i18n/locales';
 import { VoiceInput } from './VoiceInput';
-import { processOnboardingStep } from '../services/ai/openaiClient';
+import { processOnboardingStep, processNarrativeStyleStep } from '../services/ai/openaiClient';
 
 interface StoryCreatorProps {
 	onCreate: (config: any) => Promise<void>;
@@ -50,6 +51,19 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 	const [narrativeStyleMode, setNarrativeStyleMode] = useState<'auto' | 'custom'>('auto');
 	const [customNarrativeStyle, setCustomNarrativeStyle] = useState('');
 
+	// State for narrative style refinement flow
+	const [narrativeStyleHistory, setNarrativeStyleHistory] = useState<{ question: string; answer: string }[]>([]);
+	const [narrativeStyleStep, setNarrativeStyleStep] = useState<{
+		question?: string;
+		options?: string[];
+		isComplete: boolean;
+		finalStyle?: string;
+	} | null>(null);
+	const [isNarrativeStyleRefining, setIsNarrativeStyleRefining] = useState(false);
+	const [narrativeStyleInputValue, setNarrativeStyleInputValue] = useState('');
+	const [isNarrativeStyleCustomInput, setIsNarrativeStyleCustomInput] = useState(false);
+	const [narrativeStyleLoading, setNarrativeStyleLoading] = useState(false);
+
 	const prepChecklist = [
 		{ title: t.wizTheme, helper: t.wizThemePlace },
 		{ title: `${t.wizChar} // ${t.wizCharName}`, helper: t.wizCharDesc },
@@ -65,7 +79,18 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 		if (messagesEndRef.current) {
 			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
 		}
-	}, [history, currentStep, isLoading]);
+	}, [history, currentStep, isLoading, narrativeStyleHistory, narrativeStyleStep, narrativeStyleLoading]);
+
+	// Reset narrative style refinement when switching modes
+	useEffect(() => {
+		if (narrativeStyleMode === 'auto') {
+			setIsNarrativeStyleRefining(false);
+			setNarrativeStyleStep(null);
+			setNarrativeStyleHistory([]);
+			setNarrativeStyleInputValue('');
+			setIsNarrativeStyleCustomInput(false);
+		}
+	}, [narrativeStyleMode]);
 
 	// Initial Step: Trigger AI or Manual Input based on selection
 	const handleStart = async (type: 'original' | 'existing') => {
@@ -110,6 +135,94 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 				setIsLoading(false);
 			}
 		}
+	};
+
+	// Start the narrative style refinement process
+	const handleStartNarrativeStyleRefinement = async () => {
+		const trimmed = customNarrativeStyle.trim();
+		if (!trimmed) return;
+
+		setNarrativeStyleLoading(true);
+		setIsNarrativeStyleRefining(true);
+
+		try {
+			const result = await processNarrativeStyleStep(apiKey, trimmed, [], language);
+
+			if (result.isComplete) {
+				// Style is already complete, use the final style
+				setNarrativeStyleStep({
+					isComplete: true,
+					finalStyle: result.finalStyle || trimmed,
+				});
+			} else {
+				// Need to ask refinement questions
+				setNarrativeStyleStep({
+					isComplete: false,
+					question: result.question,
+					options: result.options,
+				});
+			}
+		} catch (e) {
+			console.error('Narrative style evaluation error:', e);
+			// On error, just accept the style as-is
+			setNarrativeStyleStep({
+				isComplete: true,
+				finalStyle: trimmed,
+			});
+		} finally {
+			setNarrativeStyleLoading(false);
+		}
+	};
+
+	// Handle answer to narrative style refinement question
+	const handleNarrativeStyleAnswer = async (answer: string) => {
+		if (!narrativeStyleStep || narrativeStyleStep.isComplete) return;
+
+		const questionAsked = narrativeStyleStep.question || '';
+		const previousStep = narrativeStyleStep;
+
+		setNarrativeStyleStep(null);
+		setNarrativeStyleInputValue('');
+		setIsNarrativeStyleCustomInput(false);
+		setNarrativeStyleLoading(true);
+
+		const newHistory = [...narrativeStyleHistory, { question: questionAsked, answer }];
+		setNarrativeStyleHistory(newHistory);
+
+		try {
+			const result = await processNarrativeStyleStep(apiKey, customNarrativeStyle.trim(), newHistory, language);
+
+			if (result.isComplete) {
+				setNarrativeStyleStep({
+					isComplete: true,
+					finalStyle: result.finalStyle,
+				});
+			} else {
+				setNarrativeStyleStep({
+					isComplete: false,
+					question: result.question,
+					options: result.options,
+				});
+			}
+		} catch (e) {
+			console.error('Narrative style refinement error:', e);
+			// On error, restore and complete with what we have
+			setNarrativeStyleStep({
+				isComplete: true,
+				finalStyle: customNarrativeStyle.trim(),
+			});
+		} finally {
+			setNarrativeStyleLoading(false);
+		}
+	};
+
+	// Reset narrative style refinement
+	const handleResetNarrativeStyle = () => {
+		setIsNarrativeStyleRefining(false);
+		setNarrativeStyleStep(null);
+		setNarrativeStyleHistory([]);
+		setNarrativeStyleInputValue('');
+		setIsNarrativeStyleCustomInput(false);
 	};
 
 	const handleAnswer = async (answer: string) => {
@@ -160,6 +273,19 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 			return;
 		}
 
+		// Check if we need to refine the narrative style first
+		if (narrativeStyleMode === 'custom' && !isNarrativeStyleRefining && !narrativeStyleStep?.isComplete) {
+			// Start the refinement process instead of submitting
+			handleStartNarrativeStyleRefinement();
+			return;
+		}
+
+		// Use the refined style if available, otherwise use the raw input
+		const finalNarrativeStyle =
+			narrativeStyleMode === 'custom'
+				? narrativeStyleStep?.finalStyle || trimmedStyle
+				: undefined;
+
 		// Merge AI config with defaults
 		const fullConfig = {
 			...currentStep.finalConfig,
@@ -167,7 +293,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 			combatStyle: 'descriptive',
 			dialogueHeavy: true,
 			narrativeStyleMode,
-			customNarrativeStyle: narrativeStyleMode === 'custom' ? trimmedStyle : undefined,
+			customNarrativeStyle: finalNarrativeStyle,
 			customNarrativeStyleRaw: narrativeStyleMode === 'custom' ? trimmedStyle : undefined,
 		};
 		onCreate(fullConfig);
@@ -226,21 +352,197 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 							</div>
 							{narrativeStyleMode === 'custom' && (
 								<div className="mt-4 space-y-3">
-									<div className="flex gap-3 border border-dashed border-stone-300 bg-stone-50 p-3">
-										<Info className="w-4 h-4 text-stone-500 mt-0.5" />
-										<div>
-											<p className="text-[11px] font-bold uppercase tracking-wide text-stone-500">
-												{t.narrativeStyleInfoTitle}
-											</p>
-											<p className="text-[11px] text-stone-600 leading-snug">{t.narrativeStyleInfoBody}</p>
+									{/* Initial description input (only shown before refinement starts) */}
+									{!isNarrativeStyleRefining && (
+										<>
+											<div className="flex gap-3 border border-dashed border-stone-300 bg-stone-50 p-3">
+												<Info className="w-4 h-4 text-stone-500 mt-0.5" />
+												<div>
+													<p className="text-[11px] font-bold uppercase tracking-wide text-stone-500">
+														{t.narrativeStyleInfoTitle}
+													</p>
+													<p className="text-[11px] text-stone-600 leading-snug">{t.narrativeStyleInfoBody}</p>
+												</div>
+											</div>
+											<div className="relative">
+												<textarea
+													value={customNarrativeStyle}
+													onChange={(e) => setCustomNarrativeStyle(e.target.value)}
+													className="w-full bg-stone-50 border-2 border-stone-400 p-3 pr-12 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[120px]"
+													placeholder={t.narrativeStylePlaceholder}
+												></textarea>
+												<div className="absolute right-3 top-3">
+													<VoiceInput
+														apiKey={apiKey}
+														language={language}
+														onTranscription={(text) => setCustomNarrativeStyle(prev => prev ? `${prev} ${text}` : text)}
+														className="text-stone-400 hover:text-stone-900"
+													/>
+												</div>
+											</div>
+										</>
+									)}
+
+									{/* Narrative style refinement flow */}
+									{isNarrativeStyleRefining && (
+										<div className="border-2 border-amber-500 bg-amber-50 p-4 space-y-4">
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-2 text-amber-800">
+													<Palette className="w-5 h-5" />
+													<span className="font-bold uppercase text-sm">
+														{t.narrativeStyleRefiningTitle || 'Refining Your Style'}
+													</span>
+												</div>
+												<button
+													onClick={handleResetNarrativeStyle}
+													className="text-xs text-amber-600 hover:text-amber-800 font-bold uppercase"
+												>
+													{t.reset || 'Reset'}
+												</button>
+											</div>
+
+											{/* Original description */}
+											<div className="bg-white border border-amber-200 p-3 text-sm text-stone-600">
+												<span className="text-[10px] font-bold uppercase text-stone-400 block mb-1">
+													{t.narrativeStyleYourDescription || 'Your description'}
+												</span>
+												{customNarrativeStyle}
+											</div>
+
+											{/* Refinement history */}
+											{narrativeStyleHistory.map((item, idx) => (
+												<div key={idx} className="space-y-2">
+													<div className="flex gap-2">
+														<div className="w-6 h-6 bg-amber-200 border border-amber-400 flex items-center justify-center flex-shrink-0">
+															<MessageSquare className="w-3 h-3 text-amber-700" />
+														</div>
+														<div className="bg-white border border-amber-200 p-2 text-sm text-stone-700 flex-1">
+															{item.question}
+														</div>
+													</div>
+													<div className="flex gap-2 justify-end">
+														<div className="bg-amber-800 text-white p-2 text-sm font-bold">
+															{item.answer}
+														</div>
+													</div>
+												</div>
+											))}
+
+											{/* Current refinement question */}
+											{narrativeStyleStep && !narrativeStyleStep.isComplete && (
+												<div className="flex gap-2">
+													<div className="w-6 h-6 bg-amber-800 border border-amber-900 flex items-center justify-center flex-shrink-0 text-white">
+														<Sparkles className="w-3 h-3" />
+													</div>
+													<div className="bg-white border-2 border-amber-800 p-3 text-stone-900 font-bold flex-1">
+														{narrativeStyleStep.question}
+													</div>
+												</div>
+											)}
+
+											{/* Loading state */}
+											{narrativeStyleLoading && (
+												<div className="flex gap-2 animate-pulse">
+													<div className="w-6 h-6 bg-amber-200 border border-amber-400 flex items-center justify-center flex-shrink-0">
+														<Loader2 className="w-3 h-3 animate-spin text-amber-600" />
+													</div>
+													<div className="text-amber-600 italic text-sm py-1">
+														{t.narrativeStyleAnalyzing || 'Analyzing your style...'}
+													</div>
+												</div>
+											)}
+
+											{/* Refinement complete */}
+											{narrativeStyleStep?.isComplete && (
+												<div className="bg-green-100 border-2 border-green-600 p-4">
+													<div className="flex items-center gap-2 text-green-800 mb-2">
+														<Check className="w-5 h-5" />
+														<span className="font-bold uppercase text-sm">
+															{t.narrativeStyleComplete || 'Style Defined'}
+														</span>
+													</div>
+													<div className="bg-white border border-green-200 p-3 text-xs text-stone-600 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+														{narrativeStyleStep.finalStyle}
+													</div>
+												</div>
+											)}
+
+											{/* Options for current question */}
+											{narrativeStyleStep && !narrativeStyleStep.isComplete && narrativeStyleStep.options && !narrativeStyleLoading && (
+												<div className="space-y-2">
+													{!isNarrativeStyleCustomInput ? (
+														<div className="grid grid-cols-1 gap-2">
+															{narrativeStyleStep.options.map((opt) => (
+																<button
+																	key={opt}
+																	onClick={() => handleNarrativeStyleAnswer(opt)}
+																	disabled={narrativeStyleLoading}
+																	className="p-2 border-2 border-amber-300 bg-white hover:border-amber-800 hover:bg-amber-50 text-left font-bold text-sm transition-all"
+																>
+																	{opt}
+																</button>
+															))}
+															<button
+																onClick={() => setIsNarrativeStyleCustomInput(true)}
+																disabled={narrativeStyleLoading}
+																className="p-2 border-2 border-dashed border-amber-400 bg-amber-50 hover:border-amber-800 text-left font-bold text-sm flex items-center gap-2 text-amber-700"
+															>
+																<Edit3 className="w-4 h-4" />
+																{t.otherOption}
+															</button>
+														</div>
+													) : (
+														<div className="space-y-2">
+															<button
+																onClick={() => {
+																	setIsNarrativeStyleCustomInput(false);
+																	setNarrativeStyleInputValue('');
+																}}
+																className="flex items-center gap-2 text-amber-600 hover:text-amber-800 text-xs font-bold uppercase"
+															>
+																<ArrowLeft className="w-3 h-3" />
+																{t.backToOptions}
+															</button>
+															<div className="flex gap-2">
+																<div className="relative flex-1">
+																	<textarea
+																		rows={2}
+																		value={narrativeStyleInputValue}
+																		onChange={(e) => setNarrativeStyleInputValue(e.target.value)}
+																		onKeyDown={(e) => {
+																			if (e.key === 'Enter' && !e.shiftKey && narrativeStyleInputValue.trim()) {
+																				e.preventDefault();
+																				handleNarrativeStyleAnswer(narrativeStyleInputValue);
+																			}
+																		}}
+																		className="w-full bg-white border-2 border-amber-400 p-2 pr-10 text-sm text-stone-900 focus:border-amber-800 outline-none"
+																		placeholder={t.typeYourAnswer}
+																		disabled={narrativeStyleLoading}
+																		autoFocus
+																	/>
+																	<div className="absolute right-2 top-2">
+																		<VoiceInput
+																			apiKey={apiKey}
+																			language={language}
+																			onTranscription={(text) => setNarrativeStyleInputValue(text)}
+																			className="text-amber-400 hover:text-amber-800"
+																		/>
+																	</div>
+																</div>
+																<button
+																	onClick={() => handleNarrativeStyleAnswer(narrativeStyleInputValue)}
+																	disabled={!narrativeStyleInputValue.trim() || narrativeStyleLoading}
+																	className="bg-amber-800 text-white px-4 font-bold uppercase disabled:opacity-50 hover:bg-amber-700 transition-colors"
+																>
+																	<ArrowRight className="w-4 h-4" />
+																</button>
+															</div>
+														</div>
+													)}
+												</div>
+											)}
 										</div>
-									</div>
-									<textarea
-										value={customNarrativeStyle}
-										onChange={(e) => setCustomNarrativeStyle(e.target.value)}
-										className="w-full bg-stone-50 border-2 border-stone-400 p-3 text-sm text-stone-900 focus:border-stone-900 outline-none min-h-[120px]"
-										placeholder={t.narrativeStylePlaceholder}
-									></textarea>
+									)}
 								</div>
 							)}
 						</div>
@@ -349,15 +651,50 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({ onCreate, isCreating
 							{currentStep?.isComplete && (
 								<div className="bg-green-100 border-2 border-green-800 p-6 text-center animate-fade-in mb-4">
 									<Check className="w-12 h-12 text-green-800 mx-auto mb-2" />
-									<h3 className="font-bold text-green-900 text-xl uppercase">Configuration Complete</h3>
-									<p className="text-green-800 text-sm mb-4">The world has been generated successfully.</p>
+									<h3 className="font-bold text-green-900 text-xl uppercase">
+										{t.configComplete || 'Configuration Complete'}
+									</h3>
+									<p className="text-green-800 text-sm mb-4">
+										{t.worldGenerated || 'The world has been generated successfully.'}
+									</p>
+
+									{/* Show message if custom style needs refinement */}
+									{narrativeStyleMode === 'custom' &&
+										customNarrativeStyle.trim() &&
+										!isNarrativeStyleRefining &&
+										!narrativeStyleStep?.isComplete && (
+											<p className="text-amber-700 text-xs mb-4 font-bold">
+												{t.narrativeStyleWillBeRefined || 'Your narrative style will be refined before starting.'}
+											</p>
+										)}
+
+									{/* Show message if custom style is being refined */}
+									{narrativeStyleMode === 'custom' &&
+										isNarrativeStyleRefining &&
+										!narrativeStyleStep?.isComplete && (
+											<p className="text-amber-700 text-xs mb-4 font-bold">
+												{t.narrativeStyleCompleteFirst || 'Complete the narrative style refinement above first.'}
+											</p>
+										)}
+
 									<button
 										onClick={handleFinalSubmit}
-										disabled={isCreating}
-										className="w-full py-4 bg-green-800 text-white font-bold uppercase tracking-widest hover:bg-green-900 transition-colors flex items-center justify-center gap-2"
+										disabled={
+											isCreating ||
+											narrativeStyleLoading ||
+											(narrativeStyleMode === 'custom' &&
+												isNarrativeStyleRefining &&
+												!narrativeStyleStep?.isComplete)
+										}
+										className="w-full py-4 bg-green-800 text-white font-bold uppercase tracking-widest hover:bg-green-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 									>
-										{isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
-										{t.startJourney}
+										{(isCreating || narrativeStyleLoading) && <Loader2 className="w-4 h-4 animate-spin" />}
+										{narrativeStyleMode === 'custom' &&
+										!isNarrativeStyleRefining &&
+										!narrativeStyleStep?.isComplete &&
+										customNarrativeStyle.trim()
+											? t.narrativeStyleRefineAndStart || 'Refine Style & Start'
+											: t.startJourney}
 									</button>
 								</div>
 							)}
