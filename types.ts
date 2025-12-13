@@ -428,6 +428,13 @@ export interface ThemeColors {
 	 * Example: "VT323", "Press Start 2P", "Orbitron"
 	 */
 	fontFamily?: string;
+
+	/**
+	 * Font size multiplier for the theme.
+	 * 1.0 is the default size. Range: 0.5 - 2.0
+	 * Stored per-game, not globally.
+	 */
+	fontSize?: number;
 }
 
 /**
@@ -458,12 +465,18 @@ export const DEFAULT_THEME_COLORS: ThemeColors = {
 	shadow: '#1c1917', // stone-900
 
 	fontFamily: 'VT323', // Default retro terminal font
+	fontSize: 1.0, // Default font size multiplier
 };
 
 /**
  * Default font family (VT323 - retro terminal style)
  */
 export const DEFAULT_FONT_FAMILY = 'VT323';
+
+/**
+ * Default font size multiplier (1.0 = 100%)
+ */
+export const DEFAULT_FONT_SIZE = 1.0;
 
 // ============================================================================
 // GRID MAP SYSTEM

@@ -206,6 +206,14 @@ export {
   themeColorsSchema,
   type ThemeColorsPromptParams,
   type ThemeColorsResponse,
+  // Colors only (without font)
+  buildColorsOnlyPrompt,
+  colorsOnlySchema,
+  type ColorsOnlyPromptParams,
+  // Font only (without colors)
+  buildFontOnlyPrompt,
+  fontOnlySchema,
+  type FontOnlyPromptParams,
 } from './themeColors.prompt';
 
 // =============================================================================

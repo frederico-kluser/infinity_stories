@@ -24,6 +24,8 @@ import {
 	classifyAndProcessPlayerInput,
 	StoryInitializationResult,
 	generateThemeColors,
+	generateColorsOnly,
+	generateFontOnly,
 	generateLocationBackground,
 	updateGridPositions,
 	createInitialGridSnapshot,
@@ -95,9 +97,13 @@ interface UseGameEngineReturn {
 	useTone: boolean;
 	setUseTone: (useTone: boolean) => void;
 
-	// Theme Colors
+	// Theme Colors (separated controls)
 	regenerateThemeColors: (userConsiderations?: string) => Promise<void>;
+	regenerateColorsOnly: (userConsiderations?: string) => Promise<void>;
+	regenerateFontOnly: (userConsiderations?: string) => Promise<void>;
+	updateFontSize: (delta: number) => void;
 	isGeneratingColors: boolean;
+	isGeneratingFont: boolean;
 
 	// Location Background
 	isGeneratingBackground: boolean;
@@ -211,6 +217,7 @@ export const useGameEngine = (): UseGameEngineReturn => {
 
 	// Theme Colors
 	const { setColors, setIsGenerating: setIsGeneratingColors, isGenerating: isGeneratingColors } = useThemeColors();
+	const [isGeneratingFont, setIsGeneratingFont] = useState(false);
 
 	// Location Background
 	const [isGeneratingBackground, setIsGeneratingBackground] = useState(false);
@@ -801,6 +808,137 @@ export const useGameEngine = (): UseGameEngineReturn => {
 		}
 	};
 
+	/**
+	 * Regenerates ONLY the color palette, keeping the current font.
+	 */
+	const regenerateColorsOnly = async (userConsiderations?: string) => {
+		if (!apiKey || !currentStoryId) return;
+
+		const activeStory = stories.find((s) => s.id === currentStoryId);
+		if (!activeStory) return;
+
+		setIsGeneratingColors(true);
+
+		try {
+			const newColors = await generateColorsOnly(apiKey, {
+				universeName: activeStory.config.universeName,
+				universeType: activeStory.config.universeType,
+				genre: activeStory.config.genre,
+				visualStyle: activeStory.config.visualStyle,
+				userConsiderations,
+				language: activeStory.config.language || language,
+			});
+
+			if (Object.keys(newColors).length > 0) {
+				// Merge new colors with existing theme (preserve font settings)
+				const currentTheme = activeStory.themeColors || DEFAULT_THEME_COLORS;
+				const mergedTheme: ThemeColors = {
+					...currentTheme,
+					...newColors,
+					// Preserve font settings
+					fontFamily: currentTheme.fontFamily,
+					fontSize: currentTheme.fontSize,
+				};
+
+				// Apply the new colors immediately
+				setColors(mergedTheme);
+
+				// Update the story state with new colors
+				safeUpdateStory((s) => ({
+					...s,
+					themeColors: mergedTheme,
+				}));
+
+				console.log('[Colors Only] Regenerated colors successfully');
+			}
+		} catch (e: any) {
+			console.error('Colors regeneration failed:', e);
+		} finally {
+			setIsGeneratingColors(false);
+		}
+	};
+
+	/**
+	 * Regenerates ONLY the font, keeping the current colors.
+	 */
+	const regenerateFontOnly = async (userConsiderations?: string) => {
+		if (!apiKey || !currentStoryId) return;
+
+		const activeStory = stories.find((s) => s.id === currentStoryId);
+		if (!activeStory) return;
+
+		setIsGeneratingFont(true);
+
+		try {
+			const newFont = await generateFontOnly(apiKey, {
+				universeName: activeStory.config.universeName,
+				universeType: activeStory.config.universeType,
+				genre: activeStory.config.genre,
+				visualStyle: activeStory.config.visualStyle,
+				userConsiderations,
+				language: activeStory.config.language || language,
+			});
+
+			if (newFont) {
+				// Update the font while keeping colors
+				const currentTheme = activeStory.themeColors || DEFAULT_THEME_COLORS;
+				const mergedTheme: ThemeColors = {
+					...currentTheme,
+					fontFamily: newFont,
+				};
+
+				// Apply the new font immediately
+				setColors(mergedTheme);
+
+				// Update the story state with new font
+				safeUpdateStory((s) => ({
+					...s,
+					themeColors: mergedTheme,
+				}));
+
+				console.log('[Font Only] Changed font to:', newFont);
+			}
+		} catch (e: any) {
+			console.error('Font regeneration failed:', e);
+		} finally {
+			setIsGeneratingFont(false);
+		}
+	};
+
+	/**
+	 * Updates the font size multiplier by a delta amount.
+	 * @param delta - The change to apply (positive to increase, negative to decrease)
+	 */
+	const updateFontSize = (delta: number) => {
+		if (!currentStoryId) return;
+
+		const activeStory = stories.find((s) => s.id === currentStoryId);
+		if (!activeStory) return;
+
+		const currentTheme = activeStory.themeColors || DEFAULT_THEME_COLORS;
+		const currentSize = currentTheme.fontSize ?? 1.0;
+		const newSize = Math.max(0.7, Math.min(1.5, currentSize + delta));
+
+		// Round to 1 decimal place to avoid floating point issues
+		const roundedSize = Math.round(newSize * 10) / 10;
+
+		const mergedTheme: ThemeColors = {
+			...currentTheme,
+			fontSize: roundedSize,
+		};
+
+		// Apply immediately
+		setColors(mergedTheme);
+
+		// Save to story state
+		safeUpdateStory((s) => ({
+			...s,
+			themeColors: mergedTheme,
+		}));
+
+		console.log('[Font Size] Updated to:', roundedSize);
+	};
+
 	const prefetchActionOptions = async (story: GameState) => {
 		if (!apiKey || !story.messages.length) return;
 		const lastMessage = story.messages[story.messages.length - 1];
@@ -1344,9 +1482,13 @@ export const useGameEngine = (): UseGameEngineReturn => {
 		setSelectedVoice,
 		useTone,
 		setUseTone,
-		// Theme Colors
+		// Theme Colors (separated controls)
 		regenerateThemeColors,
+		regenerateColorsOnly,
+		regenerateFontOnly,
+		updateFontSize,
 		isGeneratingColors,
+		isGeneratingFont,
 		// Location Background
 		isGeneratingBackground,
 		backgroundLocationName,

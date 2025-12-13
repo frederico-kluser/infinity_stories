@@ -34,9 +34,13 @@ import {
 	buildUniverseContextPrompt,
 	buildCustomActionAnalysisPrompt,
 	buildThemeColorsPrompt,
+	buildColorsOnlyPrompt,
+	buildFontOnlyPrompt,
 	buildLocationBackgroundPrompt,
 	buildGridUpdatePrompt,
 	themeColorsSchema,
+	colorsOnlySchema,
+	fontOnlySchema,
 	customActionAnalysisSchema,
 	onboardingSchema,
 	heavyContextSchema,
@@ -1132,6 +1136,151 @@ export const generateThemeColors = async (apiKey: string, params: GenerateThemeC
 	} catch (error) {
 		console.error('[Theme] Generation failed:', error);
 		return DEFAULT_THEME_COLORS;
+	}
+};
+
+/**
+ * Generates ONLY the color palette (without changing the font).
+ * Use this when you want to regenerate colors independently of font.
+ */
+export const generateColorsOnly = async (
+	apiKey: string,
+	params: GenerateThemeColorsParams,
+): Promise<Partial<ThemeColors>> => {
+	const prompt = buildColorsOnlyPrompt({
+		universeName: params.universeName,
+		universeType: params.universeType,
+		genre: params.genre,
+		visualStyle: params.visualStyle,
+		userConsiderations: params.userConsiderations,
+		language: params.language,
+	});
+
+	const schemaInstruction = `\n\nYou MUST respond with a valid JSON object following this exact schema:\n${JSON.stringify(
+		colorsOnlySchema,
+		null,
+		2,
+	)}`;
+
+	const messages: LLMMessage[] = [
+		{
+			role: 'system',
+			content:
+				'You are a UI/UX designer specializing in atmospheric color palettes for games. Generate colors that evoke the universe\'s mood while maintaining readability. Always respond with valid JSON.',
+		},
+		{
+			role: 'user',
+			content: prompt + schemaInstruction,
+		},
+	];
+
+	try {
+		console.log(`[Theme Colors Only] Generating palette for "${params.universeName}"...`);
+
+		const response = await queryLLM(apiKey, messages, {
+			model: MODEL_CONFIG.themeColors,
+			responseFormat: 'json',
+		});
+
+		if (!response.text) {
+			console.warn('[Theme Colors Only] No response, returning empty');
+			return {};
+		}
+
+		const parsed = JSON.parse(cleanJsonString(response.text));
+
+		// Validate all hex colors
+		const hexPattern = /^#[0-9A-Fa-f]{6}$/;
+		const requiredColorFields = [
+			'background', 'backgroundSecondary', 'backgroundAccent',
+			'text', 'textSecondary', 'textAccent',
+			'border', 'borderStrong',
+			'buttonPrimary', 'buttonPrimaryText', 'buttonSecondary', 'buttonSecondaryText',
+			'success', 'warning', 'danger', 'shadow',
+		];
+
+		const validatedColors: Partial<ThemeColors> = {};
+
+		for (const field of requiredColorFields) {
+			if (parsed[field] && hexPattern.test(parsed[field])) {
+				(validatedColors as any)[field] = parsed[field];
+			}
+		}
+
+		console.log('[Theme Colors Only] Generated colors successfully');
+		return validatedColors;
+	} catch (error) {
+		console.error('[Theme Colors Only] Generation failed:', error);
+		return {};
+	}
+};
+
+/**
+ * Generates ONLY the font selection (without changing colors).
+ * Use this when you want to change the font independently of colors.
+ */
+export const generateFontOnly = async (
+	apiKey: string,
+	params: GenerateThemeColorsParams,
+): Promise<string | null> => {
+	const prompt = buildFontOnlyPrompt({
+		universeName: params.universeName,
+		universeType: params.universeType,
+		genre: params.genre,
+		visualStyle: params.visualStyle,
+		userConsiderations: params.userConsiderations,
+		language: params.language,
+	});
+
+	const schemaInstruction = `\n\nYou MUST respond with a valid JSON object following this exact schema:\n${JSON.stringify(
+		fontOnlySchema,
+		null,
+		2,
+	)}`;
+
+	const messages: LLMMessage[] = [
+		{
+			role: 'system',
+			content:
+				'You are a typography expert specializing in selecting fonts for games. Select a font that matches the universe\'s aesthetic. Always respond with valid JSON.',
+		},
+		{
+			role: 'user',
+			content: prompt + schemaInstruction,
+		},
+	];
+
+	try {
+		console.log(`[Theme Font Only] Selecting font for "${params.universeName}"...`);
+
+		const response = await queryLLM(apiKey, messages, {
+			model: MODEL_CONFIG.themeColors,
+			responseFormat: 'json',
+		});
+
+		if (!response.text) {
+			console.warn('[Theme Font Only] No response, returning null');
+			return null;
+		}
+
+		const parsed = JSON.parse(cleanJsonString(response.text));
+
+		// Validate fontFamily
+		if (parsed.fontFamily) {
+			const fontExists = getFontByFamily(parsed.fontFamily);
+			if (fontExists) {
+				console.log(`[Theme Font Only] Selected font: ${parsed.fontFamily}`);
+				return parsed.fontFamily;
+			} else {
+				console.warn(`[Theme Font Only] Invalid font "${parsed.fontFamily}"`);
+				return null;
+			}
+		}
+
+		return null;
+	} catch (error) {
+		console.error('[Theme Font Only] Generation failed:', error);
+		return null;
 	}
 };
 
