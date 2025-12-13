@@ -32,7 +32,7 @@
  * @see {@link ActionOptionsResponse} - Formato da resposta esperada
  */
 
-import { GameState, Language, ChatMessage, Character, Location } from '../../../types';
+import { GameState, Language, ChatMessage, Character, Location, GridCharacterPosition, GridElement } from '../../../types';
 import { getLanguageName } from '../../../i18n/locales';
 import { formatInventorySimple, normalizeInventory, getRecentMessagesForPrompt } from './helpers';
 import { getItemAwarenessRulesForPrompt } from '../../../constants/economy';
@@ -225,6 +225,47 @@ export function buildActionOptionsPrompt({
     item.name.toLowerCase().includes('poção')
   );
 
+  // Build grid context section if available
+  let gridContextSection = '';
+  if (gameState.gridSnapshots && gameState.gridSnapshots.length > 0) {
+    const latestGrid = gameState.gridSnapshots[gameState.gridSnapshots.length - 1];
+    const playerPos = latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer);
+    const playerX = playerPos?.position.x ?? 5;
+    const playerY = playerPos?.position.y ?? 5;
+
+    // Format character positions
+    const gridPositions = latestGrid.characterPositions
+      .map((pos: GridCharacterPosition) => {
+        const distance = pos.isPlayer
+          ? ''
+          : ` (${Math.abs(pos.position.x - playerX) + Math.abs(pos.position.y - playerY)} cells away)`;
+        return `- @ ${pos.characterName}${pos.isPlayer ? ' [PLAYER]' : ''}: (${pos.position.x}, ${pos.position.y})${distance}`;
+      })
+      .join('\n');
+
+    // Format scene elements
+    let elementsText = '';
+    if (latestGrid.elements && latestGrid.elements.length > 0) {
+      const elementsList = latestGrid.elements
+        .map((elem: GridElement) => {
+          const distFromPlayer = Math.abs(elem.position.x - playerX) + Math.abs(elem.position.y - playerY);
+          return `- [${elem.symbol}] ${elem.name}: (${elem.position.x}, ${elem.position.y}) - ${distFromPlayer} cells away\n    → ${elem.description}`;
+        })
+        .join('\n');
+      elementsText = `\n\n**Scene Elements:**\n${elementsList}`;
+    }
+
+    gridContextSection = `
+=== SPATIAL MAP (10x10 GRID) ===
+**Characters:**
+${gridPositions}
+${elementsText}
+
+**Legend:** @ = Character, [A-Z] = Interactable elements
+**Proximity:** 0-1 cells = adjacent, 2-3 = nearby, 4+ = far (needs movement)
+`;
+  }
+
   return `
 You are a game master assistant. Based on the current game context, generate exactly 5 action options for the player.
 
@@ -243,7 +284,7 @@ Inventory: ${playerInventory || 'empty'}
 
 === NPCs PRESENT ===
 ${npcList}
-
+${gridContextSection}
 === NARRATIVE CONTEXT ===
 ${narrativeContext.length > 0 ? narrativeContext.join('\n') : 'No active quests or objectives'}
 
@@ -277,17 +318,18 @@ Rules:
 4. Write in ${langName}
 5. Make them specific to the current situation
 6. Include at least one cautious/defensive option (keep every such option inside the Safe band)
-${hasHealingItems && healthPercent < 70 ? '7. IMPORTANT: Player has low HP and healing items - suggest using them!\n' : ''}
-8. For each action, assign probability percentages for good and bad events using the calibration table above (decide the band first, then pick numbers). Never exceed 50 on any field and keep goodChance + badChance ≤ 80.
+7. If scene elements exist in the SPATIAL MAP, suggest at least one action interacting with nearby elements (doors, chests, levers, etc.)
+${hasHealingItems && healthPercent < 70 ? '8. IMPORTANT: Player has low HP and healing items - suggest using them!\n' : ''}
+9. For each action, assign probability percentages for good and bad events using the calibration table above (decide the band first, then pick numbers). Never exceed 50 on any field and keep goodChance + badChance ≤ 80.
    - goodChance: 0-50 (probability of something beneficial happening)
    - badChance: 0-50 (probability of something harmful happening)
    - The remaining percentage (100 - goodChance - badChance) is neutral (nothing special happens)
    - Internally tag each action as Safe/Moderate/High/Extreme to guide the numbers (do not output the tag)
-9. For each action, provide brief hints about what could happen and explicitly connect the hint to the risk level you chose:
+10. For each action, provide brief hints about what could happen and explicitly connect the hint to the risk level you chose:
    - goodHint: brief description of the potential benefit (e.g., "find hidden treasure", "gain ally trust")
    - badHint: brief description of the potential harm (e.g., "alert enemies", "trigger trap")
-10. If you assign High or Extreme risk, the goodHint must describe the concrete payoff that justifies the danger.
-11. Prefix every goodHint with "Critical Success:" and every badHint with "Critical Error:" before describing the localized outcome so the GM knows these effects are mandatory when a critical triggers.
+11. If you assign High or Extreme risk, the goodHint must describe the concrete payoff that justifies the danger.
+12. Prefix every goodHint with "Critical Success:" and every badHint with "Critical Error:" before describing the localized outcome so the GM knows these effects are mandatory when a critical triggers.
 
 Respond with JSON:
 {

@@ -47,6 +47,7 @@ import {
 	Item,
 	GridSnapshot,
 	GridCharacterPosition,
+	GridElement,
 	NarrativeStyleMode,
 } from '../../../types';
 import { getLanguageName } from '../../../i18n/locales';
@@ -396,40 +397,55 @@ export function buildGameMasterPrompt({
 	let gridContextSection = '';
 	if (gameState.gridSnapshots && gameState.gridSnapshots.length > 0) {
 		const latestGrid = gameState.gridSnapshots[gameState.gridSnapshots.length - 1];
+		const playerPos = latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer);
+		const playerX = playerPos?.position.x ?? 5;
+		const playerY = playerPos?.position.y ?? 5;
+
+		// Format character positions with distance from player
 		const gridPositions = latestGrid.characterPositions
 			.map((pos: GridCharacterPosition) => {
 				const distance = pos.isPlayer
 					? ''
-					: ` - Distance from player: ~${
-							Math.abs(
-								pos.position.x -
-									(latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer)?.position.x || 5),
-							) +
-							Math.abs(
-								pos.position.y -
-									(latestGrid.characterPositions.find((p: GridCharacterPosition) => p.isPlayer)?.position.y || 5),
-							)
-					  } cells`;
-				return `- ${pos.characterName}${pos.isPlayer ? ' [PLAYER]' : ''}: position (${pos.position.x}, ${
-					pos.position.y
-				})${distance}`;
+					: ` - Distance: ~${Math.abs(pos.position.x - playerX) + Math.abs(pos.position.y - playerY)} cells`;
+				return `- @ ${pos.characterName}${pos.isPlayer ? ' [PLAYER]' : ''}: (${pos.position.x}, ${pos.position.y})${distance}`;
 			})
 			.join('\n    ');
 
+		// Format scene elements with legend
+		let elementsSection = '';
+		if (latestGrid.elements && latestGrid.elements.length > 0) {
+			const elementsLegend = latestGrid.elements
+				.map((elem: GridElement) => {
+					const distFromPlayer = Math.abs(elem.position.x - playerX) + Math.abs(elem.position.y - playerY);
+					return `- [${elem.symbol}] ${elem.name}: (${elem.position.x}, ${elem.position.y}) - Distance: ~${distFromPlayer} cells\n      → ${elem.description}`;
+				})
+				.join('\n    ');
+
+			elementsSection = `
+
+    **Scene Elements (interactable objects):**
+    ${elementsLegend}`;
+		}
+
 		gridContextSection = `
     === SPATIAL CONTEXT (10x10 GRID MAP) ===
-    Characters' current positions on the map (coordinates 0-9):
+    **Characters on the map (coordinates 0-9):**
     ${gridPositions}
+${elementsSection}
 
-    Narration requirements:
-    - Explicitly describe where key NPCs are relative to the player whenever their placement matters (e.g., "Lyra lingers two cells to your right").
-    - When movement happens, mention how the distance/direction between the player and the moving character changes.
+    **Legend:**
+    - @ = Character (player marked with [PLAYER])
+    - [A-Z] = Scene elements (doors, chests, objects, etc.)
 
-    Consider spatial positioning when:
-    - Determining if characters can interact directly (same or adjacent cells)
-    - Describing movement ("approaches", "moves away", "crosses the room")
-    - Combat range and positioning
-    - Characters at distance (3+ cells) require movement to interact closely
+    **Narration requirements:**
+    - Reference scene elements when the player interacts with them or moves near them
+    - Explicitly describe where key NPCs and elements are relative to the player
+    - When movement happens, mention how distance/direction changes
+
+    **Spatial rules:**
+    - Same/adjacent cells (distance 0-1): Can interact directly
+    - Nearby (distance 2-3): Can see clearly, short walk to interact
+    - Far (distance 4+): Requires movement to interact
 `;
 	}
 
