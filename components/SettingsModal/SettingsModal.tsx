@@ -70,9 +70,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-			<div className="bg-[#f5f5f4] border-2 border-stone-900 w-full max-w-md shadow-[12px_12px_0px_rgba(0,0,0,1)] relative">
+			<div className="bg-[#f5f5f4] border-2 border-stone-900 w-full max-w-md max-h-[90vh] shadow-[12px_12px_0px_rgba(0,0,0,1)] relative flex flex-col">
 				{/* Header */}
-				<div className="p-5 border-b-2 border-stone-900 bg-stone-800 flex justify-between items-center">
+				<div className="p-5 border-b-2 border-stone-900 bg-stone-800 flex justify-between items-center flex-shrink-0">
 					<h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tight">
 						<Settings className="w-6 h-6" />
 						{t.settings || 'Settings'}
@@ -83,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 				</div>
 
 				{/* Content */}
-				<div className="p-4 space-y-3">
+				<div className="p-4 space-y-3 overflow-y-auto flex-1">
 					{/* Narrative Style Option */}
 					<button
 						onClick={handleOpenNarrativeStyle}
@@ -257,7 +257,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="p-4 border-t-2 border-stone-300 bg-stone-50">
+				<div className="p-4 border-t-2 border-stone-300 bg-stone-50 flex-shrink-0">
 					<button
 						onClick={onClose}
 						className="w-full py-2 px-6 bg-stone-900 text-white font-bold uppercase tracking-widest hover:bg-stone-700 transition-colors text-sm"
