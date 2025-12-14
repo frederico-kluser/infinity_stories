@@ -17,7 +17,7 @@ import { dbService } from './services/db';
 import { useMessageQueue } from './hooks/useMessageQueue';
 import { useCardNavigation } from './hooks/useCardNavigation';
 import { useThemeColors } from './hooks/useThemeColors';
-import { Item, NarrativeStyleMode } from './types';
+import { Item, NarrativeStyleMode, GridSnapshot } from './types';
 import {
 	Plus,
 	Terminal,
@@ -88,6 +88,20 @@ const persistStoredCardIndex = (storyId: string, index: number): void => {
 	}
 };
 
+const getLatestGridMessageNumberAtOrBefore = (snapshots: GridSnapshot[] | undefined, messageNumber: number): number => {
+	if (!snapshots || snapshots.length === 0 || messageNumber <= 0) {
+		return 0;
+	}
+
+	let latest = 0;
+	for (const snapshot of snapshots) {
+		if (snapshot.atMessageNumber <= messageNumber && snapshot.atMessageNumber > latest) {
+			latest = snapshot.atMessageNumber;
+		}
+	}
+	return latest;
+};
+
 /**
  * Main Application View.
  * Connects the Logic (useGameEngine) to the UI.
@@ -142,8 +156,6 @@ const App: React.FC = () => {
 		markCardAsViewed,
 		updateNarrativeStyle,
 		markGridAsViewed,
-		hasUnviewedGridChanges,
-		latestGridMessageNumber,
 	} = useGameEngine();
 
 	const { colors } = useThemeColors();
@@ -173,6 +185,8 @@ const App: React.FC = () => {
 	// Use message timeline to keep cards ordered
 	const { visibleMessages } = useMessageQueue(activeStory?.messages || []);
 	const totalCards = visibleMessages.length;
+	const storyGridSnapshots = activeStory?.gridSnapshots ?? [];
+	const lastViewedGridMessageNumber = activeStory?.gridLastViewedMessageNumber ?? 0;
 
 	// State for pulse animation on Next button (shows when new content is available)
 	const [showNextPulse, setShowNextPulse] = useState(false);
@@ -644,6 +658,18 @@ const App: React.FC = () => {
 									if (!msg) return null;
 
 									const sender = activeStory.characters[msg.senderId];
+								const currentMessageNumber = msg.pageNumber ?? currentCardIndex + 1;
+								const latestVisibleGridMessageNumber = getLatestGridMessageNumberAtOrBefore(
+									storyGridSnapshots,
+									currentMessageNumber,
+								);
+								const hasPendingGridUpdate =
+									latestVisibleGridMessageNumber > 0 && latestVisibleGridMessageNumber > lastViewedGridMessageNumber;
+								const handleMapViewed = () => {
+									if (latestVisibleGridMessageNumber > 0) {
+										markGridAsViewed(latestVisibleGridMessageNumber);
+									}
+								};
 									const pageIndex =
 										typeof msg.pageNumber === 'number' ? msg.pageNumber - 1 : Math.max(0, visibleMessages.indexOf(msg));
 									const isActiveCard = pageIndex === currentCardIndex;
@@ -708,8 +734,8 @@ const App: React.FC = () => {
 												characterAvatars={Object.fromEntries(
 													Object.entries(activeStory.characters).map(([id, char]) => [id, char.avatarBase64]),
 												)}
-												hasUnviewedGridChanges={hasUnviewedGridChanges}
-												onMapViewed={() => markGridAsViewed(latestGridMessageNumber)}
+												hasUnviewedGridChanges={hasPendingGridUpdate}
+												onMapViewed={handleMapViewed}
 												isActionsCollapsed={isActionsCollapsed}
 												setIsActionsCollapsed={setIsActionsCollapsed}
 												onShowCharacterSheet={() => setShowStatus(true)}
