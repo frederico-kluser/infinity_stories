@@ -122,6 +122,24 @@ exports[`StoryCard rendering should match snapshot for NPC dialogue 1`] = `
           Previous
         </span>
       </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
+        </span>
+      </button>
       <div
         class="flex items-center gap-1 md:gap-2 flex-1 min-w-0 max-w-[100px] md:max-w-[180px] mx-1 md:mx-2"
       >
@@ -307,6 +325,24 @@ exports[`StoryCard rendering should match snapshot for narrator message 1`] = `
           Previous
         </span>
       </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
+        </span>
+      </button>
       <div
         class="flex items-center gap-1 md:gap-2 flex-1 min-w-0 max-w-[100px] md:max-w-[180px] mx-1 md:mx-2"
       >
@@ -468,6 +504,24 @@ exports[`StoryCard rendering should match snapshot for player message 1`] = `
           class="hidden md:inline"
         >
           Previous
+        </span>
+      </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
         </span>
       </button>
       <div
@@ -643,6 +697,24 @@ exports[`StoryCard rendering should match snapshot for system message 1`] = `
           Previous
         </span>
       </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
+        </span>
+      </button>
       <div
         class="flex items-center gap-1 md:gap-2 flex-1 min-w-0 max-w-[100px] md:max-w-[180px] mx-1 md:mx-2"
       >
@@ -816,6 +888,24 @@ exports[`StoryCard rendering should match snapshot with avatar 1`] = `
           Previous
         </span>
       </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
+        </span>
+      </button>
       <div
         class="flex items-center gap-1 md:gap-2 flex-1 min-w-0 max-w-[100px] md:max-w-[180px] mx-1 md:mx-2"
       >
@@ -977,6 +1067,24 @@ exports[`StoryCard rendering should match snapshot with location background 1`] 
           class="hidden md:inline"
         >
           Previous
+        </span>
+      </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
         </span>
       </button>
       <div
@@ -1142,6 +1250,24 @@ exports[`StoryCard responsive design should render mobile-friendly layout 1`] = 
           Previous
         </span>
       </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
+        </span>
+      </button>
       <div
         class="flex items-center gap-1 md:gap-2 flex-1 min-w-0 max-w-[100px] md:max-w-[180px] mx-1 md:mx-2"
       >
@@ -1305,6 +1431,24 @@ exports[`StoryCard scroll controls should match snapshot when content overflows 
           Previous
         </span>
       </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
+        </span>
+      </button>
       <div
         class="flex items-center gap-1 md:gap-2 flex-1 min-w-0 max-w-[100px] md:max-w-[180px] mx-1 md:mx-2"
       >
@@ -1466,6 +1610,24 @@ exports[`StoryCard theming should apply custom theme colors 1`] = `
           class="hidden md:inline"
         >
           Previous
+        </span>
+      </button>
+      <button
+        class="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+        disabled=""
+        style="background-color: rgb(231, 229, 228); color: rgb(28, 25, 23); border: 2px solid #d6d3d1; box-shadow: 3px 3px 0px #1c1917;"
+        title="Ajuda"
+      >
+        <span
+          class="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+          style="border-color: #1c1917;"
+        >
+          ?
+        </span>
+        <span
+          class="hidden md:inline"
+        >
+          Ajuda
         </span>
       </button>
       <div

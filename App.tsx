@@ -12,6 +12,7 @@ import { StoryCreationLoader } from './components/StoryCreationLoader/StoryCreat
 import { ProcessingIndicator } from './components/ProcessingIndicator/ProcessingIndicator';
 import { SettingsModal } from './components/SettingsModal';
 import { NarrativeStyleModal } from './components/NarrativeStyleModal';
+import { TutorialModal } from './components/TutorialModal';
 import { useGameEngine } from './hooks/useGameEngine';
 import { dbService } from './services/db';
 import { useMessageQueue } from './hooks/useMessageQueue';
@@ -152,6 +153,7 @@ const App: React.FC = () => {
 		isGeneratingBackground,
 		backgroundLocationName,
 		creationPhase,
+		lastCreatedStoryId,
 		processingPhase,
 		markCardAsViewed,
 		updateNarrativeStyle,
@@ -178,6 +180,7 @@ const App: React.FC = () => {
 	const [showNarrativeStyleModal, setShowNarrativeStyleModal] = useState(false);
 	const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 	const [zoomModalData, setZoomModalData] = useState<{ imageSrc: string; name: string } | null>(null);
+	const [showTutorialModal, setShowTutorialModal] = useState(false);
 
 	// File input ref for import
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -187,6 +190,12 @@ const App: React.FC = () => {
 	const totalCards = visibleMessages.length;
 	const storyGridSnapshots = activeStory?.gridSnapshots ?? [];
 	const lastViewedGridMessageNumber = activeStory?.gridLastViewedMessageNumber ?? 0;
+
+	useEffect(() => {
+		if (lastCreatedStoryId && currentStoryId === lastCreatedStoryId) {
+			setShowTutorialModal(true);
+		}
+	}, [lastCreatedStoryId, currentStoryId]);
 
 	// State for pulse animation on Next button (shows when new content is available)
 	const [showNextPulse, setShowNextPulse] = useState(false);
@@ -739,6 +748,7 @@ const App: React.FC = () => {
 												isActionsCollapsed={isActionsCollapsed}
 												setIsActionsCollapsed={setIsActionsCollapsed}
 												onShowCharacterSheet={() => setShowStatus(true)}
+												onShowTutorial={() => setShowTutorialModal(true)}
 												actionsCount={actionsCount}
 											/>
 										</div>
@@ -990,6 +1000,9 @@ const App: React.FC = () => {
 
 			{/* Error Modal */}
 			<ErrorModal isOpen={showErrorModal} onClose={closeErrorModal} errorType={errorType} errorMessage={errorMessage} />
+
+			{/* Tutorial Modal */}
+			<TutorialModal isOpen={showTutorialModal} onClose={() => setShowTutorialModal(false)} colors={colors} />
 
 			{/* Voice Settings Modal */}
 			<VoiceSettings

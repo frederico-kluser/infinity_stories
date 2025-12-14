@@ -40,6 +40,7 @@ export interface StoryCardProps {
 	isActionsCollapsed?: boolean;
 	setIsActionsCollapsed?: React.Dispatch<React.SetStateAction<boolean>>;
 	onShowCharacterSheet?: () => void;
+	onShowTutorial?: () => void;
 	actionsCount?: number; // Number of available actions (for pulse animation)
 }
 
@@ -80,6 +81,7 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 	isActionsCollapsed = true,
 	setIsActionsCollapsed,
 	onShowCharacterSheet,
+	onShowTutorial,
 	actionsCount = 0,
 }) => {
 	const isNarrator = message.senderId === 'GM' && message.type === MessageType.NARRATION;
@@ -672,6 +674,28 @@ export const StoryCardView: React.FC<StoryCardProps> = ({
 						<span className="hidden md:inline">{t.map || 'Map'}</span>
 					</button>
 				)}
+
+				{/* Tutorial Button */}
+				<button
+					onClick={() => onShowTutorial && onShowTutorial()}
+					disabled={!onShowTutorial}
+					className="flex items-center gap-1 px-2 py-2 md:px-4 md:py-3 font-bold uppercase text-xs md:text-sm transition-all hover:scale-105 flex-shrink-0 disabled:opacity-40"
+					style={{
+						backgroundColor: colors.buttonSecondary,
+						color: colors.buttonSecondaryText,
+						border: `2px solid ${colors.border}`,
+						boxShadow: `3px 3px 0px ${colors.shadow}`,
+					}}
+					title={t.help || 'Ajuda'}
+				>
+					<span
+						className="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full border-2 text-[10px] md:text-xs font-black"
+						style={{ borderColor: colors.buttonSecondaryText }}
+					>
+						?
+					</span>
+					<span className="hidden md:inline">{t.help || 'Ajuda'}</span>
+				</button>
 
 				{/* Actions Toggle Button - Mobile only */}
 				{setIsActionsCollapsed && (

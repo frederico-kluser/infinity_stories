@@ -111,6 +111,7 @@ interface UseGameEngineReturn {
 
 	// Creation Progress
 	creationPhase: CreationPhase;
+	lastCreatedStoryId: string | null;
 
 	// Processing Progress
 	processingPhase: ProcessingPhase;
@@ -232,6 +233,7 @@ export const useGameEngine = (): UseGameEngineReturn => {
 
 	// Creation Progress
 	const [creationPhase, setCreationPhase] = useState<CreationPhase>(null);
+	const [lastCreatedStoryId, setLastCreatedStoryId] = useState<string | null>(null);
 
 	// Processing Progress
 	const [processingPhase, setProcessingPhase] = useState<ProcessingPhase>(null);
@@ -759,6 +761,7 @@ export const useGameEngine = (): UseGameEngineReturn => {
 			loadedStoriesRef.current.add(newStoryId);
 			setStories((prev) => [...prev, newState]);
 			setCurrentStoryId(newStoryId);
+			setLastCreatedStoryId(newStoryId);
 			queueAvatarGeneration(newState, Object.keys(newState.characters));
 			setIsGenerating(false);
 			setCreationPhase(null);
@@ -1583,6 +1586,7 @@ export const useGameEngine = (): UseGameEngineReturn => {
 		backgroundLocationName,
 		// Creation Progress
 		creationPhase,
+		lastCreatedStoryId,
 		// Processing Progress
 		processingPhase,
 		// Viewed Cards
