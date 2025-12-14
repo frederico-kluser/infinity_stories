@@ -1165,10 +1165,19 @@ export const useGameEngine = (): UseGameEngineReturn => {
 					return false;
 				};
 
+				const isPlayerSpeaker = (speaker?: string | null) => {
+					if (!speaker) return false;
+					const matchedCharacter = findCharacterByName(next.characters, speaker);
+					if (matchedCharacter) {
+						return matchedCharacter.id === next.playerCharacterId || matchedCharacter.isPlayer === true;
+					}
+					return isForbiddenSpeaker(speaker);
+				};
+
 				const filteredMessages = (response.messages || []).filter((m: GMResponseMessage) => {
 					if (m.type !== 'dialogue') return true;
 					const speakerName = m.characterName || (m as any).senderName;
-					if (isForbiddenSpeaker(speakerName)) {
+					if (isPlayerSpeaker(speakerName)) {
 						console.warn('[Player Agency] Blocked AI dialogue from:', speakerName);
 						return false;
 					}
