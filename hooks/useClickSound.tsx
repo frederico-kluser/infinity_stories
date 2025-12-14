@@ -123,6 +123,7 @@ export function ClickSoundProvider({ children }: ClickSoundProviderProps) {
 
 	const [isReady, setIsReady] = useState(false);
 	const initializedRef = useRef(false);
+	const initializingRef = useRef(false);
 
 	// Persist preference
 	const setEnabled = useCallback((value: boolean) => {
@@ -132,16 +133,20 @@ export function ClickSoundProvider({ children }: ClickSoundProviderProps) {
 
 	// Initialize sound service on first user interaction
 	const initializeAudio = useCallback(async () => {
-		if (initializedRef.current) return;
-		initializedRef.current = true;
+		if (initializedRef.current || initializingRef.current) return;
+		initializingRef.current = true;
 
 		try {
 			await soundService.init();
 			await soundService.preload(SOUNDS.UI_CLICK, UI_CLICK_SOUND_PATH);
+			initializedRef.current = true;
 			setIsReady(true);
 			console.log('[ClickSound] Audio system initialized');
 		} catch (error) {
+			initializedRef.current = false;
 			console.error('[ClickSound] Failed to initialize:', error);
+		} finally {
+			initializingRef.current = false;
 		}
 	}, []);
 
