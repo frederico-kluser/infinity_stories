@@ -462,7 +462,7 @@ export const DEFAULT_THEME_COLORS: ThemeColors = {
 	buttonSecondary: '#e7e5e4', // stone-200
 	buttonSecondaryText: '#1c1917',
 
-	success: '#166534', // green-800
+	success: '#22c55e', // green-500
 	warning: '#d97706', // amber-600
 	danger: '#dc2626', // red-600
 

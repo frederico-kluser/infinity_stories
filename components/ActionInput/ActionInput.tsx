@@ -228,7 +228,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 
 	// Fixed colors for Critical Success/Error hints - these should NEVER change
 	// based on narrative theme or percentages
-	const CRITICAL_SUCCESS_COLOR = '#166534'; // green-800 - always green for success
+	const CRITICAL_SUCCESS_COLOR = '#22c55e'; // green-500 - always green for success
 	const CRITICAL_ERROR_COLOR = '#dc2626'; // red-600 - always red for error
 
 	const renderContextSyncBadge = () => {
@@ -643,7 +643,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 							<button
 								onClick={handleCustomClick}
 								disabled={isBlocked}
-								className="p-2.5 md:p-4 border-2 border-dashed text-left font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base tracking-wide md:tracking-wider flex items-center gap-2 md:gap-3 min-w-0 overflow-hidden"
+								className="py-4 px-2.5 md:p-4 border-2 border-dashed text-left font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base tracking-wide md:tracking-wider flex items-center gap-2 md:gap-3 min-w-0 overflow-hidden"
 								style={{
 									borderColor: colors.border,
 									backgroundColor: colors.backgroundAccent,
